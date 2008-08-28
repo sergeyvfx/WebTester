@@ -23,7 +23,9 @@
 static int core_silent=0;
 
 static char *lines[CORE_OUTPUT_LINES]={0};
-static int lines_count=0;
+static char *sorted_lines[CORE_OUTPUT_LINES]={0};
+static int lines_ptr=0, lines_count=0;
+static BOOL lines_sorted=FALSE;
 
 ////////
 // Internal stuff
@@ -31,21 +33,16 @@ static int lines_count=0;
 static void
 push_line                          (char *__text, ...)
 {
-  int uk=0;
   static char print_buf[65536];
   PACK_ARGS (__text, print_buf, 65536);
 
-  if (lines_count==CORE_OUTPUT_LINES-1)
-    {
-      int i;
-      free (lines[0]);
-      for (i=0; i<lines_count-1; ++i)
-        lines[i]=lines[i+1];
-      uk=lines_count;
-    } else
-      uk=lines_count++;
+  if (lines[lines_ptr])
+    free (lines[lines_ptr]);
 
-  lines[uk]=strdup (print_buf);
+  lines[lines_ptr]=strdup (print_buf);
+  lines_ptr=(lines_ptr+1)%CORE_OUTPUT_LINES;
+  lines_count++;
+  lines_sorted=FALSE;
 }
 
 ////////
@@ -77,7 +74,7 @@ core_print                         (int __type, char *__text, ...)
 
       char dummy[65536];
       sprintf (dummy, "[DEBUG] %s", print_buf);
-  
+
       if (!silent && !(__type&MSG_LOG))
         {
           printf ("%s", dummy);
@@ -116,7 +113,25 @@ core_io_done                       (void)
 char**
 core_output_buffer                 (int *__count)
 {
+
+  if (!lines_sorted)
+    {
+      int i, ptr=lines_ptr-1;
+
+      memset (sorted_lines, 0, sizeof (sorted_lines));
+
+      for (i=lines_count-1; i>=0; i--)
+        {
+          sorted_lines[i]=lines[ptr];
+          ptr--;
+          if (ptr<0)
+            ptr=CORE_OUTPUT_LINES-1;
+        }
+
+      lines_sorted=TRUE;
+    }
+
   if (__count)
     *__count=lines_count;
-  return lines;
+  return sorted_lines;
 }

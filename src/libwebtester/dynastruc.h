@@ -23,17 +23,25 @@
 #define dyna_data(cur)  ( (cur)?((cur)->data):(0))
 
 #define DYNA_FOREACH(__dyna, __data) \
-  dyna_item_t *__cur_; \
-  __cur_=dyna_head (__dyna); \
-  while (__cur_) \
-    { \
-      __data=dyna_data (__cur_);
+  { \
+    dynastruc_t *__cur_dyna_; \
+    __cur_dyna_=__dyna; \
+    dyna_item_t *__cur_, *__next_; \
+    __cur_=dyna_head (__dyna); \
+    while (__cur_) \
+      { \
+        __data=dyna_data (__cur_); \
+        __next_=dyna_next (__cur_);
 
 #define DYNA_BREAK break
 
 #define DYNA_DONE \
-      __cur_=dyna_next (__cur_); \
-    }
+        __cur_=__next_; \
+      } \
+  }
+
+#define DYNA_DELETE_CUR(__deleter) \
+  dyna_delete (__cur_dyna_, __cur_, __deleter)
 
 typedef struct
 {

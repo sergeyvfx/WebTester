@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./stuff/uninstall_lib.sh librun.so
-./stuff/uninstall_lib.sh libtestlib.so
-./stuff/uninstall_lib.sh libtestlib++.so
-./stuff/uninstall_lib.sh libwebtester.so
+$PREFIX/stuff/uninstall_lib.sh librun.so
+$PREFIX/stuff/uninstall_lib.sh libtestlib.so
+$PREFIX/stuff/uninstall_lib.sh libtestlib++.so
+$PREFIX/stuff/uninstall_lib.sh libwebtester.so

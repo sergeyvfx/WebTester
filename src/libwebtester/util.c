@@ -33,6 +33,22 @@
 #include <stdlib.h>
 #include <signal.h>
 
+//////
+//
+
+/*#define BASE_YEAR        1970
+#define MAX_CACHED_YEARS 128
+
+static int days_per_month[2][12]={
+    {31,28,31,30,31,30,31,31,30,31,30,31},
+    {31,29,31,30,31,30,31,31,30,31,30,31}
+  };
+
+static long days_per_year[MAX_CACHED_YEARS];*/
+
+//////
+//
+
 static int
 is_number_entry                    (char *__self, int __float)
 {
@@ -304,3 +320,58 @@ sign                               (double __self)
   if (__self>0) return 1;
   return -1;
 }
+/*
+time_t
+unixtime                           (int __year, int __month, int __day, int __hour, int __minute, int __second)
+{
+  static int init=0;
+  int i, l;
+  time_t t=0;
+
+  // Normalization
+  l=LEAP_YEAR (__year);
+  while (__day>days_per_month[l][__month-1])
+    {
+      __day-=days_per_month[l][__month-1];
+      __month++;
+    }
+
+  if (__month>12)
+    {
+      long yd=__month/12;
+      if (!(__month%12)) yd--;
+      __year+=yd;
+      __month-=yd*12;
+    }
+
+  // Check for valid date
+  if (__year<BASE_YEAR || __year>=BASE_YEAR+MAX_CACHED_YEARS)
+    return (time_t)(-1);
+
+  // Initialize cache  
+  if (!init)
+    {
+      int i, j, l;
+      long days=0;
+      for (i=0; i<MAX_CACHED_YEARS-1; i++)
+        {
+          l=LEAP_YEAR ((i+BASE_YEAR));
+          for (j=0; j<12; j++)
+            days+=days_per_month[l][j];
+          days_per_year[i+1]=days;
+        }
+      init=1;
+    }
+
+  t=__second+__minute*60+__hour*60*60;
+  t+=days_per_year[__year-BASE_YEAR]*24*60*60;
+
+  l=LEAP_YEAR (__year);
+  for (i=0; i<__month-1; i++)
+    __day+=days_per_month[l][i];
+
+  t+=(__day-1)*24*60*60;
+
+  return t;
+}
+*/

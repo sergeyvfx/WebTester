@@ -63,6 +63,9 @@
 /* "" */
 #undef HELP_DIR
 
+/* Define for home directory */
+#undef HOME_DIRECTORY
+
 /* definition of HOST */
 #undef HOST
 
@@ -110,6 +113,9 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Define for supervisor pid file */
+#undef SUPERVISOR_PID_FILE
 
 /* Define for user debugging */
 #undef USER_DEBUG

@@ -2,8 +2,8 @@
 
 # src_dir file user grouop mode
 
-SRC_TOPDIR=`./stuff/opt_get.sh SRC_TOPDIR`
-DIST_DIR=`./stuff/opt_get.sh DIST_DIR`
+SRC_TOPDIR=`$PREFIX/stuff/opt_get.sh SRC_TOPDIR`
+DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
 
 echo -n "INstalling binary \`$2\`... "
 if ( `cp $SRC_TOPDIR$1/$2 $DIST_DIR/webtester/sbin/$2 > /dev/null 2>&1` ); then

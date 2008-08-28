@@ -2,7 +2,7 @@
 
 # dir owner group mode
 
-DIST_DIR=`./stuff/opt_get.sh DIST_DIR`
+DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
 
 if ( `test ! -e "$DIST_DIR$1"` ); then
   echo -n "Creating dist directory \`$1\`... "

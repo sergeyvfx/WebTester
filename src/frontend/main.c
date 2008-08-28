@@ -56,7 +56,7 @@ main (int __argc, char *__argv[])
   //  Not flexible enough
   //
 
-  add_pixmap_directory ("/home/webtester/usr/pixmaps/frontend");
+  add_pixmap_directory (HOME_DIRECTORY "/usr/pixmaps/frontend");
   add_pixmap_directory ("./pixmaps");
 
   main_window=create_main_window ();

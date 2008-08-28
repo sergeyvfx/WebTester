@@ -65,7 +65,7 @@ flexval_eval_from_string           (flex_value_t *__self)
   if (!__self) return;
   if (!is_number (__self->pchar))
     {
-      __self->integer=__self->real=__self->real=flexval_is_truth (__self);
+      __self->integer=__self->real=flexval_is_truth (__self);
       return;
     }
   __self->integer = flexval_atol (__self->pchar);

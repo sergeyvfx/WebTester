@@ -17,6 +17,7 @@
 
 #include <libwebtester/cmd.h>
 #include <libwebtester/sock.h>
+#include <libwebtester/util.h>
 
 #include <time.h>
 
@@ -25,18 +26,27 @@ typedef struct
   int  id;
   int  sock;
 
-//  char cmd[65535];
   char *cmd;
 
   int  authontificated;
-  char login[1024];
+  char login[32];
   int  access;
 
   unsigned long flags;
 
   time_t timestamp;
   char uid[64];
+
+  char ip[32];
+
+  timeval_t frozen_timestamp;
+  int       freeze_duration;
 } ipc_client_t;
+
+////////
+//
+
+#define IPCCF_FROZEN 0x0001
 
 ////////
 //
@@ -79,6 +89,15 @@ ipc_get_client_by_id               (int __id);
 ipc_client_t*
 ipc_get_current_client             (void);
 
+////
+//
+
+int
+ipc_client_frozen                  (ipc_client_t *__self);
+
+void
+ipc_client_freeze                  (ipc_client_t *__self, int __duration);
+
 ////////////////////////////////////////
 // IPC procs' stuff
 
@@ -87,5 +106,23 @@ ipc_proc_register                  (char *__procname, cmd_entry_point __entrypoi
 
 int
 ipc_proc_exit                      (int __argc, char **__argv);
+
+////////////////////////////////////////
+// Blacklisting
+
+int
+ipc_blacklist_init                 (char *__blacklist_file, long __reset_timeout);
+
+void
+ipc_blacklist_done                 (void);
+
+int
+ipc_blacklisted                    (char *__ip);
+
+void
+ipc_blacklist_ip                   (char *__ip, time_t __time);
+
+void
+ipc_unblacklist_ip                 (char *__ip);
 
 #endif

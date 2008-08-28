@@ -17,6 +17,7 @@
 #include "sock.h"
 #include "cmd.h"
 #include "uid.h"
+#include "sock.h"
 #include <malloc.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -28,7 +29,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-cmd_context_t *ipc_cmd_context;
+cmd_context_t *ipc_cmd_context = 0;
 
 int ipc_inet=-1;
 ipc_client_t *ipc_clients = 0;
@@ -37,11 +38,41 @@ int ipc_max_client_count  = IPC_MAX_CLIENT_COUNT;
 ipc_client_t *ipc_current_client=0;
 
 static char in_buf[65535];
-
 static int shutdowning=0;
 
 #define IPC_PROC_REGISTER(__name,__entry_point) \
-  cmd_context_proc_register (ipc_cmd_context, __name, __entry_point);
+  if (ipc_cmd_context) \
+    cmd_context_proc_register (ipc_cmd_context, __name, __entry_point) \
+
+////
+// Frozening stuff
+
+int
+ipc_client_frozen                  (ipc_client_t *__self)
+{
+  if (__self->flags&IPCCF_FROZEN)
+    {
+      if (tv_usec_cmp (timedist (__self->frozen_timestamp, now ()), __self->freeze_duration*1000)>0)
+        {
+          __self->flags&=~IPCCF_FROZEN;
+          return 0;
+        }
+      return 1;
+    }
+
+  return 0;
+}
+
+void
+ipc_client_freeze                  (ipc_client_t *__self, int __duration)
+{
+  __self->flags|=IPCCF_FROZEN;
+  __self->frozen_timestamp=now ();
+  __self->freeze_duration=__duration;
+}
+
+////
+//
 
 static int
 ipc_init_clients                   (void)
@@ -142,6 +173,8 @@ ipc_init_client                    (int __sock, struct sockaddr_in __addr)
           ipc_clients[i].timestamp=time (0);
           uid_gen (ipc_clients[i].uid);
 
+          strcpy (ipc_clients[i].ip, ip);
+
           sock_answer (__sock, "+OK\n------------------------\n%s IPC interface greets you.\nYou must authentificate yourself to get access to restricted stuff.\nType `help' for help :)\n------------------------\n\n", CORE_PACKAGE_NAME);
           break;
         }
@@ -160,7 +193,17 @@ ipc_listen                         (void)
   memset (&addr, 0, sizeof (addr));
   if ((acc_s=accept (ipc_inet, (struct sockaddr*)&addr, &len))>=0)
     {
-      ipc_init_client (acc_s, addr);
+      char *ip=inet_ntoa (addr.sin_addr);
+
+      // Check if client's IP is blacklisted
+      if (!ipc_blacklisted (ip))
+        {
+          ipc_init_client (acc_s, addr);
+        } else {
+          sock_answer (acc_s, "Your IP has been blacklisted.\n");
+          LOG ("IPC", "Tried to connect from blacklisted IP: %s\n", ip);
+          sock_destroy (acc_s);
+        }
     }
   return 0;
 }
@@ -172,6 +215,13 @@ ipc_parse_client                   (ipc_client_t *__self)
   char **argv=0, cmd_buf[65536]={0};
   if (!__self->cmd || __self->cmd[0]==0) return 0;
 
+  // Skip executing command if client is frozen
+  if (ipc_client_frozen (__self)) {
+    free (__self->cmd);
+    __self->cmd=0;
+    return 0;
+  }
+
   strcpy (cmd_buf, __self->cmd);
 
   i=0;
@@ -182,7 +232,7 @@ ipc_parse_client                   (ipc_client_t *__self)
   j=0;
   for (; i<n; i++)
     {
-      if (__self->cmd[i]=='\n') break;
+      if (__self->cmd[i]=='\n' || __self->cmd[i]=='\r') break;
       cmd_buf[j++]=__self->cmd[i];
     }
   cmd_buf[j]=0;
@@ -201,7 +251,7 @@ ipc_parse_client                   (ipc_client_t *__self)
       sock_answer (__self->sock, "-ERR Unknown command: `%s'\n", argv[0]);
   cmd_free_arglist (argv, argc);
 
-  if (!__self->cmd)
+  if (__self->cmd)
     {
       free (__self->cmd);
       __self->cmd=0;
@@ -230,6 +280,14 @@ ipc_interact                       (void)
     {
       if (ipc_clients[i].sock>=0)
         {
+          // Check if user has been blacklisted
+          if (ipc_blacklisted (ipc_clients[i].ip))
+            {
+              sock_answer (ipc_clients[i].sock, "Your' IP has been blacklisted.\n");
+              ipc_disconnect_client (&ipc_clients[i], 0);
+              continue;
+            }
+
           len=recv (ipc_clients[i].sock, in_buf, 65535, 0);
           if (len<0)
             {

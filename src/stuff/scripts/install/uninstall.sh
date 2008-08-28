@@ -6,17 +6,20 @@
 # Written (by Nazgul) under GPL. 02.09.2007
 #
 
+export PREFIX=`dirname $0`
+
+
 init_variables()
   {
-    DIST_DIR=`./stuff/opt_get.sh DIST_DIR`
-    SRC_TOPDIR=`./stuff/opt_get.sh SRC_TOPDIR`
+    DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
+    SRC_TOPDIR=`$PREFIX/stuff/opt_get.sh SRC_TOPDIR`
   }
 
 banner()
   {
-    ./stuff/echo.sh "===================================="
-    ./stuff/echo.sh "Started WebTester Server uninstaller"
-    ./stuff/echo.sh "===================================="
+    $PREFIX/stuff/echo.sh "===================================="
+    $PREFIX/stuff/echo.sh "Started WebTester Server uninstaller"
+    $PREFIX/stuff/echo.sh "===================================="
     echo
   }
 
@@ -31,28 +34,28 @@ banner;
 
 # Step 1: Remove all installed files
 
-./stuff/echo.sh "Uninstalling installed binaries...."
-./stuff/uninstall_bins.sh
+$PREFIX/stuff/echo.sh "Uninstalling installed binaries...."
+$PREFIX/stuff/uninstall_bins.sh
 
-./stuff/echo.sh "Uninstalling installed system binaries...."
-./stuff/uninstall_sbins.sh
+$PREFIX/stuff/echo.sh "Uninstalling installed system binaries...."
+$PREFIX/stuff/uninstall_sbins.sh
 
-./stuff/echo.sh "Uninstalling installed libraries...."
-./stuff/uninstall_libs.sh
+$PREFIX/stuff/echo.sh "Uninstalling installed libraries...."
+$PREFIX/stuff/uninstall_libs.sh
 
-./stuff/echo.sh "Removing installed files and directories..."
-./stuff/rmdistdir.sh /webtester
+$PREFIX/stuff/echo.sh "Removing installed files and directories..."
+$PREFIX/stuff/rmdistdir.sh /webtester
 
 # Step 2: Delete unwanted groups and users
 
-./stuff/echo.sh "Deleting unwanted Samba's users..."
-./stuff/delete_smb_user.sh webtester
+$PREFIX/stuff/echo.sh "Deleting unwanted Samba's users..."
+$PREFIX/stuff/delete_smb_user.sh webtester
 
-./stuff/echo.sh "Deleting unwanted groups and users..."
-./stuff/delete_user.sh webtester
-./stuff/delete_user.sh webtester-nobody
-./stuff/delete_group.sh webtester
-./stuff/delete_group.sh webtester-nobody
+$PREFIX/stuff/echo.sh "Deleting unwanted groups and users..."
+$PREFIX/stuff/delete_user.sh webtester
+$PREFIX/stuff/delete_user.sh webtester-nobody
+$PREFIX/stuff/delete_group.sh webtester
+$PREFIX/stuff/delete_group.sh webtester-nobody
 
 unlink /etc/init.d/webtester 
 

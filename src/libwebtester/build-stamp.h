@@ -15,7 +15,7 @@
 //#define __DEBUG
 #undef __DEBUG
 //#define __UNSTABLE
-//#define __TESTING
+#define __TESTING
 #define LINUX
 #define BUILD_HOST  HOST
 

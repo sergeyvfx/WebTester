@@ -15,7 +15,7 @@
 #define MAX_UNIQUE 65536
 
 typedef struct {
-  long stack[MAX_UNIQUE];
+  unsigned short stack[MAX_UNIQUE];
   long ptr;
 } unique_pool_t;
 
@@ -28,11 +28,11 @@ unique_pool_create                 (void);
 void
 unique_pool_destroy                (unique_pool_t *__self);
 
-long
+int
 unique_alloc_uid                   (unique_pool_t *__self);
 
 void
-unique_release_uid                 (unique_pool_t *__self, long __uid);
+unique_release_uid                 (unique_pool_t *__self, unsigned short __uid);
 
 BOOL
 unique_pool_empty                  (unique_pool_t *__self);

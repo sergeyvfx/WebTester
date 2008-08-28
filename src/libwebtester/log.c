@@ -45,6 +45,9 @@ logfile_open                       (void)
 
   stream=fopen (filename, "a");
 
+  if (!stream)
+    return;
+
   if (print_banner)
     {
       fprintf (stream, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
@@ -85,7 +88,7 @@ logfile_pack                       (void)
   fdup (filename, fname, LOG_PACKED_EXT, MAX_LOG_FILES);
 
   thread=g_thread_create (logfile_pack_entry, fname, FALSE, 0);
-  
+
   unlink (filename);
 }
 
@@ -110,9 +113,10 @@ log_init                           (const char *__fn)
   strcpy (filename, __fn);
 
   logfile_open ();
-  
+
   if (!stream)
     return -1;
+
   return 0;
 }
 

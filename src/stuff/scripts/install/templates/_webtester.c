@@ -25,10 +25,22 @@
 
 #include <string.h>
 
+#include <webtester/const.h>
+#include <config.h>
+
 #define MAX_TRIES   10
 #define TIME_DELTA  60
 
-#define PIDFILE "/home/webtester/var/run/supervisor.pid"
+#define PIDFILE SUPERVISOR_PID_FILE
+
+////////
+//
+
+static char *chpriv_free_args[] = {
+  "--version", "-v",
+  "--help",    "-h",
+  0
+};
 
 ////////
 //
@@ -71,7 +83,7 @@ dirname                            (char *__self, char *__out)
 static long
 wt_get_uid                         (void)
 {
-  struct passwd *p=getpwnam ("webtester");
+  struct passwd *p=getpwnam (WEBTESTER_USER);
   if (!p) return -1;
   return (long)p->pw_uid;
 }
@@ -79,7 +91,7 @@ wt_get_uid                         (void)
 static long
 wt_get_gid                         (void)
 {
-  struct group *g=getgrnam ("webtester");
+  struct group *g=getgrnam (WEBTESTER_GROUP);
   if (!g) return -1;
   return (long)g->gr_gid;
 }
@@ -101,7 +113,7 @@ change_privilegies                 (void)
 
   if (ruid || rgid)
     {
-      fprintf (stderr, "WebTester must be run by superuser\n");
+      fprintf (stderr, "WebTester Server must be run by superuser\n");
       rm_pid ();
       exit (1);
     }
@@ -234,14 +246,24 @@ exec_server                        (int __argc, char **__argv)
 int
 main                               (int __argc, char **__argv)
 {
-  int status, w, i;
-  int do_fork=0;
+  int status, w, i, j;
+  int do_fork=0, ch_priv=1;
+  char exec[1024]={0};
 
   for (i=1; i<__argc; i++)
     {
       if (!strcmp (__argv[i], "--fork") || !strcmp (__argv[i], "-f"))
         {
           do_fork=1;
+        }
+
+      j=0;
+      while (chpriv_free_args[j] && ch_priv)
+        {
+          if (!strcmp (__argv[i], chpriv_free_args[j]))
+            ch_priv=0;
+
+          j++;
         }
     }
 
@@ -250,7 +272,9 @@ main                               (int __argc, char **__argv)
       write_pid ();
 
       // Some initialization
-      change_privilegies ();
+      if (ch_priv)
+        change_privilegies ();
+
       hook_signals ();
 
       for (;;)
@@ -263,6 +287,12 @@ main                               (int __argc, char **__argv)
               if (WIFEXITED (status))
                 {
                   int exit_code=WEXITSTATUS (status);
+
+                  // Assume 255 (-1 in signed notation) is code ans there is no changing of privilegies to ROOT,
+                  // when we shouldn't restart server.
+                  if (exit_code==255 /*&& !ch_priv*/)
+                    return 0;
+
                   if (!exit_code)
                     {
                       rm_pid ();
@@ -279,7 +309,10 @@ main                               (int __argc, char **__argv)
                       return 0;
                     }
                   fprintf (stderr, "WebTester Server crashed!! Restarting...\n");
-                  system ("sudo /home/webtester/sbin/lrvm_killall.sh");
+
+                  if (!exec[0])
+                    sprintf (exec, "sudo %s/sbin/lrvm_killall.sh", HOME_DIRECTORY);
+                  system (exec);
                 }
             }
           while (!WIFEXITED (status) && !WIFSIGNALED (status));

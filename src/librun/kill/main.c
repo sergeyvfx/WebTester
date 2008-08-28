@@ -30,8 +30,7 @@
 
 static char *config_allowed_prefixes[]={
   "/etc",
-  "/opt/webtester",
-  "/home/webtester",
+  HOME_DIRECTORY,
   0
 };
 

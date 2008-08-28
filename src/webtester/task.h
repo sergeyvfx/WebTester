@@ -127,7 +127,8 @@ void wt_belts_status_changed (void);
 // I/O parameters
 
 #define TASK_INPUT_PARAM(__self, __key) (assarr_get_value ((__self).input_params, __key))
-#define TASK_SET_OUTPUT_PARAM(__self, __key, __val) (assarr_set_value ((__self).output_params, __key, __val))
+#define TASK_UNSET_OUTPUT_PARAM(__self, __key)      (assarr_unset_value ((__self).output_params, __key, assarr_deleter_free_ref_data))
+#define TASK_SET_OUTPUT_PARAM(__self, __key, __val) (assarr_set_value   ((__self).output_params, __key, __val))
 
 ////
 // Task flags' stuff

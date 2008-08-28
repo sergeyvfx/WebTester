@@ -306,7 +306,7 @@ webiface_put_soution               (wt_task_t *__self)
   // Collect additional params
   strcpy (add, "");
 
-  ASSARR_FOREACH_DO (*(__self->output_params), key, value);
+  ASSARR_FOREACH_DO (__self->output_params, key, value);
     if (strcmp (add, ""))
       strcat (add, "&");
     strcat (add, key);

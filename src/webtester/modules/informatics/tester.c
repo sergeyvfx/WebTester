@@ -39,6 +39,9 @@
 
 #define MAX_COMPILER_MSG_LEN 4096
 
+// File to print solution's testing info
+#define SOLUTION_ERRORS_LOG "errors.log"
+
 ////////////////////////////////////////
 // Macroses
 
@@ -466,9 +469,9 @@ testing_main_loop                  (wt_task_t *__self,
   ////////
   // I/O filenames 
   // Name of input file
-  char *input_file   = TASK_INPUT_PARAM (*__self, "INPUTFILE");   
+  char *input_file   = TASK_INPUT_PARAM (*__self, "INPUTFILE");
   // Name of output file
-  char *output_file  = TASK_INPUT_PARAM (*__self, "OUTPUTFILE"); 
+  char *output_file  = TASK_INPUT_PARAM (*__self, "OUTPUTFILE");
 
   ////////
   // Resource limits
@@ -478,10 +481,10 @@ testing_main_loop                  (wt_task_t *__self,
 
   char full_input[4096],    // Full input filename
        full_output[4096],   // Full output filename
-       checker_cmd[4096];   // Command to execute 
+       checker_cmd[4096];   // Command to execute
 
   char  // String with all tests' results
-        tests_res_pchar[(MAX_ERRCODE+1)*MAX_TESTS]; 
+        tests_res_pchar[(MAX_ERRCODE+1)*MAX_TESTS];
 
   // Process's descriptor
   run_process_info_t *proc=NULL; 
@@ -499,8 +502,13 @@ testing_main_loop                  (wt_task_t *__self,
   char **tests_pchar_arr=0;
   int tests[MAX_TESTS];  // Points for tests
 
+  char dummy[1024]; // Dummy pchar value
+
   trim (tests_pchar, effective_tests);
   int tests_count=explode (effective_tests, " ", &tests_pchar_arr);
+
+  // Per-compiler resource usage correction
+  double time_corr, rss_corr;
 
   for (i=0; i<tests_count; i++)
     tests[i]=atoi (tests_pchar_arr[i]);
@@ -525,6 +533,18 @@ testing_main_loop                  (wt_task_t *__self,
   // Copying all libs/binaries needed for correct running of solution
   if (use_chroot)
     copy_chroot_data (__cur_testing_dir);
+
+  ////
+  // Get corrections to apply when executing solution
+  sprintf (dummy, "ResourceCorrections/Compilers/%s/Time", TASK_COMPILER_ID (*__self));
+  INF_SAFE_FLOAT_KEY (time_corr, dummy, 0);
+
+  sprintf (dummy, "ResourceCorrections/Compilers/%s/RSS", TASK_COMPILER_ID (*__self));
+  INF_SAFE_FLOAT_KEY (rss_corr, dummy, 0);
+
+  // Apply corrections
+  time_limit   += time_corr*1024;
+  memory_limit += rss_corr*USEC_COUNT;
 
   // Cycle by tests
   INF_DEBUG_LOG ("Task %ld. Begin cycle by tests\n", __self->sid);
@@ -709,7 +729,7 @@ set_output_params                  (wt_task_t *__task, assarr_t *__params)
   int i;
   char *pchar;
   flex_value_t *retprops=0;
-  
+
   //
   // TODO:
   //  Need beautiful solution to solve this query
@@ -722,7 +742,8 @@ set_output_params                  (wt_task_t *__task, assarr_t *__params)
     {
       pchar=flexval_get_array_string (retprops, i);
       if (assarr_get_value (__params, pchar))
-        TASK_SET_OUTPUT_PARAM (*__task, pchar, strdup (assarr_get_value (__params, pchar)));
+        TASK_SET_OUTPUT_PARAM (*__task, pchar, strdup (assarr_get_value (__params, pchar))); else
+        TASK_SET_OUTPUT_PARAM (*__task, pchar, strdup (""));
     }
 }
 
@@ -936,7 +957,7 @@ __done_:
     TASK_LOG (*task, "\n========\nTesting completed: %s\n", pchar);
 
   // Save log
-  sprintf (pchar, "%s/errors.log", cur_testing_dir);
+  sprintf (pchar, "%s/%s", cur_testing_dir, SOLUTION_ERRORS_LOG);
   stream=fopen (pchar, "w");
   if (stream)
     {

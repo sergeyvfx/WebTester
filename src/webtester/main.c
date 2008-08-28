@@ -66,10 +66,12 @@ typedef void (*wt_inst_close_func) (void);
 ////
 //
 
-BOOL terminating=FALSE;
+static BOOL terminating=FALSE;
 
 static char config_file[4096];
 static char log_file[4096];
+
+static BOOL good_exit=FALSE;
 
 ////
 //
@@ -82,6 +84,37 @@ signal_term                     (int __signum);
 
 ////////////////////////////////////////
 //
+
+static long
+wt_get_uid                         (void)
+{
+  struct passwd *p=getpwnam (WEBTESTER_USER);
+  if (!p) return -1;
+  return (long)p->pw_uid;
+}
+
+static long
+wt_get_gid                         (void)
+{
+  struct group *g=getgrnam (WEBTESTER_GROUP);
+  if (!g) return -1;
+  return (long)g->gr_gid;
+}
+
+static void
+check_permissions                  (void)
+{
+  long uid=wt_get_uid (), gid=wt_get_gid ();
+  long ruid=getuid (), rgid=getgid ();
+  long euid=geteuid (), egid=getegid ();
+
+  // Check for matching of real and effective UID and PID
+  if (uid<0 || gid<0 || ruid!=uid || rgid!=gid || euid!=uid || egid!=gid)
+    {
+      printf ("This module must be run under user %s:%s.\n", WEBTESTER_USER, WEBTESTER_GROUP);
+      exit (0);
+    }
+}
 
 static void
 init_iterator                      (char *__inf_str, wt_init_func __funct, char *__err_msg, int __fatal)
@@ -140,7 +173,6 @@ init_instance                      (void)
   core_print (MSG_INFO, " %s\n", core_get_version_string ());
   core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
 
-
   log_init (log_file);
 
 #ifdef __DEBUG
@@ -161,6 +193,9 @@ init_instance                      (void)
   if (create_pid_file (PID_FILE))
     {
       core_print (MSG_INFO, "The WebTester Server is already running.\n");
+
+      // Do not cause a general panic
+      good_exit=TRUE;
       return -1;
     }
 
@@ -270,13 +305,17 @@ main                               (int __argc, char **__argv)
 {
   struct timespec timestruc;
 
+  core_init_version_string ();
+
   wt_set_config_file (CONFIG_FILE);
   wt_set_log_file    (LOG_FILE);
 
   wt_cmdline_parse_args (__argc, __argv);
 
+  check_permissions ();
+
   if (init_instance ())
-    return -1;
+    return (good_exit)?(0):(-1);
 
   timestruc.tv_sec=0;
   timestruc.tv_nsec=0.2*NSEC_COUNT; // Nanoseconds :)

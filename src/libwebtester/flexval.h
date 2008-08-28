@@ -14,11 +14,13 @@
 #ifndef _flexval_h_
 #define _flexval_h_
 
-#define FVT_UNDEFINED 0x00000000
-#define FVT_INTEGER   0x00000001
-#define FVT_STRING    0x00000002
-#define FVT_FLOAT     0x00000004
-#define FVT_ARRAY     0x00000008
+#include <libwebtester/types.h>
+
+#define FVT_UNDEFINED 0x00
+#define FVT_INTEGER   0x01
+#define FVT_STRING    0x02
+#define FVT_FLOAT     0x04
+#define FVT_ARRAY     0x08
 
 #define FLEXVAL_ARRAY_LENGTH(__self)         ((__self)->array.length)
 #define FLEXVAL_ARRAY_DATA(__self)           ((__self)->array.data)
@@ -30,15 +32,15 @@ typedef struct
   double   real;
   char     *pchar;
 
-  int      type;
+  __u8_t   type;
 
   struct {
-    long length;
-    void **data;
+    __u16_t length;
+    void    **data;
   } array;
 
   //
-  int allocated;
+  __u8_t allocated;
 } flex_value_t;
 
 flex_value_t*

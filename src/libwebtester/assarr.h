@@ -39,20 +39,21 @@ typedef void (*assarr_deleter)     (void *__item);
 
 #define ASSARR_FOREACH_DO(__self, __key, __value) \
  { \
-  int i; \
-  assarr_entry_t *cur; \
-  for (i=0; i<(__self).m; i++) \
+  int __i_; \
+  assarr_entry_t *__cur_, *__next_; \
+  for (__i_=0; __i_ < (__self)->m; __i_++) \
     { \
-      cur=(__self).data[i]; \
-      while (cur) \
+      __cur_=(__self)->data[__i_]; \
+      while (__cur_) \
         { \
-          __key=cur->key; \
-          __value=cur->value; \
+          __key=__cur_->key; \
+          __value=__cur_->value; \
+          __next_=__cur_->next_ptr; \
           {
           
 #define ASSARR_FOREACH_DONE \
           } \
-          cur=cur->next_ptr; \
+          __cur_=__next_; \
         } \
     } \
  }

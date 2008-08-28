@@ -23,6 +23,7 @@ SOURCES = \
 	flexval.c \
 	hive.c \
 	ipc.c \
+	ipc-blacklist.c \
 	pid.c \
 	log.c \
 	regexp.c  \

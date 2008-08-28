@@ -66,14 +66,14 @@
 #define COMPILER_PCHAR_KEY(__id,__path) \
   COMPILER_KEY (__id, __path, flexval_get_string)
 
-#define COMPILER_SAFE_VAL(__task,__path,__default_value,__func) \
-  ((Informatics_compiler_config_val (__task, __path))?(__func (Informatics_compiler_config_val (__task, __path))):(__default_value))
-#define COMPILER_SAFE_INT_KEY(__task,__path,__default_value) \
-  COMPILER_SAFE_VAL (__task, __path, __default_value, flexval_get_int)
-#define COMPILER_SAFE_FLOAT_KEY(__task,__path,__default_value) \
-  COMPILER_SAFE_VAL (__task, __path, __default_value, flexval_get_float)
-#define COMPILER_SAFE_PCHAR_KEY(__task,__path,__default_value) \
-  COMPILER_SAFE_VAL (__task, __path, __default_value, flexval_get_string)
+#define COMPILER_SAFE_VAL(__id,__path,__default_value,__func) \
+  ((Informatics_compiler_config_val (__id, __path))?(__func (Informatics_compiler_config_val (__id, __path))):(__default_value))
+#define COMPILER_SAFE_INT_KEY(__id,__path,__default_value) \
+  COMPILER_SAFE_VAL (__id, __path, __default_value, flexval_get_int)
+#define COMPILER_SAFE_FLOAT_KEY(__id,__path,__default_value) \
+  COMPILER_SAFE_VAL (__id, __path, __default_value, flexval_get_float)
+#define COMPILER_SAFE_PCHAR_KEY(__id,__path,__default_value) \
+  COMPILER_SAFE_VAL (__id, __path, __default_value, flexval_get_string)
 
 #define COMPILER_SAFE_COMMON_VAL(__path,__default_value,__func) \
   ((Informatics_compiler_common_val (__path))?(__func (Informatics_compiler_common_val (__path))):(__default_value))

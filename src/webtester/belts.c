@@ -209,7 +209,7 @@ belts_fill                         (dynastruc_t *__queue)
       cur=dyna_next (cur);
 
       if (wt_task_in_belts (task))
-        { 
+        {
           //
           // Task is already in belts.
           // But why LIB_WebIFACE hasn't cauched this?

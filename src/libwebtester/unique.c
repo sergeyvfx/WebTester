@@ -39,7 +39,7 @@ unique_pool_destroy                (unique_pool_t *__self)
   free (__self);
 }
 
-long
+int
 unique_alloc_uid                   (unique_pool_t *__self)
 {
   if (!__self || __self->ptr>=MAX_UNIQUE) return -1;
@@ -47,7 +47,7 @@ unique_alloc_uid                   (unique_pool_t *__self)
 }
 
 void
-unique_release_uid                 (unique_pool_t *__self, long __uid)
+unique_release_uid                 (unique_pool_t *__self, unsigned short __uid)
 {
   if (!__self || __self->ptr<=0) return;
   __self->stack[--__self->ptr]=__uid;

@@ -64,7 +64,7 @@ thread_cs_mutex_register           (mutex_t __self)
 
       cs_mutexes_length+=CS_MUTEX_APPENDIX;
       cs_mutexes=malloc (sizeof (mutex_t)*cs_mutexes_length);
-      
+
       for (i=0; i<cs_mutexes_count; ++i)
         cs_mutexes[i]=smutex[i];
 

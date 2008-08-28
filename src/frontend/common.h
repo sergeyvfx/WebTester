@@ -13,6 +13,8 @@
 
 #include <gtk/gtk.h>
 
+#include <config.h>
+
 #include "macrodef.h"
 #include "support.h"
 
@@ -28,6 +30,6 @@ extern GtkWidget *main_window;
 #define PIPE_VIEW        "pipe_view"
 #define PIPE_SCROLL      "pipe_scroll"
 
-#define CONFIG_FILE      "/home/webtester/conf/gwebtester.conf"
+#define CONFIG_FILE      HOME_DIRECTORY "/conf/gwebtester.conf"
 
 #endif

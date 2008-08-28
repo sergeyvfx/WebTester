@@ -176,7 +176,7 @@ assarr_unset_all                   (assarr_t *__self, assarr_deleter __deleter)
   void *v;
   if (!__self) return -1;
   
-  ASSARR_FOREACH_DO ((*__self), k, v);
+  ASSARR_FOREACH_DO (__self, k, v);
     assarr_unset_value (__self, k, __deleter);
   ASSARR_FOREACH_DONE
   
@@ -191,7 +191,7 @@ assarr_pack                        (assarr_t *__self, char **__out)
   char *key;
   void *value;
   strcpy (*__out, "");
-  ASSARR_FOREACH_DO ((*__self), key, value);
+  ASSARR_FOREACH_DO (__self, key, value);
   strcat (*__out, key); strcat (*__out, ";");
   sprintf (buf, "%ld", (long)strlen ((char*)value));
   strcat (*__out, buf); strcat (*__out, ";");

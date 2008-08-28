@@ -12,6 +12,7 @@
 
 #include "autoinc.h"
 #include "stat.h"
+#include "ipc.h"
 
 #include <malloc.h>
 
@@ -35,7 +36,8 @@ typedef struct {
 //
 
 static stat_client_t clients[IPC_MAX_CLIENT_COUNT];
-static assarr_t *vars=NULL;
+static assarr_t *vars = NULL;
+static assarr_t *desc = NULL;
 
 static BOOL initialized=FALSE;
 
@@ -51,7 +53,7 @@ dump_arr_to_buf                    (assarr_t *__self, char *__buf)
   
   strcpy (__buf, "");
 
-  ASSARR_FOREACH_DO (*__self, key, val);
+  ASSARR_FOREACH_DO (__self, key, val);
     flexval_serialize (val, dumped);
     strcat (__buf, key);
     strcat (__buf, ";");
@@ -100,7 +102,7 @@ build_stat_changes                 (stat_client_t *__self, assarr_t *__vars_diff
   flex_value_t *val, *cval;
   char *key;
 
-  ASSARR_FOREACH_DO (*vars, key, val);
+  ASSARR_FOREACH_DO (vars, key, val);
     cval=assarr_get_value (__self->vars, key);
     if (!cval || flexval_cmp (val, cval))
       assarr_set_value (__vars_diff, key, val);
@@ -131,7 +133,7 @@ update_client_stat_cache           (stat_client_t *__self, assarr_t *__vars)
   if (!__self->vars)
     __self->vars=assarr_create ();
 
-  ASSARR_FOREACH_DO (*__vars, key, val);
+  ASSARR_FOREACH_DO (__vars, key, val);
     cval=assarr_get_value (__self->vars, key);
     if (!cval)
       {
@@ -191,16 +193,36 @@ dump_stat_to_buf                   (char *__buf)
   sprintf (__buf, "vars;%ld;%s;", (long)strlen (svars), svars);
 }
 
-static void     // Send full stat to client
-send_stat_to_client                (stat_client_t *__self)
+static void
+send_unpacked_stat                 (stat_client_t *__self)
 {
-  char stat[65536];
+  char *key, buf[4096], *dummy;
+  flex_value_t *val;
 
-  if (__self->ipc_client->access<7) // But why??
-    return;
+  sock_answer (__self->ipc_client->sock, "+OK ");
+
+  ASSARR_FOREACH_DO (vars, key, val)
+    flexval_serialize (val, buf);
+    dummy=assarr_get_value (desc, key);
+    sock_answer (__self->ipc_client->sock, "%s %s\n", (dummy)?(dummy):(key), buf);
+  ASSARR_FOREACH_DONE
+}
+
+static void     // Send full stat to client
+send_stat_to_client                (stat_client_t *__self, BOOL __packed)
+{
+  if (__packed)
+    {
+      char stat[65536];
+
+      if (__self->ipc_client->access<7) // But why??
+        return;
   
-  dump_stat_to_buf (stat);
-  sock_answer (__self->ipc_client->sock, "+OK %s\n", stat);
+      dump_stat_to_buf (stat);
+      sock_answer (__self->ipc_client->sock, "+OK %s\n", stat);
+  } else {
+    send_unpacked_stat (__self);
+  }
 }
 
 ////
@@ -248,13 +270,13 @@ ipc_stat                           (int __argc, char **__argv)
         } else
       if (!strcmp (__argv[1], "packed"))
         {
-          send_stat_to_client (client);
+          send_stat_to_client (client, TRUE);
         } else
           goto __usage_;
     } else
   if (__argc==1)
     {
-      IPC_PROC_ANSWER ("+OK <But not implemented yet :(>\n");
+      send_stat_to_client (client, FALSE);
     } else
       goto __usage_;
 
@@ -271,6 +293,9 @@ static void
 clients_init                       (void)
 {
   int i;
+  if (!clients)
+    return ;
+
   memset (clients, 0, sizeof (clients));
   for (i=0; i<IPC_MAX_CLIENT_COUNT; i++)
     {
@@ -296,9 +321,13 @@ clients_done                       (void)
 int
 wt_stat_init                       (void)
 {
+  if (!wt_ipc_supported ())
+    return -1;
+
   clients_init ();
 
   vars=assarr_create ();
+  desc=assarr_create ();
 
   ipc_proc_register ("stat", ipc_stat);
 
@@ -312,9 +341,15 @@ wt_stat_init                       (void)
 void
 wt_stat_done                       (void)
 {
+  if (!initialized)
+    return;
+
   initialized=FALSE;
   clients_done ();
+
   assarr_destroy (vars, var_deleter);
+  assarr_destroy (desc, assarr_deleter_free_ref_data);
+
 //  hook_unregister ("Stat.Changed", stat_changed_callback, HOOK_PRIORITY_NORMAL);
 }
 
@@ -355,4 +390,18 @@ wt_stat_set_array                  (char *__var, flex_value_t **__val)
   flex_value_t *fv=get_var (__var);
   flexval_set_array (fv, __val);
   stat_changed_callback ();
+}
+
+void
+wt_stat_set_desc                   (char *__var, char *__desc)
+{
+  if (!__var)
+    return;
+
+  assarr_unset_value (desc, __var, assarr_deleter_free_ref_data);
+
+  if (!__desc)
+    return;
+
+  assarr_set_value (desc, __var, strdup (__desc));
 }

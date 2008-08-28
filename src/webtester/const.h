@@ -15,6 +15,9 @@
 #  define SHARED_SUFFIX ".so"
 #endif
 
+#define WEBTESTER_USER   "webtester"
+#define WEBTESTER_GROUP  "webtester"
+
 #define LIB_PREFIX "lib"
 #define LIB_SUFFIX SHARED_SUFFIX
 

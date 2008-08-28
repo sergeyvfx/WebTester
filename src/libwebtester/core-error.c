@@ -14,13 +14,13 @@
 #include <stdarg.h>
 #include <string.h>
 
-static char core_error[65536];
+static char core_error[4096];
 
 void
 core_set_last_error                (char *__text, ...)
 {
-  static char buf[65536];
-  PACK_ARGS (__text, buf, 65535);
+  static char buf[4096];
+  PACK_ARGS (__text, buf, 4096);
   strcpy (core_error, buf);
 }
 

@@ -1,13 +1,97 @@
+2008-05-11  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/ipc.h : fixed incorrect cheking freeing of command
+buffer in ipc_parse_clients().
+
+2008-04-03  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTester Server 5.0.2-RC1 is out.
+
+2008-03-22  Sergey Sharybin <sharybin@nm.ru>
+
+	Code and project cleenuping. Last preparations before realising 5.0.2.
+
+	* informatics/tester.c : Added zerolization of array of output parameters.
+
+2008-03-16  Sergey Sharybin <sharybin@nm.ru>
+
+	There were big troubles with my HDD (anyway, it is now dead) so there are
+some code regressions.
+
+	* libwebtester/unique.c : Memory optimization.
+
+2008-03-04  Sergey Sharybin <sharybin@nm.ru>
+
+	* _webtester.c       : fixed bug with incorrect file of PID file.
+	* configure          : added option to set supervisor's PID filename.
+	* libwebtester/ipc.h : field `login` is now has length in 32 bytes.
+
+	Some other optimization of memory usage. One megabyte optimized :)
+
+2008-03-03  Sergey Sharybin <sharybin@nm.ru>
+
+	Added some flexibility to installation scripts.
+
+2008-02-28  Sergey Sharybin <sharybin@nm.ru>
+
+	* webtester/main.c    : Added checking of effective  UID and  GID to  be  equal
+to WEBTESTER_USER:WEBTESTER_GROUP.
+	* webtester/cmdline.c : Added optins --help and --version.
+	* stuff/_webtester.c  : Some changes for --help and --version works propely.
+	config.h : Added option HOME_DIRECTORY.
+
+	Rough  draft  of  INSTALL   documentation.   Source  code  will  be   avaliable
+download soon.
+
+	There is time to release 5.0.2 but we  haven't  debug  this  branch  perfectly.
+	Well, waiting...
+
+	Started hard work around articles in Wiki.
+
+2008-02-25  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/core-io.c : Optimized storing of CORE's messages.
+	* libwebtester/flexval.h : System fields of structures made no so large.
+	* webtester/ipc_bultin.c : added IPC function `vesrion` which  sends a  vesrion
+of the CORE.
+
+2008-02-23  Sergey Sharybin <sharybin@nm.ru>
+
+	* webtester/stat.c     : Realized sending non-packed stat to IPC client.
+	* informatics/tester.c : Added per-compiler correction of resource limits.
+
+2008-02-20  Sergey Sharybin <sharybin@nm.ru>
+
+	* webtester/ipc_blacklist.c: Added IPC function `ip`
+
+2008-02-19  Sergey Sharybin <sharybin@nm.ru>
+
+	Added basic blacklisting stuff. Need to make it as flexible as possible.
+
+	* webtester/ip_builtin.c:  Make code more readable. Some small bugfixes.
+
+	TODO:
+	  - Realize IPC commands for blocking/unblocking IPs.
+
+2008-02-17  Sergey Sharybin <sharybin@nm.ru>
+
+	Started working towards anty-spy in IPC stuff.
+
+	* libwebtester/ipc-blacklist.c : added ipc blacklisting stuff.
+
 2008-02-13  Sergey Sharybin <sharybin@nm.ru>
 
 	* incformatics/problem-uploader.c :  fixed  incorrect  spawming  of   problem's
 uploading thread. 
 
-  WebTester Server 5.0.1-1 updated.
-
 2008-02-12  Sergey Sharybin <sharybin@nm.ru>
 
 	WebTester Server 5.0.1, WebTester Frontend 1.0.0 released!
+
+	Deattached branch 5.0.2
+
+	* Added skipping execution commands from  client  when it  has  failure  during
+authentification.
 
 2008-01-04  Sergey Sharybin <sharybin@nm.ru>
 

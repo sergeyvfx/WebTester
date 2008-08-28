@@ -16,6 +16,8 @@
 #include <libwebtester/smartinclude.h>
 #include <sys/time.h>
 
+#define leapyear(year)((year % 100 ? year : year / 100) % 4 == 0)
+
 int
 is_number                          (char *__self);
 
@@ -72,5 +74,8 @@ fabs                               (double __self);
 
 double
 sign                               (double __self);
+
+//time_t
+//unixtime                           (int __y, int __m, int __d, int __h, int __min, int __s);
 
 #endif

@@ -24,7 +24,7 @@
 #else
 #  ifdef USER_DEBUG
 #    include <stdio.h>
-#    define DEBUG(__text, __args...) printf ("@@@@@@@@@@@2\n");
+#    define DEBUG(__text, __args...) core_print (MSG_DEBUG, __text, ##__args)
 #  else
 #    define DEBUG(__text, __args...)
 #  endif

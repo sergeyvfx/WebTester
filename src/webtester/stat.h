@@ -36,4 +36,7 @@ wt_stat_set_string                 (char *__var, char *__val);
 void
 wt_stat_set_array                  (char *__var, flex_value_t **__val);
 
+void
+wt_stat_set_desc                   (char *__var, char *__desc);
+
 #endif
