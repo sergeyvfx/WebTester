@@ -16,6 +16,7 @@
 #include <libwebtester/conf.h>
 #include <libwebtester/sock.h>
 #include <libwebtester/log.h>
+#include <libwebtester/thread.h>
 
 #include "run.h"
 #include "hv.h"
@@ -62,8 +63,6 @@ static GThread *plistening_thread_acct = NULL;
 
 // Mutexes. But does we need all of them?
 static GMutex  *listening_thread_mutex = NULL;
-static GMutex  *proc_stats_mutex       = NULL;
-static GMutex  *send_cmd_mutex         = NULL;
 
 // Mask of full CPU set
 static char cpumask[MAX_CPU_MASK];
@@ -124,13 +123,7 @@ send_cmd                           (int __sock, __u16 __nlmsg_type, __u32 __nlms
 
   struct msgtemplate msg;
 
-  //
-  // Debug code. We needn't lock mutex in all ways.
-  // But maybe we need  to lock mutex per socket.
-  //
-  if (!send_cmd_mutex)
-    return -1;
-  g_mutex_lock (send_cmd_mutex);
+  CS_Begin
 
   // Fill da msg struct
   msg.n.nlmsg_len   = NLMSG_LENGTH (GENL_HDRLEN);
@@ -164,11 +157,15 @@ send_cmd                           (int __sock, __u16 __nlmsg_type, __u32 __nlms
       if (errno!=EAGAIN)
         goto __fail_;
     }
-  g_mutex_unlock (send_cmd_mutex);
+
+  CS_End
+
   return 0;
 
 __fail_:
-  g_mutex_unlock (send_cmd_mutex);
+
+  CS_End
+
   return -1;
 }
 
@@ -365,8 +362,8 @@ static gpointer
 listening_thread                   (gpointer __unused)
 {
   static struct timespec timestruc;
-  timestruc.tv_sec  = ((long)(hv_delay*NSEC_COUNT))/NSEC_COUNT;
-  timestruc.tv_nsec = ((long)(hv_delay*NSEC_COUNT))%NSEC_COUNT;
+  timestruc.tv_sec  = ((unsigned long long)(hv_delay*NSEC_COUNT))/NSEC_COUNT;
+  timestruc.tv_nsec = ((unsigned long long)(hv_delay*NSEC_COUNT))%NSEC_COUNT;
 
   for (;;)
     {
@@ -438,10 +435,6 @@ run_hypervisor_init                (void)
   if (run_hvpool_init ())
     return -1;
 
-  // Create mutexes
-  proc_stats_mutex=g_mutex_new ();
-  send_cmd_mutex=g_mutex_new ();
-
   if ((netlink_socket         = create_nl_socket (NETLINK_GENERIC, FALSE))<0 ||
       (netlink_socket_per_pid = create_nl_socket (NETLINK_GENERIC, FALSE))<0
      )
@@ -478,11 +471,7 @@ run_hypervisor_done                (void)
   if (plistening_thread_acct)
     g_thread_join (plistening_thread_acct);
 
-  G_FREE_LOCKED_MUTEX (proc_stats_mutex);
-  G_FREE_LOCKED_MUTEX (send_cmd_mutex);
-
-  // Free mutex
-  G_SAFE_FREE_MUTEX (listening_thread_mutex);
+  mutex_free (listening_thread_mutex);
 
   // Close netlink sockets
   if (netlink_socket>=0)
@@ -503,13 +492,10 @@ run_hv_proc_stats                  (__u32 __pid, struct taskstats *__stats)
   struct msgtemplate msg;
   struct nlattr *na;
 
-  if (!proc_stats_mutex)
-    return -1;
-
   DEBUG_LOG ("librun", "run_hv_proc_stats() called with pid %u\n", __pid);
 
   // Send request for info
-  g_mutex_lock (proc_stats_mutex);
+  CS_Begin
 
   rc=send_cmd (netlink_socket_per_pid, family_id, mypid, TASKSTATS_CMD_GET,
     TASKSTATS_CMD_ATTR_PID, &__pid, sizeof(__u32));
@@ -517,12 +503,12 @@ run_hv_proc_stats                  (__u32 __pid, struct taskstats *__stats)
   if (rc<0)
     {
       core_print (MSG_WARNING,  "librun: run_hv_proc_stats(): error sending command to get stats structute by pid (%u)\n", __pid);
-      g_mutex_unlock (proc_stats_mutex);
+      CS_End
       return -1;
     }
 
   rep_len=recv (netlink_socket_per_pid, &msg, sizeof(msg), 0);
-  g_mutex_unlock (proc_stats_mutex);
+  CS_End
 
   if (rep_len<0)
     {

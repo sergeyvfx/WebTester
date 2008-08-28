@@ -29,15 +29,15 @@ hook_init                          (void)
   return 0;
 }
 
-int
+void
 hook_done                          (void)
 {
   int i;
-  if (!hooks) return 0;
+  if (!hooks) return;
   for (i=0; i<HOOK_MAX_PRIORITY; i++)
     dyna_destroy (hooks[i], dyna_deleter_free_ref_data);
   free (hooks);
-  return 0;
+  hooks=0;
 }
 
 hook_node_t
@@ -86,7 +86,7 @@ hook_unregister                    (char *__proc, hook_callback_proc __callback,
 }
 
 int
-hook_call                          (char *__proc)
+hook_call                          (char *__proc, void *__data)
 {
   int i;
   dyna_item_t *cur;
@@ -99,7 +99,7 @@ hook_call                          (char *__proc)
         {
           data=dyna_data (cur);
           if (!strcmp (data->proc, __proc))
-            if (data->callback (data->userData))
+            if (data->callback (data->userData, __data))
               return -1;
           cur=dyna_next (cur);
         }
@@ -108,7 +108,7 @@ hook_call                          (char *__proc)
 }
 
 int
-hook_call_backward                 (char *__proc)
+hook_call_backward                 (char *__proc, void *__data)
 {
   int i;
   dyna_item_t *cur;
@@ -121,7 +121,7 @@ hook_call_backward                 (char *__proc)
         {
           data=dyna_data (cur);
           if (!strcmp (data->proc, __proc))
-            if (data->callback (data->userData))
+            if (data->callback (data->userData, __data))
               return -1;
           cur=dyna_prev (cur);
         }

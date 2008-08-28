@@ -10,27 +10,35 @@
  *
 */
 
+#include "smartinclude.h"
 #include "core.h"
 #include "ipc.h"
 #include "sock.h"
 #include "sock.h"
 #include "cmd.h"
-#include "smartinclude.h"
+#include "uid.h"
 #include <malloc.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <memory.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 cmd_context_t *ipc_cmd_context;
 
 int ipc_inet=-1;
-ipc_client_t *ipc_clients=0;
-int ipc_client_connected=0;
-int ipc_max_client_count=IPC_MAX_CLIENT_COUNT;
+ipc_client_t *ipc_clients = 0;
+int ipc_client_connected  = 0;
+int ipc_max_client_count  = IPC_MAX_CLIENT_COUNT;
 ipc_client_t *ipc_current_client=0;
 
 static char in_buf[65535];
+
+static int shutdowning=0;
 
 #define IPC_PROC_REGISTER(__name,__entry_point) \
   cmd_context_proc_register (ipc_cmd_context, __name, __entry_point);
@@ -43,10 +51,9 @@ ipc_init_clients                   (void)
   ipc_client_connected=0;
   for (i=0; i<ipc_max_client_count; i++)
     {
+      memset (&ipc_clients[i], 0, sizeof (ipc_clients[i]));
       ipc_clients[i].sock=-1;
       ipc_clients[i].id=i;
-      ipc_clients[i].cmd[0]=0;
-      ipc_clients[i].authontificated=0;
     }
   return 0;
 }
@@ -97,17 +104,19 @@ ipc_init                           (char *__host, unsigned int __port)
 int
 ipc_done                           (void)
 {
+  shutdowning=1;
   ipc_done_clients ();
   if (ipc_inet>=0)	
     sock_destroy (ipc_inet);
   ipc_inet = -1;
   if (ipc_cmd_context)
     cmd_destroy_context (ipc_cmd_context);
+  shutdowning=0;
   return 0;
 }
 
 static int
-ipc_init_client                    (int __sock)
+ipc_init_client                    (int __sock, struct sockaddr_in __addr)
 {
   int i;
   if (ipc_client_connected>ipc_max_client_count)
@@ -120,10 +129,20 @@ ipc_init_client                    (int __sock)
     {
       if (ipc_clients[i].sock<0)
         {
-          core_print (MSG_INFO, "IPC: Client connected (#%d).\n", i);
+          char *ip=inet_ntoa (__addr.sin_addr);
+
+          core_print (MSG_INFO, "IPC: Client connected from IP %s (#%d).\n", ip, i);
           ipc_clients[i].sock=__sock;
           sock_set_nonblock (__sock, 1);
-          sock_answer (__sock, "Ok\n------------------------\n%s IPC interface greets you.\nYou must authentificate you to restricted stuff.\nType `help' for help :)\n------------------------\n\n", PACKAGE_NAME);
+
+          ipc_clients[i].authontificated=0;
+          ipc_clients[i].access=0;
+          strcpy (ipc_clients[i].login, "");
+
+          ipc_clients[i].timestamp=time (0);
+          uid_gen (ipc_clients[i].uid);
+
+          sock_answer (__sock, "+OK\n------------------------\n%s IPC interface greets you.\nYou must authentificate yourself to get access to restricted stuff.\nType `help' for help :)\n------------------------\n\n", CORE_PACKAGE_NAME);
           break;
         }
     }
@@ -134,13 +153,14 @@ int
 ipc_listen                         (void)
 {
   int acc_s;
-  struct sockaddr addr;
+  struct sockaddr_in addr;
   socklen_t len;
   if (ipc_inet<0) return -1;
   len=sizeof (addr);
-  if ((acc_s=accept (ipc_inet, &addr, &len))>=0)
+  memset (&addr, 0, sizeof (addr));
+  if ((acc_s=accept (ipc_inet, (struct sockaddr*)&addr, &len))>=0)
     {
-      ipc_init_client (acc_s);
+      ipc_init_client (acc_s, addr);
     }
   return 0;
 }
@@ -148,16 +168,45 @@ ipc_listen                         (void)
 static int
 ipc_parse_client                   (ipc_client_t *__self)
 {
-  int argc=0;
-  char **argv=0;
-  if (__self->cmd[0]==0) return 0;
-  cmd_parse_buf (__self->cmd, &argv, &argc);
+  int argc=0, n, i, j;
+  char **argv=0, cmd_buf[65536]={0};
+  if (!__self->cmd || __self->cmd[0]==0) return 0;
+
+  strcpy (cmd_buf, __self->cmd);
+
+  i=0;
+  n=strlen (__self->cmd);
+  while (__self->cmd[i]<' ' && i<n)
+    i++;
+
+  j=0;
+  for (; i<n; i++)
+    {
+      if (__self->cmd[i]=='\n') break;
+      cmd_buf[j++]=__self->cmd[i];
+    }
+  cmd_buf[j]=0;
+
+  j=0;
+  for (i++; i<n; i++)
+    __self->cmd[j++]=__self->cmd[i];
+  __self->cmd[j]=0;
+
+  LOG ("IPC", "Command from client #%d: %s\n", __self->id, cmd_buf);
+
+  cmd_parse_buf (cmd_buf, &argv, &argc);
   ipc_current_client=__self;
   if (argc>0)
     if (cmd_context_execute_proc (ipc_cmd_context, argv, argc))
-      sock_answer (__self->sock, "Command unknown: `%s'\n", argv[0]);
+      sock_answer (__self->sock, "-ERR Unknown command: `%s'\n", argv[0]);
   cmd_free_arglist (argv, argc);
-  __self->cmd[0]=0;
+
+  if (!__self->cmd)
+    {
+      free (__self->cmd);
+      __self->cmd=0;
+    }
+//  __self->cmd[0]=0;
   return 0;
 }
 
@@ -192,8 +241,24 @@ ipc_interact                       (void)
             } else
             if (len!=0) // Socket is non-blocking, so `0' means error - socket closed by foreign host
               {
+                int cmd_len=0;
+                char *scmd=0;
                 in_buf[len]=0;
-                strcpy (ipc_clients[i].cmd, in_buf);
+                cmd_len=len;
+
+                if (ipc_clients[i].cmd)
+                  cmd_len+=strlen (ipc_clients[i].cmd);
+
+                scmd=ipc_clients[i].cmd;
+                ipc_clients[i].cmd=malloc (cmd_len+1);
+                strcpy (ipc_clients[i].cmd, "");
+                if (scmd)
+                  {
+                    strcpy (ipc_clients[i].cmd, scmd);
+                    free (scmd);
+                  }
+                strcat (ipc_clients[i].cmd, in_buf);
+//                strcpy (ipc_clients[i].cmd, in_buf);
               } else
               {
                 // Connection to client losted :(
@@ -215,7 +280,13 @@ ipc_disconnect_client              (ipc_client_t *__self, int __send_info)
         sock_answer (__self->sock, "You have been disconnected from server.\n");
       sock_destroy (__self->sock);
       __self->authontificated=0;
-      core_print (MSG_INFO, "IPC: Client diconnected (#%d).\n", __self->id);
+      __self->access=0;
+      strcpy (__self->login, "");
+      strcpy (__self->uid, "");
+
+      if (!shutdowning) // For more sucky beauty
+        core_print (MSG_INFO, "IPC: Client disconnected (#%d).\n", __self->id);
+
       __self->sock=-1;
     }
   return 0;
@@ -225,6 +296,12 @@ ipc_client_t *
 ipc_get_current_client             (void)
 {
   return ipc_current_client;
+}
+
+ipc_client_t *
+ipc_get_client_by_id               (int __id)
+{
+  return &ipc_clients[__id];
 }
 
 int

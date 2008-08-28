@@ -290,3 +290,17 @@ is_truth                          (char *__self)
   free (pchar);
   return res;
 }
+
+double
+fabs                               (double __self)
+{
+  return ((__self>0)?(__self):(-__self));
+}
+
+double
+sign                               (double __self)
+{
+  if (fabs (__self)<1e-8) return 0;
+  if (__self>0) return 1;
+  return -1;
+}

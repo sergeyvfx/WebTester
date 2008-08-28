@@ -16,18 +16,45 @@
 #define IPC_MAX_CLIENT_COUNT 1024
 
 #include <libwebtester/cmd.h>
+#include <libwebtester/sock.h>
+
+#include <time.h>
 
 typedef struct
 {
-  int id;
-  int sock;
-  char cmd[65535];
-  
-  int authontificated;
-  char user_login[1024];
-  int user_access;
+  int  id;
+  int  sock;
 
+//  char cmd[65535];
+  char *cmd;
+
+  int  authontificated;
+  char login[1024];
+  int  access;
+
+  unsigned long flags;
+
+  time_t timestamp;
+  char uid[64];
 } ipc_client_t;
+
+////////
+//
+
+#define IPC_PROC_ANSWER(__text,__args...) \
+  sock_answer (ipc_get_current_client ()->sock, __text, ##__args)
+
+#define IPC_PROC_ACCESS \
+  (ipc_get_current_client ()->access)
+
+#define IPC_ADMIN_REQUIRED \
+  if (IPC_PROC_ACCESS<7) { \
+    IPC_PROC_ANSWER ("-ERR You must have administrator previleges to run this command\n"); \
+    return 0; \
+  }
+
+////////
+//
 
 typedef int (*ipc_printf_proc_t)   (const char *__text, ...);
 
@@ -45,6 +72,9 @@ ipc_interact                       (void);
 
 int
 ipc_disconnect_client              (ipc_client_t *__self, int __send_info);
+
+ipc_client_t*
+ipc_get_client_by_id               (int __id);
 
 ipc_client_t*
 ipc_get_current_client             (void);

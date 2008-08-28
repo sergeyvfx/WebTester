@@ -52,6 +52,7 @@ gpasswd -a nazgul webtester
 ./stuff/mkdistdir.sh /webtester/lib/plugins          webtester webtester 0775
 ./stuff/mkdistdir.sh /webtester/lib/modules          webtester webtester 0775
 ./stuff/mkdistdir.sh /webtester/include              webtester webtester 0775
+./stuff/mkdistdir.sh /webtester/include/libwebtester webtester webtester 0775
 ./stuff/mkdistdir.sh /webtester/conf                 webtester webtester 0770
 ./stuff/mkdistdir.sh /webtester/tmp                  webtester webtester 0775
 ./stuff/mkdistdir.sh /webtester/var                  webtester webtester 0775
@@ -62,8 +63,10 @@ gpasswd -a nazgul webtester
 
 # Step 3: Coping files
 ./stuff/echo.sh "Installing config files..."
-./stuff/cpfile.sh /etc/webtester.conf /conf/webtester.conf webtester webtester 0660
-./stuff/cpfile.sh /etc/lrvm.conf      /conf/lrvm.conf      webtester webtester 0660
+./stuff/cpfile.sh /etc/webtester.conf  /conf/webtester.conf  webtester webtester 0660
+./stuff/cpfile.sh /etc/gwebtester.conf /conf/gwebtester.conf webtester webtester 0664
+./stuff/cpfile.sh /etc/lrvm.conf       /conf/lrvm.conf       webtester webtester 0640
+./stuff/cpfile.sh /etc/users.conf      /conf/users.conf      webtester webtester 0640
 
 ./stuff/echo.sh "Installing binaries..."
 ./stuff/install_bins.sh
@@ -77,6 +80,7 @@ gpasswd -a nazgul webtester
 ./stuff/echo.sh "Installing includes..."
 ./stuff/cpfile.sh /src/stuff/testlib/testlib.h     /include/testlib.h   webtester webtester 0664
 ./stuff/cpfile.sh /src/stuff/testlib++/testlib++.h /include/testlib++.h webtester webtester 0664
+./stuff/cpfile.sh /src/libwebtester/*.h   /include/libwebtester webtester webtester 0664
 
 ./stuff/echo.sh "Installing plugins..."
 ./stuff/install_plugins.sh
@@ -102,6 +106,8 @@ fpc $SRC_TOPDIR/src/stuff/testlib.pas/testlib.pas > /dev/null
 ./stuff/cpfile.sh /src/stuff/testlib.pas/testlib.o    /var/fpc/units/testlib.o     webtester webtester 0664
 
 ./stuff/echo.sh "Copying scripts..."
+./stuff/cpfile.sh /src/stuff/scripts/lrvm_killall.sh   /sbin/lrvm_killall.sh  webtester webtester 0750
+
 ./stuff/mkdistdir.sh /webtester/usr           webtester webtester 0775
 ./stuff/mkdistdir.sh /webtester/usr/scripts   webtester webtester 0775
 
@@ -110,6 +116,9 @@ fpc $SRC_TOPDIR/src/stuff/testlib.pas/testlib.pas > /dev/null
 ./stuff/cpfile.sh /src/stuff/scripts/check_all/check_entry.sh    /usr/scripts/check_all/check_entry.sh  webtester webtester 0775
 ./stuff/cpfile.sh /src/stuff/scripts/check_all/files.info        /usr/scripts/check_all/files.info      webtester webtester 0644
 ./stuff/cpfile.sh /src/stuff/scripts/check_all/tests.info        /usr/scripts/check_all/tests.info      webtester webtester 0644
+
+./stuff/mkdistdir.sh /webtester/usr/scripts/init.d   webtester webtester 0775
+./stuff/cpfile.sh /src/stuff/scripts/init.d/webtester            /usr/scripts/init.d/webtester  webtester webtester 0775
 
 ./stuff/echo.sh "Copying checkers..."
 ./stuff/mkdistdir.sh /webtester/usr/checkers   webtester webtester 0775
@@ -126,11 +135,25 @@ cd $SRC_TOPDIR/src/stuff/scripts/install
 
 ./stuff/echo.sh "Installing helpers..."
 ./stuff/mkdistdir.sh /webtester/usr/helpers   webtester webtester 0775
-./stuff/cpfile.sh /src/stuff/helpers/genpass.c     /usr/helpers/genpass.c   webtester webtester 0644
+./stuff/cpfile.sh /src/stuff/helpers/genpass.c     /usr/helpers/genpass.c    webtester webtester 0644
+./stuff/cpfile.sh /src/stuff/helpers/ipcpassenc.c  /usr/helpers/ipcpassenc.c webtester webtester 0644
 cd $DIST_DIR/webtester/usr/helpers
 gcc -o genpass genpass.c
+gcc -I$DIST_DIR/webtester/include -L$DIST_DIR/webtester/lib -lwebtester -o ipcpassenc ipcpassenc.c
 cd $SRC_TOPDIR/src/stuff/scripts/install
 
+./stuff/echo.sh "Installing pixmaps..."
+./stuff/install_pixmaps.sh
+
+./stuff/echo.sh "Installing data..."
+./stuff/mkdistdir.sh /webtester/var/data webtester webtester 0775
+./stuff/mkdistdir.sh /webtester/var/data/Informatics webtester webtester 0775
+./stuff/cpdir.sh /data/Informatics/chroot /var/data/Informatics webtester webtester 0775
+
+./stuff/echo.sh "Installing init.d scripts..."
+cp $SRC_TOPDIR/src/stuff/scripts/init.d/webtester  /etc/init.d/webtester
+chown root:root /etc/init.d/webtester
+chmod 0775 /etc/init.d/webtester
 
 #
 ./stuff/echo.sh "Copying other stuff..."

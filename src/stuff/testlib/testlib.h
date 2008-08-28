@@ -106,13 +106,14 @@ main                               (int __argc, char **__argv)
 
   if (__argc>4 && !strcmp (__argv[4], "-s"))
     testlib_silent (1);
-
+    
   inf=fopen (__argv[1], "r");
   ouf=fopen (__argv[2], "r");
   ans=fopen (__argv[3], "r");
 
   if (!ouf)
     Quit (_PE, "File not found");
+
 
   testlib_set_output_stream (ouf);
 

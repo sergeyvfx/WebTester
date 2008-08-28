@@ -18,6 +18,7 @@
 #include <libwebtester/fs.h>
 #include <libwebtester/md5.h>
 #include <libwebtester/log.h>
+#include <libwebtester/mutex.h>
 
 #include <stdio.h>
 
@@ -48,8 +49,8 @@
 #define CHECK_LIMITS(__proc, __state) \
   { \
     /*  Check for RSS memory limit */ \
-    if ((__proc).limits.rss_mem>0 && (__proc).limits.rss_mem<RUN_PROC_RSSUSAGE (__proc)) {\
-      __state|=PS_MEMORYLIMIT; printf ("%lld %lld\n", (__proc).limits.rss_mem, RUN_PROC_RSSUSAGE (__proc)); }\
+    if ((__proc).limits.rss_mem>0 && (__proc).limits.rss_mem<RUN_PROC_RSSUSAGE (__proc)) \
+      __state|=PS_MEMORYLIMIT; \
     /* Check for elapsed time limit */  \
     if ((__proc).limits.time>0 && (__proc).limits.time<RUN_PROC_TIMEUSAGE (__proc)) \
       __state|=PS_TIMELIMIT; \
@@ -139,11 +140,12 @@ generate_security_hash             (char *__self)
 static void
 fill_security_info                 (run_process_info_t *__self)
 {
-  char pchar[RUN_HASH_LENGTH+64];
+  char pchar[RUN_HASH_LENGTH+64], dummy[128];
   generate_security_hash (__self->security_hash);
 
   sprintf (pchar, "##%s@%ld##", __self->security_hash, __self->unique);
-  md5_crypt (pchar, SECURITY_MAGICK, __self->security_key);
+  md5_crypt (pchar, SECURITY_MAGICK, dummy);
+  strcpy (__self->security_key, dummy+8);
   memset (pchar, 0, sizeof (pchar));
 }
 
@@ -277,6 +279,8 @@ static void
 proc_fill_from_stats               (run_process_info_t *__self, struct taskstats __stats)
 {
 
+  DWORD dummy;
+
   //
   // TODO:
   //  Some troubles with base memory because of optimizer and memory manager.
@@ -284,11 +288,17 @@ proc_fill_from_stats               (run_process_info_t *__self, struct taskstats
 
   __self->r_usage.rss_mem = ACC_RSSMEM_USAGE (__stats)-__self->r_base.rss_mem*0;
 
+  //
+  // TODO;
+  //  But maybe we shuold zerolize RSS memory usage in negative situation?
+  //
+
   if (!(rss_correction<0 && __self->r_usage.rss_mem<-rss_correction))
     __self->r_usage.rss_mem+=rss_correction;
 
-  if (ACC_TIME_USAGE   (__stats)>=__self->r_base.time+time_correction) // But are we really need this?
-    __self->r_usage.time    = ACC_TIME_USAGE   (__stats)-__self->r_base.time+time_correction; else
+  dummy=ACC_TIME_USAGE   (__stats);
+  if (dummy>=__self->r_base.time-time_correction) // But are we really need this?
+    __self->r_usage.time    = dummy-__self->r_base.time+time_correction; else
     __self->r_usage.time    = 0;
 }
 
@@ -355,19 +365,19 @@ belts_dyna_deleter                (void *__self)
 static void    // Append process to LibRUN's belts
 belts_append                      (run_process_info_t* __self)
 {
-  g_mutex_lock (belts_mutex);
+  mutex_lock (belts_mutex);
   // Save timestamp
   __self->timestamp=now ();
   dyna_append (belts, __self, 0);
   RUN_PROC_SET_FLAG (*__self, PF_INBELTS);
-  g_mutex_unlock (belts_mutex);
+  mutex_unlock (belts_mutex);
 }
 
 static void     // Remove process from LibRUN's belts entry
 belts_remove                      (run_process_info_t* __self)
 {
   dyna_item_t *item;
-  g_mutex_lock (belts_mutex);
+  mutex_lock (belts_mutex);
 
   if (RUN_PROC_TEST_FLAG (*__self, PF_INBELTS))
     {
@@ -380,7 +390,7 @@ belts_remove                      (run_process_info_t* __self)
       RUN_PROC_FREE_FLAG (*__self, PF_INBELTS);
     }
 
-  g_mutex_unlock (belts_mutex);
+  mutex_unlock (belts_mutex);
 }
 
 ////
@@ -487,7 +497,7 @@ run_belts_overview                 (void)
   timeval_t cur_time;
 
   // Lock belts' mutex
-  g_mutex_lock (belts_mutex);
+  mutex_lock (belts_mutex);
 
   cur_time=now ();
 
@@ -538,7 +548,7 @@ run_belts_overview                 (void)
       DEBUG_LOG ("librun", "Overviewving status for process %d completed\n", proc->unique);
     }
   // Unlock belts' mutex
-  g_mutex_unlock (belts_mutex);
+  mutex_unlock (belts_mutex);
 }
 
 ////////////////////////////////////////
@@ -604,7 +614,7 @@ run_init                           (void)
     g_thread_init (0);
 
   belts       = dyna_create ();  // Create belts
-  belts_mutex = g_mutex_new ();  // Create belts's mutex
+  belts_mutex = mutex_create ();  // Create belts's mutex
 
   if (run_unique_init ())
     return -1;
@@ -623,7 +633,7 @@ run_done                           (void)
   dyna_destroy (belts, belts_dyna_deleter);
 
   if (belts_mutex)
-    g_mutex_free (belts_mutex);
+    mutex_free (belts_mutex);
 
   run_unique_done ();
 }
@@ -923,10 +933,10 @@ run_process_info_t*
 run_process_info_by_unique        (long __unique)
 {
   dyna_item_t *item;
-  g_mutex_lock (belts_mutex);
+  mutex_lock (belts_mutex);
   dyna_search_reset (belts);
   item=dyna_search (belts, &__unique, 0, belts_unique_comparator);
-  g_mutex_unlock (belts_mutex);
+  mutex_unlock (belts_mutex);
   return dyna_data (item);
 }
 

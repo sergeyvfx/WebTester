@@ -20,8 +20,7 @@
 #define HOOK_PRIORITY_NORMAL 2
 #define HOOK_PRIORITY_HIGHT  (HOOK_MAX_PRIORITY - 1)
 
-
-typedef int (*hook_callback_proc)   (void *__userData);
+typedef int (*hook_callback_proc)   (void *__userData, void *__callData);
 
 typedef struct {
   hook_callback_proc callback;
@@ -34,7 +33,7 @@ typedef hook_t *hook_node_t;
 int
 hook_init                          (void);
 
-int
+void
 hook_done                          (void);
 
 int
@@ -44,9 +43,9 @@ int
 hook_unregister                    (char *__proc, hook_callback_proc __callback, int __priority);
 
 int
-hook_call                          (char *__proc);
+hook_call                          (char *__proc, void *__data);
 
 int
-hook_call_backward                 (char *__proc);
+hook_call_backward                 (char *__proc, void *__data);
 
 #endif

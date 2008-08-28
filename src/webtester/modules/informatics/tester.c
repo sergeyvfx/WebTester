@@ -19,10 +19,13 @@
 #include <libwebtester/regexp.h>
 #include <libwebtester/util.h>
 #include <libwebtester/fs.h>
+#include <libwebtester/mutex.h>
+
 #include <librun/run.h>
+
 #include <testlib/testlib.h>
 
-#include <glib.h>
+//#include <glib.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -67,17 +70,17 @@
 
 // Check module's active in testing loop
 #define LOOP_CHECK_ACTIVE \
-  if (g_mutex_trylock (active)) \
+  if (mutex_trylock (active)) \
     { \
-      g_mutex_unlock (active); \
+      mutex_unlock (active); \
       goto __done_; \
     }
 
 // Check module's active after testing loop
 #define LOOP_DONE_CHECK_ACTIVE \
-  if (g_mutex_trylock (active)) \
+  if (mutex_trylock (active)) \
     { \
-      g_mutex_unlock (active); \
+      mutex_unlock (active); \
       /* Checking has been interrupted. */ \
       /* So there is nothing interesting in testing dir. */ \
       unlinkdir (__cur_testing_dir); \
@@ -86,9 +89,9 @@
 
 // Check module's active in main testing thread
 #define TESTING_CHECK_ACTIVE \
-  if (g_mutex_trylock (active)) \
+  if (mutex_trylock (active)) \
     { \
-      g_mutex_unlock (active); \
+      mutex_unlock (active); \
       goto __free_; \
     }
 
@@ -153,6 +156,8 @@ static char solution_exec_group[4096]="";
 
 static BOOL use_chroot=FALSE;
 
+static mutex_t suspended=0;
+
 // Null-terminated list of required input task's params
 static char *required_params[]=
   { "SOURCE",
@@ -167,8 +172,56 @@ static char *required_params[]=
     0
   };
 
+static char chroot_items[64][64]={{0}};
+
 ///////////////////////////////////
 // Internal stuff
+
+static void
+copy_chroot_data                   (char *__dst_dir)
+{
+  char src_dir[4096];
+  static char init=FALSE;
+
+  INF_DEBUG_LOG ("Copying chroot data to %s\n", __dst_dir);
+
+  sprintf (src_dir, "%s/chroot", data_dir);
+  fcopydir (src_dir, __dst_dir);
+  
+  sprintf (src_dir, "%s/chroot", data_dir);
+
+  if (!init)
+    {
+      // Cache list of items, needed by chrooting
+      dynastruc_t *ls;
+      int count=0;
+      char *cur_dir;
+      ls=dir_listing (src_dir);
+
+      DYNA_FOREACH (ls, cur_dir);
+        strcpy (chroot_items[count++], cur_dir);
+      DYNA_DONE;
+
+      dyna_destroy (ls, dyna_deleter_free_ref_data);
+      init=TRUE;
+    }
+}
+
+static void
+remove_chroot_data                 (char *__dir)
+{
+  int i=0;
+  char full[4096];
+
+  INF_DEBUG_LOG ("Removing chroot data from %s\n", __dir);
+
+  while (chroot_items[i][0])
+    {
+      sprintf (full, "%s/%s", __dir, chroot_items[i]);
+      unlinkdir (full);
+      i++;
+    }
+}
 
 ////////////////////////////////////////
 // Different stuff
@@ -442,11 +495,12 @@ testing_main_loop                  (wt_task_t *__self,
 
   ////////
   // Unpack tests' data
-  char *tests_pchar=TASK_INPUT_PARAM (*__self, "TESTS");
+  char *tests_pchar=TASK_INPUT_PARAM (*__self, "TESTS"), effective_tests[4096];
   char **tests_pchar_arr=0;
   int tests[MAX_TESTS];  // Points for tests
 
-  int tests_count=explode (tests_pchar, " ", &tests_pchar_arr);
+  trim (tests_pchar, effective_tests);
+  int tests_count=explode (effective_tests, " ", &tests_pchar_arr);
 
   for (i=0; i<tests_count; i++)
     tests[i]=atoi (tests_pchar_arr[i]);
@@ -467,6 +521,10 @@ testing_main_loop                  (wt_task_t *__self,
 
   INF_PCHAR_KEY (execfn,  "FileToExec");
   strcat (execfn, COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self), "OutputExtension", ""));
+
+  // Copying all libs/binaries needed for correct running of solution
+  if (use_chroot)
+    copy_chroot_data (__cur_testing_dir);
 
   // Cycle by tests
   INF_DEBUG_LOG ("Task %ld. Begin cycle by tests\n", __self->sid);
@@ -513,12 +571,12 @@ testing_main_loop                  (wt_task_t *__self,
           LOOPCRASH;
         }
 
-      INF_DEBUG_LOG ("Task %ld test %d: solution exit with exit_code %d, rss_usage %lld and time_usage %lld\n", __self->sid, i,
+      INF_DEBUG_LOG ("Task %ld test #%d: solution exit with exit_code %d, rss_usage %lld and time_usage %lld\n", __self->sid, i,
         RUN_PROC_EXITCODE (*proc), RUN_PROC_RSSUSAGE (*proc), RUN_PROC_TIMEUSAGE (*proc));
-      
+
       // Overview solution's status
-      if (RUN_PROC_MEMORYLIMIT  (*proc)) ERR (ML, "ML") else
-      if (RUN_PROC_TIMELIMIT    (*proc)) ERR (TL, "TL") else
+      if (RUN_PROC_MEMORYLIMIT      (*proc)) ERR (ML, "ML") else
+      if (RUN_PROC_TIMELIMIT        (*proc)) ERR (TL, "TL") else
       if (PROCESS_RUNTIME_ERROR (*proc)) ERR (RE, "RE") else
         {
           if (!fexists (full_output))
@@ -622,6 +680,8 @@ __done_:
 
   assarr_set_value (__params, "TESTS", strdup (tests_res_pchar));
 
+  remove_chroot_data (__cur_testing_dir);
+
   LOOP_DONE_CHECK_ACTIVE;
 
   if (!CR)
@@ -673,6 +733,7 @@ print_common_info                  (wt_task_t *__self)
 	TASK_LOG (*__self, "    Solution ID : %ld\n", __self->sid);
 	TASK_LOG (*__self, "    Problem ID  : %s\n",  (char*)assarr_get_value (__self->input_params, "PROBLEMID"));
 	TASK_LOG (*__self, "    Compiler ID : %s\n",  (char*)assarr_get_value (__self->input_params, "COMPILERID"));
+	TASK_LOG (*__self, "    TESTS       : %s\n",  (char*)assarr_get_value (__self->input_params, "TESTS"));
 	TASK_LOG (*__self, "\n");
 }
 
@@ -707,7 +768,7 @@ unlink_unwanted_testing_dirs       (void)
   static timeval_t last_unlink;
   timeval_t cur=now ();
 
-  g_mutex_lock (unlink_mutex);
+  mutex_lock (unlink_mutex);
   INF_DEBUG_LOG ("Start unlinking unwanted dirs\n");
 
   if (!initialized)
@@ -733,13 +794,13 @@ unlink_unwanted_testing_dirs       (void)
         sprintf (full, "%s/%s", testing_dir, cur_dir);
         unlinkdir (full);
         to_delete--;
-      DYNA_DONE ();
+      DYNA_DONE;
 
       dyna_destroy (ls, dyna_deleter_free_ref_data);
       last_unlink=cur;
     }
 
-  g_mutex_unlock (unlink_mutex);
+  mutex_unlock (unlink_mutex);
   INF_DEBUG_LOG ("Unwanted dirs have been just deleted\n");
 }
 
@@ -936,7 +997,7 @@ read_config                        (void)
 
   INF_PCHAR_KEY (dummy, "ChRoot");
   use_chroot=is_truth (dummy);
-  
+
   ////
   // Get security info
 
@@ -957,12 +1018,13 @@ Informatics_init_testing           (void)
 {
   read_config ();
 
-  active       = g_mutex_new ();
-  unlink_mutex = g_mutex_new ();
+  active       = mutex_create ();
+  unlink_mutex = mutex_create ();
+  suspended    = mutex_create ();
 
   create_testing_pool ();
 
-  g_mutex_lock (active);
+  mutex_lock (active);
 
   return TRUE;
 }
@@ -970,28 +1032,31 @@ Informatics_init_testing           (void)
 void            // Uninitialize testing stuff
 Informatics_done_testing           (void)
 {
-  Informatics_stop_testing (0);
+  Informatics_stop_testing (0, 0);
   if (active)
-    g_mutex_free (active);
+    mutex_free (active);
   if (unlink_mutex)
-    g_mutex_free (unlink_mutex);
+    mutex_free (unlink_mutex);
+  if (suspended)
+    mutex_free (suspended);
   if (pool)
     g_thread_pool_free (pool, FALSE, FALSE);
 }
 
 int             // Wait for stopping all testing threads
-Informatics_stop_testing           (void *__unused)
+Informatics_stop_testing           (void *__unused, void *__call_unused)
 {
   if (!active || !pool)
     return -1;
 
-  if (g_mutex_trylock (active))
+  if (mutex_trylock (active))
     {
-      g_mutex_unlock (active);
+      mutex_unlock (active);
       return -1;
     }
 
-  g_mutex_unlock (active);
+  // IMHO it is the best way to wait for all threads is finished
+  mutex_unlock (active);
   g_thread_pool_free (pool, FALSE, TRUE);
   create_testing_pool ();
 
@@ -1001,13 +1066,19 @@ Informatics_stop_testing           (void *__unused)
 BOOL            // Creates new testing thread
 Informatics_start_testing_thread   (wt_task_t *__task, char *__error)
 {
-  if (g_mutex_trylock (active))
+
+  // Try to lock `suspended` to make shure stuff is not suspended
+  mutex_lock (suspended);
+  // if locking is completed, unlock `suspended`
+  mutex_unlock (suspended);
+
+  if (mutex_trylock (active))
     {
       strcpy (__error, "Testing stuff is not active");
-      g_mutex_unlock (active);
+      mutex_unlock (active);
       return FALSE;
     }
-  
+
   INF_DEBUG_LOG ("Staring testing thread for task %ld\n", __task->sid);
 
   if (g_thread_pool_get_num_threads (pool)>=max_threads)
@@ -1022,4 +1093,22 @@ Informatics_start_testing_thread   (wt_task_t *__task, char *__error)
   g_thread_pool_push (pool, __task, 0);
 
   return TRUE;
+}
+
+int
+Informatics_SuspendTesting         (void)
+{
+  mutex_lock (suspended);
+
+  // It the simpliest way to free pool
+  g_thread_pool_free (pool, FALSE, TRUE);
+  create_testing_pool ();
+  return 0;
+}
+
+int
+Informatics_ResumeTesting         (void)
+{
+  mutex_unlock (suspended);
+  return 0;
 }

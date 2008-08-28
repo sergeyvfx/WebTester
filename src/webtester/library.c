@@ -115,7 +115,10 @@ wt_load_single_module              (char *__name, int __id)
     }
   dyna_append (modules, ptr, 0);
 
+  plugin_activate_by_fn (full);
+
   SAFE_FREE (full);
+
   CMSG_OK ();
   return 0;
 
@@ -220,6 +223,9 @@ load_single_plugin                 (char *__lib)
       return -1;
     }
   CMSG_OK ();
+
+  plugin_activate_by_fn (full);
+
   free (full);
   return 0;
 }

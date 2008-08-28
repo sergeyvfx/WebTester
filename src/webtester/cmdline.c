@@ -11,6 +11,7 @@
 */
 
 #include <libwebtester/smartinclude.h>
+#include <libwebtester/core.h>
 
 #include <string.h>
 #include "cmdline.h"
@@ -37,5 +38,11 @@ wt_cmdline_parse_args              (int __argc, char **__argv)
           if (CHECK_NEXT)
             wt_set_config_file (NEXT_ARG);
         }
+#ifdef USER_DEBUG
+      if (C_ARG_EQ ("--debug") || C_ARG_EQ ("-d"))
+        {
+          core_enter_debug_mode ();
+        }
+#endif
     }
 }

@@ -24,6 +24,8 @@
 #include <pwd.h>
 #include <grp.h>
 
+#include <errno.h>
+
 #define CONFIG_FILE            "/etc/lrvm.conf"
 
 #define SECURITY_MAGICK        "asdadfad"
@@ -46,6 +48,8 @@ static char *config_allowed_prefixes[]={
   "/home/webtester",
   0
 };
+
+static int allow_uid=0, allow_gid=0;
 
 ////////
 // Some forward defenitions
@@ -161,9 +165,10 @@ term                               (void)
 static void
 validate_security                  (char *__s, long __unique)
 {
-  char tmp[128], key[128];
+  char tmp[128], dummy[128], key[128];
   sprintf (tmp, "##%s@%ld##", __s, __unique);
-  md5_crypt (tmp, SECURITY_MAGICK, key);
+  md5_crypt (tmp, SECURITY_MAGICK, dummy);
+  strcpy (key, dummy+8);
   strcpy (__s, key);
 }
 
@@ -205,12 +210,12 @@ get_gid                            (char *__self)
   return (long)g->gr_gid;
 }
 
-void
-chugid                             (long __ruid, long __rgid, long __uid, long __gid)
+static void
+chugid_prepare                     (long __ruid, long __rgid, long __uid, long __gid)
 {
   char act[10], dst[10], name[1024];
   FILE *stream;
-  int allow_uid=0, allow_gid=0, i, n, j;
+  int i, n, j;
 
   if (!__uid || !__gid || ((__uid<0 || __gid<0) && (!__ruid || !__rgid)))
     {
@@ -218,7 +223,6 @@ chugid                             (long __ruid, long __rgid, long __uid, long _
       lrvm_ipc_done ();
       term ();
     }
-
 
   if (__uid==__ruid && __gid==__rgid)
     return;
@@ -268,10 +272,17 @@ chugid                             (long __ruid, long __rgid, long __uid, long _
     }
 
   fclose (stream);
+}
+
+static void
+chugid                             (long __ruid, long __rgid, long __uid, long __gid)
+{
+  if (__uid==__ruid && __gid==__rgid)
+    return;
 
   if (setgroups (0, NULL)<0)
     {
-      lrvm_ipc_send_command ("exec_error", "\"Unable to call setgroups()\"");
+      lrvm_ipc_send_command ("exec_error", "\"Unnable to call setgroups()\"");
       lrvm_ipc_done ();
       term ();
     }
@@ -321,10 +332,10 @@ main                               (int __argc, char **__argv)
   // Send PID of this stuff 
   printf ("%u@", getpid ());
   fflush (0);
-  
+
   signal (SIGINT,  signal_term);
   signal (SIGHUP,  signal_term);
-  //signal (SIGSTOP, signal_term);
+//  signal (SIGSTOP, signal_term);
   signal (SIGTERM, signal_term);
 
   strcpy (config_file, CONFIG_FILE);
@@ -357,7 +368,7 @@ main                               (int __argc, char **__argv)
       if (C_ARG_EQ ("-config-file") && i<__argc-1)
         strcpy (config_file, __argv[++i]);
 
-      if (C_ARG_EQ ("-chroot") && i<__argc-1)
+      if (C_ARG_EQ ("-chroot"))
         use_chroot=1, i++;
     }
 
@@ -401,9 +412,11 @@ main                               (int __argc, char **__argv)
         return -1;
 
       case 0:
+        chugid_prepare (ruid, rgid, uid, gid);
+
+        chdir (workdir);
         if (use_chroot)
-          chroot (workdir); else
-          chdir (workdir);
+          chroot (workdir);
 
         chugid (ruid, rgid, uid, gid);
 

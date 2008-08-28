@@ -1,5 +1,8 @@
 List of known bugs:
 
+	- A very strange segfoltings of server's frontend :(
+
+Closed, but not with 100% guarantee:
 	- Strange segfolting at random moment.
 	- Time limit exceeding while executing checker in Informatics library.
   - Maybe error in seekeof() in testlib.pas.

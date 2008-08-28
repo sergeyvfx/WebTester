@@ -17,8 +17,6 @@
 #include <libwebtester/dynastruc.h>
 #include <libwebtester/plugin-defs.h>
 
-int
-plugin_load                        (char *__fn);
 
 int
 plugin_probe                       (plugin_t *__self);
@@ -26,8 +24,34 @@ plugin_probe                       (plugin_t *__self);
 int
 plugin_register                    (plugin_t *__self);
 
+
+int
+plugin_load                        (char *__fn);
+
+int
+plugin_unload                      (plugin_t *__self);
+
 int
 plugin_unload_with_fn              (char *__fn);
+
+int
+plugin_activate                    (plugin_t *__self);
+
+int
+plugin_activate_by_name            (char *__name);
+
+int
+plugin_activate_by_fn              (char *__fn);
+
+int
+plugin_deactivate                  (plugin_t *__self);
+
+int
+plugin_deactivate_by_fn            (char *__fn);
+
+int
+plugin_deactivate_by_name          (char *__name);
+
 
 void
 plugin_unload_all                  (void);

@@ -18,9 +18,7 @@ static int debugMode=0;
 void
 core_enter_debug_mode              (void)
 {
-#ifdef __DEBUG
   debugMode=1;
-#endif
 }
 
 int

@@ -11,9 +11,10 @@
 #include "scheduler.h"
 #include "dynastruc.h"
 #include "util.h"
+#include "mutex.h"
 
 #include <malloc.h>
-#include <glib.h>
+
 
 #define CHECK() \
     if (!mutex || !scheduler) return -1;
@@ -36,7 +37,7 @@ typedef struct {
 //
 
 static dynastruc_t *scheduler = 0;
-static GMutex      *mutex    = 0;
+static mutex_t       mutex    = 0;
 
 ////////////////////////////////////////
 //
@@ -68,7 +69,7 @@ int             // Initialize scheduler stuff
 scheduler_init                     (void)
 {
   scheduler=dyna_create ();
-  mutex=g_mutex_new ();
+  mutex=mutex_create ();
   return 0;
 }
 
@@ -78,7 +79,7 @@ scheduler_done                     (void)
   if (scheduler)
     dyna_destroy (scheduler, dyna_deleter_free_ref_data);
   if (mutex)
-    g_mutex_free (mutex);
+    mutex_free (mutex);
 }
 
 int             // Add task to scheduler
@@ -88,15 +89,15 @@ scheduler_add                      (scheduler_callback __callback, void *__data,
 
   CHECK ();  
   
-  g_mutex_lock (mutex);
+  mutex_lock (mutex);
   item=spawn_new_item (__callback, __data, __interval);
   if (!item)
     {
-      g_mutex_unlock (mutex);
+      mutex_unlock (mutex);
       return -1;
     }
   dyna_append (scheduler, item, 0);
-  g_mutex_unlock (mutex);
+  mutex_unlock (mutex);
   return 0;
 }
 
@@ -108,7 +109,7 @@ scheduler_remove                   (scheduler_callback __callback)
 
   CHECK_VOID ();
 
-  g_mutex_lock (mutex);
+  mutex_lock (mutex);
   
   cur=dyna_head (scheduler);
   
@@ -122,7 +123,7 @@ scheduler_remove                   (scheduler_callback __callback)
         dyna_delete (scheduler, dummy, dyna_deleter_free_ref_data);
     }
   
-  g_mutex_unlock (mutex);
+  mutex_unlock (mutex);
 }
 
 void
@@ -133,7 +134,7 @@ scheduler_overview                 (void)
 
   CHECK_VOID ();
 
-  g_mutex_lock (mutex);
+  mutex_lock (mutex);
 
   cur_time=now ();
   
@@ -143,7 +144,7 @@ scheduler_overview                 (void)
         item->callback (item->data);
         item->last_call=cur_time;
       }
-  DYNA_DONE ();
+  DYNA_DONE;
   
-  g_mutex_unlock (mutex);
+  mutex_unlock (mutex);
 }

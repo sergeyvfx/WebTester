@@ -38,7 +38,7 @@ sock_create_inet                   (char *__host, unsigned int __port)
     return -1;
   name.sin_family=AF_INET;
   name.sin_port=htons (__port);
-  
+
   if (__host==0 || !strcmp (__host, "") || !strcmp (__host, "*"))
     name.sin_addr.s_addr=htonl (INADDR_ANY); else
     name.sin_addr.s_addr=inet_addr (__host);
@@ -88,7 +88,7 @@ sock_answer                        (int __sock, char* __text, ...)
   char print_buf[BUFSIZE];
   int result;
   PACK_ARGS (__text, print_buf, BUFSIZE);
-  result=send (__sock, print_buf, strlen (print_buf), 0);
+  result=send (__sock, print_buf, strlen (print_buf), MSG_NOSIGNAL);
   if (result < 0)
     if (errno != EWOULDBLOCK)
       return -1;

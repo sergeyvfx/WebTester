@@ -17,7 +17,7 @@
 #include "webinterface.h"
 
 static int
-activate                           (void *__unused)
+activate                           (void *__unused, void *__call_unused)
 {
   if (webiface_transport_init ())
     {
@@ -28,7 +28,7 @@ activate                           (void *__unused)
 }
 
 static int
-deactivate                         (void *__deactivate)
+deactivate                         (void *__deactivate, void *__call_unused)
 {
   webiface_transport_done ();
   core_print (MSG_INFO, "    **** HTTP WebIface access plugin deactivated,\n");
@@ -60,7 +60,9 @@ static plugin_info_t Info={
   WEBIFACE_MINOR_VERSION,
 
   0,
-  OnUnload
+  OnUnload,
+  0,
+  0
 };
 
 PLUGIN_INIT  (WEBIFACE_LIBNAME, Init, Info);

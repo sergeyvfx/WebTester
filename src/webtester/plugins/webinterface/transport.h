@@ -13,6 +13,7 @@
 
 #include <libwebtester/dynastruc.h>
 #include <libwebtester/network-soup.h>
+#include <libwebtester/types.h>
 #include <webtester/task.h>
 
 int             // Initialize 
@@ -44,5 +45,11 @@ webiface_prepare_url               (char *__self, char *__out);
 
 http_message_t* // Send simple message with URL
 webiface_send_message              (char *__url);
+
+DWORD
+webiface_bytes_send                (void);
+
+DWORD
+webiface_bytes_recv                (void);
 
 #endif

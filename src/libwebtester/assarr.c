@@ -169,6 +169,20 @@ assarr_unset_value                 (assarr_t *__self, char *__key, assarr_delete
   return 0;
 }
 
+int
+assarr_unset_all                   (assarr_t *__self, assarr_deleter __deleter)
+{
+  char *k;
+  void *v;
+  if (!__self) return -1;
+  
+  ASSARR_FOREACH_DO ((*__self), k, v);
+    assarr_unset_value (__self, k, __deleter);
+  ASSARR_FOREACH_DONE
+  
+  return 0;
+}
+
 // Pack assaciative array to string
 void
 assarr_pack                        (assarr_t *__self, char **__out)

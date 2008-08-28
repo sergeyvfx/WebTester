@@ -11,8 +11,13 @@
 #include "autoinc.h"
 #include "queue.h"
 #include "task.h"
+#include "stat.h"
 
 #include <libwebtester/dynastruc.h>
+#include <libwebtester/ipc.h>
+
+////////
+//
 
 // Size of task queue
 static long queue_size    = QUEUE_SIZE;
@@ -21,6 +26,13 @@ static long unpack_count  = UNPACK_COUNT;
 
 // Task QUEUE
 static dynastruc_t *queue = NULL;
+
+static BOOL active = FALSE;
+
+////
+
+static int
+ipc_queue                          (int __argc, char **__argv);
 
 ////
 //
@@ -45,6 +57,12 @@ wt_queue_init                      (void)
   read_config ();
   queue=dyna_create ();
   if (!queue) return -1;
+
+  ipc_proc_register ("queue", ipc_queue);
+
+  wt_stat_set_int ("Queue.Size",   queue_size);
+  wt_stat_set_int ("Queue.Active", FALSE);
+
   return 0;
 }
 
@@ -57,7 +75,19 @@ wt_queue_done                      (void)
 int
 wt_queue_update                    (void)
 {
-  return wt_get_task_list (queue, queue_size);
+  int res;
+  static int update=TRUE;
+  if (!active) // Queue is not active
+    {
+      if (update)
+        wt_stat_set_int ("Queue.Usage", wt_queue_length ());
+      update=FALSE;
+      return 0;
+    }
+  update=TRUE;
+  res=wt_get_task_list (queue, queue_size);
+  wt_stat_set_int ("Queue.Usage", wt_queue_length ());
+  return res;
 }
 
 void            // Unpack parameters for some tasks
@@ -73,7 +103,7 @@ wt_queue_unpack                    (void)
         wt_get_task (task);
         got++;
       }
-  DYNA_DONE ();
+  DYNA_DONE;
 }
 
 void            // Free all cells of queue
@@ -104,4 +134,85 @@ dynastruc_t*
 wt_queue                           (void)
 {
   return queue;
+}
+
+void
+wt_queue_start                     (void)
+{
+  if (!active)
+    {
+      _INFO ("    Queue started\n");
+      active=TRUE;
+      wt_stat_set_int ("Queue.Active", TRUE);
+    } else
+      _INFO ("    Queue is already started\n");
+}
+
+void
+wt_queue_stop                      (void)
+{
+  if (active)
+    {
+      _INFO ("    Queue stopped\n");
+      active=FALSE;
+      wt_stat_set_int ("Queue.Active", FALSE);
+    } else
+      _INFO ("    Queue is already stopped\n");
+}
+
+////////
+// IPC builtin
+
+static int
+ipc_queue_start                    (int __argc, char **__argv)
+{
+  IPC_ADMIN_REQUIRED
+  if (active)
+    { 
+      IPC_PROC_ANSWER ("-ERR Queue is already started\n");
+      return 0;
+    }
+
+  wt_queue_start ();
+  IPC_PROC_ANSWER ("+OK Queue started\n");
+
+  return 0;
+}
+
+static int
+ipc_queue_stop                     (int __argc, char **__argv)
+{
+  IPC_ADMIN_REQUIRED
+  if (!active)
+    { 
+      IPC_PROC_ANSWER ("-ERR Queue is already stopped\n");
+      return 0;
+    }
+
+  wt_queue_stop ();
+  IPC_PROC_ANSWER ("+OK Queue stopped \n");
+
+  return 0;
+}
+
+static int
+ipc_queue                          (int __argc, char **__argv)
+{
+  if (__argc!=2)
+    goto __usage_;
+
+  if (!strcmp (__argv[1], "start"))
+    {
+      ipc_queue_start (__argc, __argv);
+    } else
+  if (!strcmp (__argv[1], "stop"))
+    {
+      ipc_queue_stop (__argc, __argv);
+    } else
+      goto __usage_;
+
+  return 0;
+__usage_:
+  IPC_PROC_ANSWER ("-ERR: Usage: `queue [start|stop]`\n");
+  return 0;
 }

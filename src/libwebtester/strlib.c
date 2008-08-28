@@ -198,6 +198,6 @@ trim                               (char *__data, char *__out)
     last--;
   
   for (i=first; i<=last; i++)
-    __out[len++]=__data[first];
+    __out[len++]=__data[i];
   __out[len]=0;
 }

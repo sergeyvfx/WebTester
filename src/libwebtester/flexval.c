@@ -271,6 +271,50 @@ flexval_unserialize                (char *__data)
   return flexval_unserialize_entry (__data, 0, 0);
 }
 
+void
+flexval_serialize_entry            (flex_value_t *__self, char *__res)
+{
+  if (!__self) return;
+
+  if (__self->type==FVT_STRING || __self->type==FVT_UNDEFINED)
+    {
+      strcat (__res, "\"");
+      strcat (__res, flexval_get_string (__self));
+      strcat (__res, "\"");
+    } else
+  if (__self->type==FVT_INTEGER)
+    {
+      char dummy[1024];
+      sprintf (dummy, "%ld", flexval_get_int (__self));
+      strcat (__res, dummy);
+    } else
+  if (__self->type==FVT_FLOAT)
+    {
+      char dummy[1024];
+      sprintf (dummy, "%lf", flexval_get_float (__self));
+      strcat (__res, dummy);
+    } else
+  if (__self->type==FVT_ARRAY)
+    {
+      int i, n;
+      strcat (__res, "[");
+      for (i=0, n=FLEXVAL_ARRAY_LENGTH (__self); i<n; i++)
+        {
+          flexval_serialize_entry (FLEXVAL_ARRAY_ELEM (__self, i), __res);
+          if (i!=n-1)
+            strcat (__res, " ");
+        }
+      strcat (__res, "]");
+    }
+}
+
+void
+flexval_serialize                  (flex_value_t *__self, char *__res)
+{
+  strcpy (__res, "");
+  flexval_serialize_entry (__self, __res);
+}
+
 ////////////////////////////////////////
 //
 
@@ -588,6 +632,47 @@ flexval_array_append_array         (flex_value_t *__self, flex_value_t **__data)
   flexval_set_array (&data, __data);
   flexval_array_append (__self, &data);
   flexval_free (&data);
+}
+
+int
+flexval_cmp                        (flex_value_t *__a, flex_value_t *__b)
+{
+
+  if (__a->type!=__b->type)
+    return -2;
+
+  if (__a->type==FVT_UNDEFINED)
+    return 0;
+
+  if (__a->type!=FVT_ARRAY)
+    return strcmp (__a->pchar, __b->pchar);
+  
+  char a[65536], b[65536];
+  flexval_serialize (__a, a);
+  flexval_serialize (__b, b);
+
+  return strcmp (a, b);
+}
+
+void
+flexval_copy                       (flex_value_t *__src, flex_value_t *__dst)
+{
+  if (!__src || !__dst) return;
+  if (__src->type==FVT_UNDEFINED) return;
+  
+  if (__src->type==FVT_INTEGER)
+    flexval_set_int (__dst, __src->integer); else
+  if (__src->type==FVT_FLOAT)
+    flexval_set_float (__dst, __src->real); else
+  if (__src->type==FVT_STRING)
+    flexval_set_string (__dst, __src->pchar); else
+  if (__src->type==FVT_ARRAY)
+    {
+      //
+      // TODO:
+      //  Do not forget to write this stuff!!
+      //
+    }
 }
 
 ////////////////////////////////////////

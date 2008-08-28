@@ -78,6 +78,9 @@ assarr_set_value                   (assarr_t *__self, char *__key, void *__value
 int             // Unset value by key
 assarr_unset_value                 (assarr_t *__self, char *__key, assarr_deleter __deleter);
 
+int             // Unset all values
+assarr_unset_all                   (assarr_t *__self, assarr_deleter __deleter);
+
 // !!! WARNING !!! Works ONLY with PCHAR data
 void            // Pack assarr PCHAR data to string
 assarr_pack                        (assarr_t *__self, char **__out);

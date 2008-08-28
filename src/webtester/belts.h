@@ -21,6 +21,8 @@
 // Default size of belts
 #define BELTS_SIZE   4
 
+#define BELTS_AUTOSTART 0
+
 int             // Max avaliable size of belts
 wt_belts_size                      (void);
 
@@ -47,6 +49,12 @@ wt_belts_full                      (void);
 
 long            // Current length of belts
 wt_belts_length                    (void);
+
+void
+wt_belts_start                     (void);
+
+void
+wt_belts_stop                      (void);
 
 #ifndef _wt_task_h
 void

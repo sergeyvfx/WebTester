@@ -1,0 +1,17 @@
+.SILENT:
+include ../../../../mk/rules.mk
+include ../../../../mk/init.mk
+
+srcdir = .
+top_builddir = ../../../..
+
+OBJECTIVE_LIBS = libpipe.so
+
+CFLAGS += -Wall @GLIB_CFLAGS@ @GTHREAD_CFLAGS@ @SOUP_CFLAGS@  -I../../..  
+
+SOURCES = \
+	pipe.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../../mk/objective.mk

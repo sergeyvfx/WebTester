@@ -19,6 +19,7 @@
 #include <malloc.h>
 
 #include <webtester/belts.h>
+#include <webtester/stat.h>
 
 #include "transport.h"
 
@@ -44,6 +45,9 @@ static http_session_t *http_session=NULL;
 static BOOL use_ssl=FALSE;
 static char proxy[1024]={0};
 static char ssl_ca_file[4096]={0};
+
+static unsigned long long bsend = 0;
+static unsigned long long brecv = 0;
 
 ////////////////////////////////////////
 // General stuff
@@ -163,10 +167,23 @@ get_resetstatus_url                (char *__out)
 static http_message_t* // Send simple message with URL
 send_message                       (char *__url)
 {
+  char dummy[1024];
   http_message_t *msg=http_message_prepare ("GET", __url);
   if (!msg) return 0;
   soup_message_set_flags (msg, SOUP_MESSAGE_NO_REDIRECT);
   http_session_send_message (http_session, msg);
+
+  bsend+=strlen (__url);
+  brecv+=HTTP_RESPONSE_LENGTH (msg);
+
+  //
+  // TODO:
+  //  Use pchar-ed data because flexval stuff works only with long-typed numbers
+  //
+
+  sprintf (dummy, "%lld", bsend); wt_stat_set_string ("Plugins.WebInterface.BytesSend", dummy);
+  sprintf (dummy, "%lld", brecv); wt_stat_set_string ("Plugins.WebInterface.BytesRecv", dummy);
+
   return msg;
 }
 
@@ -412,4 +429,16 @@ http_message_t* // Send simple message with URL
 webiface_send_message              (char *__url)
 {
   return send_message (__url);
+}
+
+DWORD
+webiface_bytes_send                (void)
+{
+  return bsend;
+}
+
+DWORD
+webiface_bytes_recv                (void)
+{
+  return brecv;
 }

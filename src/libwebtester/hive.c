@@ -106,6 +106,22 @@ hive_add_variable	               (hive_item_t *__self, char *__name, char *__val
   return 0;
 }
 
+int
+hive_copy_childs               (hive_item_t *__dst, hive_item_t *__src)
+{
+  hive_item_t *node;
+
+  if (!__dst || !__src || !__src->nodes) return -1;
+  if (!__dst->nodes)
+    __dst->nodes = dyna_create ();
+
+  DYNA_FOREACH (__src->nodes, node);
+    dyna_add_to_back (__dst->nodes, node, 0);
+  DYNA_DONE;
+
+  return 0;
+}
+
 ////////////////////////////////////////
 // Parsing stuff
 
@@ -221,7 +237,7 @@ hive_parser_iteration              (char *__token, char *__data, long *__linenum
 }
 
 int
-hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__error)
+hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__error, char *__cur_dir)
 {
   char *shift;
   char token[1024];
@@ -246,17 +262,28 @@ hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__
       if (flags&HPF_ARRAY && state!=1) { ERROR ("Unexpected array at line %ld", line); return -1; }
       if (*token=='#' && !(flags&HPF_STRING))
        {
-       
-         //
-         // TODO:
-         //  !!Big troubles!!
-         //  #include will be working correctly only if this directive is the direct child of ROOT
-         //
-
          if (!strcmp (token, "#include"))
            {
+             char fn[4096];
+             hive_item_t *node;
+             dynastruc_t *dummy=0;
              shift=hive_parser_iteration (token, shift, &line, &flags,error);
-             hive_parse_file (token, __self, __error);
+             
+             if (token[0]!='/')
+               sprintf (fn, "%s/%s", __cur_dir, token); else
+               strcpy (fn, token);
+
+             hive_parse_file (fn, &dummy, __error);
+             node= dyna_data (dyna_head (dummy));
+             hive_copy_childs (current_node, node);
+             
+             if (node)
+               {
+                 if (node->header.name)
+                   free (node->header.name);
+                 free (node);
+               }
+             dyna_destroy (dummy, 0);
            } else
            {
              ERROR ("Invalid preprocessor derictive at line %ld", line);
@@ -352,12 +379,18 @@ hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__
 int
 hive_parse_file                    (char *__fn, dynastruc_t **__self, char *__error)
 {
-  char *data;
+  char *data, dir[4096];
   int result;
   data=fload (__fn);
   if (!data)
-    return -1;
-  result=hive_parse_buf (data, __self, __error);
+    {
+      strcpy (__error, "Unable to load buffer from file");
+      return -1;
+    }
+
+  dirname (__fn, dir);
+
+  result=hive_parse_buf (data, __self, __error, dir);
   free (data);
   return result;
 }

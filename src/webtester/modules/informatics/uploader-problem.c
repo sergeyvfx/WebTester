@@ -19,6 +19,8 @@
 #include <libwebtester/regexp.h>
 #include <libwebtester/network-smb.h>
 
+#include <libwebtester/mutex.h>
+
 #include <webtester/transport.h>
 
 #include "informatics.h"
@@ -26,6 +28,8 @@
 
 #include <memory.h>
 #include <unistd.h>
+
+#include <glib.h>
 
 static BOOL active=TRUE;
 
@@ -68,7 +72,8 @@ static char *required_params[]={
   0
 };
 
-static BOOL uploading = FALSE;
+static GThread *thread = 0;
+static mutex_t mutex=0;
 
 ////////
 //
@@ -498,7 +503,6 @@ __fail_:
 //
 ////////////////////////////////////////
 
-
 static void
 put_problem                        (assarr_t *__params, char *__err, char *__desc)
 {
@@ -554,17 +558,11 @@ check_params                       (assarr_t *__self)
   return TRUE;
 }
 
-int
-Informatics_UploadProblem          (void *__unused)
+static gpointer
+uploading_thread                   (gpointer __unused)
 {
   assarr_t *params;
-
-  if (!samba_initialized ())
-    return 0;
-
-  if (uploading) return 0;
-  uploading=TRUE;
-
+  
   params=assarr_create ();
 
   if (active && send_ipc_request (params))
@@ -573,6 +571,7 @@ Informatics_UploadProblem          (void *__unused)
         {
           char err[1024], desc[65536];
           INF_DEBUG_LOG ("uploader-problem: Start uploading problem\n");
+          Informatics_SuspendTesting ();
           if (check_params (params))
             {
               strcpy (err, "OK");
@@ -582,16 +581,54 @@ Informatics_UploadProblem          (void *__unused)
             } else {
               put_problem (params, "ERR", "Required parameter is undefined");
             }
+          Informatics_ResumeTesting ();
         }
     }
-  uploading=FALSE;
   assarr_destroy (params, assarr_deleter_free_ref_data);
+
+  thread=0;
+
+  g_mutex_unlock (mutex);
+
+  g_thread_exit (0);
   return 0;
 }
 
 int
-Informatics_StopProblemUploading   (void *__unused)
+Informatics_UploadProblem          (void *__unused, void *__call_unused)
+{
+
+  if (!mutex)
+    {
+      mutex=mutex_create ();
+      if (!mutex)
+        return -1;
+    }
+
+  if (g_mutex_trylock (mutex))
+    {
+      if (!samba_initialized ())
+        return 0;
+
+      thread=g_thread_create (uploading_thread, 0, FALSE, 0);
+    }
+
+  return 0;
+}
+
+int
+Informatics_StopProblemUploading   (void *__unused, void *__call_unused)
 {
   active=FALSE;
+  if (mutex)
+    {
+      // Wait for mutex unlock
+      mutex_lock (mutex);
+
+      // Safe freeing of mutex
+      mutex_unlock (mutex);
+      mutex_free (mutex);
+      mutex=0;
+    }
   return 0;
 }

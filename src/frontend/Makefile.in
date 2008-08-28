@@ -1,0 +1,31 @@
+.SILENT:
+
+top_builddir = ../..
+
+include ../../mk/rules.mk
+include ../../mk/init.mk
+
+OBJECTIVE_BINS = gwebtester
+
+LIBADD = -Wl,-export-dynamic -ldl -L../libwebtester -lwebtester  @GLIB_LIBS@ @GTHREAD_LIBS@ @GTK_LIBS@  
+CFLAGS += -I..  @GLIB_CFLAGS@  @GTHREAD_CFLAGS@ @GTK_CFLAGS@ 
+
+HEADERS = 
+SOURCES = \
+	main.c \
+	support.c \
+	interface.c \
+	callbacks.c \
+	builtin.c \
+	console.c \
+	console-cmd.c \
+	console-cmd-line.c \
+	console-builtin.c \
+	iface.c \
+	pipe.c \
+	mainloop.c \
+	stat.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../mk/objective.mk

@@ -15,9 +15,11 @@
 #include <libwebtester/dynastruc.h>
 
 // Default size of queue
-#define  QUEUE_SIZE   4
+#define QUEUE_SIZE   4
 // Default count of unpacking tasks
 #define UNPACK_COUNT  1
+
+#define QUEUE_AUTOSTART 0
 
 ////
 //
@@ -48,5 +50,11 @@ wt_queue_empty                     (void);
 
 dynastruc_t*
 wt_queue                           (void);
+
+void
+wt_queue_start                     (void);
+
+void
+wt_queue_stop                      (void);
 
 #endif

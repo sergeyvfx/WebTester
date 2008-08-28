@@ -51,6 +51,9 @@ static GMutex *working    = NULL;
 // Delay in main loop
 static double delay=MAINLOOP_DELAY;
 
+static BOOL queue_autostart = QUEUE_AUTOSTART;
+static BOOL belts_autostart = BELTS_AUTOSTART;
+
 ////
 // Some prototypes
 
@@ -63,12 +66,15 @@ wt_mainloop                        (gpointer __unused);
 static void     // Read data from config
 read_config                        (void)
 {
-  CONFIG_FLOAT_KEY (queue_update_interval, "Server/MainLoop/QueueUpdateInterval");
-  CONFIG_FLOAT_KEY (belts_update_interval, "Server/MainLoop/BeltsUpdateInterval");
+  CONFIG_FLOAT_KEY (queue_update_interval, "Server/MainLoop/Queue/UpdateInterval");
+  CONFIG_FLOAT_KEY (queue_autostart,       "Server/MainLoop/Queue/Autostart");
+  CONFIG_FLOAT_KEY (belts_update_interval, "Server/MainLoop/Belts/UpdateInterval");
+  CONFIG_FLOAT_KEY (belts_autostart,       "Server/MainLoop/Belts/Autostart");
   CONFIG_FLOAT_KEY (upload_interval,       "Server/MainLoop/UpdateInterval");
   CONFIG_FLOAT_KEY (unpack_interval,       "Server/MainLoop/UnpackInterval");
   CONFIG_FLOAT_KEY (delay,                 "Server/MainLoop/Delay");
   CONFIG_FLOAT_KEY (scheduler_interval,    "Server/Scheduler/OverviewInterval");
+
 
   // Some validators
   RESET_LEZ (queue_update_interval, MAINLOOP_QUEUE_UPDATE_INTERVAL);
@@ -84,7 +90,7 @@ read_config                        (void)
 //
 
 static int      // Start testing main loop
-wt_mainloop_start                  (void *__unused)
+wt_mainloop_start                  (void *__unused, void *__call_unused)
 {
   // Reset status of half-tested tasks
   wt_reset_status ();
@@ -95,7 +101,7 @@ wt_mainloop_start                  (void *__unused)
 }
 
 static int      // Stop testing mainloop
-wt_mainloop_stop                   (void *__unused)
+wt_mainloop_stop                   (void *__unused, void *__call_unused)
 {
   if (g_mutex_trylock (working))
     {
@@ -106,7 +112,7 @@ wt_mainloop_stop                   (void *__unused)
 
   _INFO ("    Sending StopTesting signal to all modules...");
   g_mutex_unlock (working);
-  hook_call (CORE_STOPTESTING);
+  hook_call (CORE_STOPTESTING, 0);
   g_thread_join (mainloop);
   CMSG_DONE ();
 
@@ -150,7 +156,7 @@ wt_mainloop_init                   (void)
 void            // Uninitialize testing mainloop
 wt_mainloop_done                   (void)
 {
-  wt_mainloop_stop (0);
+  wt_mainloop_stop (0, 0);
 
   wt_queue_done ();
   wt_belts_done ();
@@ -167,7 +173,7 @@ wt_mainloop_done                   (void)
 static void
 call_upload_tasks                  (void)
 {
-  hook_call (CORE_UPLOADPROBLEMS); // Call tasks upload hook
+  hook_call (CORE_UPLOADPROBLEMS, 0); // Call tasks upload hook
 }
 
 static gpointer // Main loop
@@ -184,8 +190,13 @@ wt_mainloop                        (gpointer __unused)
 
   last_queue_update = last_belts_update = last_scheduler = last_unpack = last_upload = cur_time = now ();
 
-  timestruc.tv_sec   = ((long)(delay*NSEC_COUNT))/NSEC_COUNT;
-  timestruc.tv_nsec  = ((long)(delay*NSEC_COUNT))%NSEC_COUNT;
+  timestruc.tv_sec   = ((unsigned long long)(delay*NSEC_COUNT))/NSEC_COUNT;
+  timestruc.tv_nsec  = ((unsigned long long)(delay*NSEC_COUNT))%NSEC_COUNT;
+
+  nanosleep (&timestruc, 0);
+
+  if (queue_autostart)  wt_queue_start ();
+  if (belts_autostart)  wt_belts_start ();
 
   core_print (MSG_INFO, "    Waiting for tasks...\n");
   waiting=TRUE;
@@ -232,6 +243,6 @@ wt_mainloop                        (gpointer __unused)
       nanosleep (&timestruc, 0);
       cur_time=now ();
     }
-  g_thread_exit (0);
+//  g_thread_exit (0);
   return 0;
 }

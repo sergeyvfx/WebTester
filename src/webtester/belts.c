@@ -15,11 +15,13 @@
 #include "const.h"
 #include "task.h"
 #include "library.h"
+#include "stat.h"
 
 #include <libwebtester/core.h>
 #include <libwebtester/dynastruc.h>
 #include <libwebtester/conf.h>
 #include <libwebtester/log.h>
+#include <libwebtester/ipc.h>
 
 ////
 // Macroses
@@ -32,6 +34,14 @@
 static dynastruc_t *belts = NULL;
 static long belts_size    = BELTS_SIZE;
 static BOOL global_state_changed = FALSE;
+
+static BOOL active = FALSE;
+
+////
+//
+
+static int
+ipc_belts                          (int __argc, char **__argv);
 
 ////
 //
@@ -60,6 +70,12 @@ wt_belts_init                      (void)
   read_config ();
   belts=dyna_create ();
   if (!belts) return -1;
+
+  ipc_proc_register ("belts", ipc_belts);
+
+  wt_stat_set_int ("Belts.Size",   belts_size);
+  wt_stat_set_int ("Belts.Active", FALSE);
+
   return 0;
 }
 
@@ -268,6 +284,10 @@ wt_belts_update                    (void)
   int   belts_length, queue_length;
   BOOL stateChanged   = FALSE;
   static BOOL waiting = FALSE;
+  static int update=TRUE;
+
+  if (!active)  // Belts is not active
+    return 0;
 
   queue=wt_queue ();
 
@@ -284,9 +304,19 @@ wt_belts_update                    (void)
           _INFO ("    Overviewing completed\n");
         }
       waiting=TRUE;
+
+      if (update)
+        {
+          wt_stat_set_int ("Belts.Usage", wt_belts_length ());
+          wt_stat_set_int ("Queue.Usage", wt_queue_length ());
+        }
+
+      update=FALSE;
+
       return 0;
     }
   waiting=FALSE;
+  update=TRUE;
 
   global_state_changed=FALSE;
   // Overview only it is posibility of some changes
@@ -304,7 +334,8 @@ wt_belts_update                    (void)
       _INFO ("    Overviewing completed\n");
     }
 
-
+  wt_stat_set_int ("Belts.Usage", wt_belts_length ());
+  wt_stat_set_int ("Queue.Usage", wt_queue_length ());
 
   return 0;
 }
@@ -331,4 +362,85 @@ void
 wt_belts_status_changed            (void)
 {
   global_state_changed=TRUE;
+}
+
+void
+wt_belts_start                     (void)
+{
+  if (!active)
+    {
+      _INFO ("    Belts started\n");
+      active=TRUE;
+      wt_stat_set_int ("Belts.Active", TRUE);
+    } else
+      _INFO ("    Belts is already started\n");
+}
+
+void
+wt_belts_stop                      (void)
+{
+  if (active)
+    {
+      _INFO ("    Belts stopped\n");
+      active=FALSE;
+      wt_stat_set_int ("Belts.Active", FALSE);
+    } else
+      _INFO ("    Belts is already stopped\n");
+}
+
+////////
+// IPC builtin
+
+static int
+ipc_belts_start                    (int __argc, char **__argv)
+{
+  IPC_ADMIN_REQUIRED
+  if (active)
+    { 
+      IPC_PROC_ANSWER ("-ERR Belts is already started\n");
+      return 0;
+    }
+
+  wt_belts_start ();
+  IPC_PROC_ANSWER ("+OK Belts started\n");
+
+  return 0;
+}
+
+static int
+ipc_belts_stop                     (int __argc, char **__argv)
+{
+  IPC_ADMIN_REQUIRED
+  if (!active)
+    { 
+      IPC_PROC_ANSWER ("-ERR Belts is already stopped\n");
+      return 0;
+    }
+
+  wt_belts_stop ();
+  IPC_PROC_ANSWER ("+OK Belts stopped\n");
+
+  return 0;
+}
+
+static int
+ipc_belts                          (int __argc, char **__argv)
+{
+  if (__argc!=2)
+    goto __usage_;
+
+  if (!strcmp (__argv[1], "start"))
+    {
+      ipc_belts_start (__argc, __argv);
+    } else
+  if (!strcmp (__argv[1], "stop"))
+    {
+      ipc_belts_stop (__argc, __argv);
+    } else
+      goto __usage_;
+
+  return 0;
+__usage_:
+  IPC_PROC_ANSWER ("-ERR: Usage: `belts [start|stop]`\n");
+  return 0;
 }

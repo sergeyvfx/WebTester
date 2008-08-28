@@ -4,6 +4,8 @@
  *  _webtester.c - part of the WebTester Server
  * ================================================================================
  *
+ *  Supervisor of WebTester Server.
+ *
  *  Written (by Nazgul) under General Public License.
  *
 */
@@ -21,8 +23,50 @@
 #include <pwd.h>
 #include <grp.h>
 
+#include <string.h>
+
 #define MAX_TRIES   10
 #define TIME_DELTA  60
+
+#define PIDFILE "/home/webtester/var/run/supervisor.pid"
+
+////////
+//
+
+static void
+write_pid                          (void)
+{
+  FILE *f=fopen (PIDFILE, "w");
+  if (!f)
+    return;
+
+  fprintf (f, "%u", getpid ());
+
+  fclose (f);
+}
+
+static void
+rm_pid                             (void)
+{
+  unlink (PIDFILE);
+}
+
+static void
+dirname                            (char *__self, char *__out)
+{
+  int i, n, last;
+
+  n=strlen (__self);
+  last=0;
+
+  for (i=0; i<n; ++i)
+    if (__self[i]=='/')
+      last=i;
+
+  for (i=0; i<last; ++i)
+    __out[i]=__self[i];
+  __out[i]=0;
+}
 
 static long
 wt_get_uid                         (void)
@@ -50,32 +94,56 @@ change_privilegies                 (void)
 
   if (uid<0 || gid<0)
     {
-      printf ("Unable to determine webtester UID or GID\n");
+      fprintf (stderr, "Unable to determine webtester UID or GID\n");
+      rm_pid ();
+      exit (1);
+    }
+
+  if (ruid || rgid)
+    {
+      fprintf (stderr, "WebTester must be run by superuser\n");
+      rm_pid ();
       exit (1);
     }
 
   if (setgroups (0, NULL)<0)
     {
       perror ("setgroups");
+      rm_pid ();
       exit (1);
     }
 
   if (setregid (gid, gid)<0)
     {
       perror ("setregid");
+      rm_pid ();
       exit (1);
     }
 
   if (setreuid (uid, uid)<0)
     {
       perror ("setreuid");
+      rm_pid ();
       exit (1);
     }
 }
 
+////////
+//
+
 static void
 signal_term                        (int __signum)
 {
+  int status;
+
+  // Kill all childrens
+  kill (0, __signum);
+
+  // Wait for all childrens
+  waitpid (-1, &status, WUNTRACED | WCONTINUED);
+
+  rm_pid ();
+  exit (0);
 }
 
 static void
@@ -86,7 +154,10 @@ hook_signals                       (void)
   signal (SIGTERM, signal_term);
 }
 
-static int
+////////
+//
+
+static int      // Can we execute server?
 executable                         (void)
 {
   static int stack[MAX_TRIES+1];
@@ -108,7 +179,6 @@ executable                         (void)
       i++;
     }
 
-
   stack[stack_ptr++]=now;
   return 1;
 }
@@ -118,24 +188,39 @@ exec_server                        (int __argc, char **__argv)
 {
   static int initialized=0;
   static char *argv[4096];
+  static char argv0[4096];
 
   if (!executable ())
     {
+      // Oh, no! We can't execute server!
       fprintf (stderr, "WebTester server crashed %d times in last %d seconds. Not trying to restart.\n", MAX_TRIES, TIME_DELTA);
+      rm_pid ();
       exit (1);
     }
 
+  // Cacheable initialization of different stuff
   if (!initialized)
     {
-      int i;
+      int i, j;
+      char dummy[4096];
+
+      j=1;
       for (i=1; i<__argc; i++)
-        argv[i]=__argv[i];
-      argv[0]      = "./bin/webtester.bin";
+        {
+          if (strcmp (__argv[i], "--fork") && strcmp (__argv[i], "-f"))
+            argv[j++]=__argv[i];
+        }
+
+      dirname (__argv[0], dummy);
+      sprintf (argv0, "%s/bin/webtester.bin", dummy);
+      argv[0]=argv0;
+
       argv[__argc] = 0;
 
       initialized=1;
     }
 
+  // Fork and execute process
   if (fork ()==0)
     {
       execv (argv[0], argv);
@@ -143,36 +228,64 @@ exec_server                        (int __argc, char **__argv)
     }
 }
 
+////////
+// MAIN STUFF
+
 int
 main                               (int __argc, char **__argv)
 {
-  int status, w;
+  int status, w, i;
+  int do_fork=0;
 
-  change_privilegies ();
-  hook_signals ();
-
-  for (;;)
+  for (i=1; i<__argc; i++)
     {
-      exec_server (__argc, __argv);
-      do
+      if (!strcmp (__argv[i], "--fork") || !strcmp (__argv[i], "-f"))
         {
-          waitpid (-1, &status, WUNTRACED | WCONTINUED);
-          if (w == -1) { return -1; }
-          if (WIFEXITED (status))
-            {
-              int exit_code=WEXITSTATUS (status);
-              if (!exit_code)
-                return 0;
-            }
-          if (WIFSIGNALED (status))
-            {
-              int termsig=WTERMSIG (status);
-              fprintf (stderr, "Webtester Server crashed!! Restarting...\n");
-              system ("sudo /home/webtester/sbin/lrvm_killall.sh");
-            }
+          do_fork=1;
         }
-      while (!WIFEXITED (status) && !WIFSIGNALED (status));
     }
 
+  if (!do_fork || (fork()==0))
+    {
+      write_pid ();
+
+      // Some initialization
+      change_privilegies ();
+      hook_signals ();
+
+      for (;;)
+        {
+          exec_server (__argc, __argv);
+          do
+            {
+              w=waitpid (-1, &status, WUNTRACED | WCONTINUED);
+              if (w == -1) { rm_pid (); return -1; }
+              if (WIFEXITED (status))
+                {
+                  int exit_code=WEXITSTATUS (status);
+                  if (!exit_code)
+                    {
+                      rm_pid ();
+                      return 0;
+                    }
+                }
+              if (WIFSIGNALED (status))
+                {
+                  int termsig=WTERMSIG (status);
+                  if (termsig==-1)
+                    {
+                      fprintf (stderr, "WebTester Server finished with exitcode -1. Assuming we don't need to restart server.\n");
+                      rm_pid ();
+                      return 0;
+                    }
+                  fprintf (stderr, "WebTester Server crashed!! Restarting...\n");
+                  system ("sudo /home/webtester/sbin/lrvm_killall.sh");
+                }
+            }
+          while (!WIFEXITED (status) && !WIFSIGNALED (status));
+        }
+      rm_pid ();
+      return 0;
+    }
   return 0;
 }

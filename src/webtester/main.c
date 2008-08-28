@@ -27,6 +27,7 @@
 #include "cmdline.h"
 #include "core.h"
 #include "transport.h"
+#include "stat.h"
 
 #include <libwebtester/smartinclude.h>
 #include <libwebtester/core.h>
@@ -39,6 +40,8 @@
 #include <libwebtester/network-smb.h>
 #include <libwebtester/log.h>
 #include <libwebtester/fs.h>
+#include <libwebtester/util.h>
+#include <libwebtester/thread.h>
 
 #include <dlfcn.h>
 #include <stdio.h>
@@ -122,34 +125,36 @@ wt_set_log_file                    (char *__self)
 int             // Initialization of WebTester Server
 init_instance                      (void)
 {
-  core_init ();
-
-#ifdef __DEBUG
-  core_enter_debug_mode ();
-#endif
-
-  // Print banner
-  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
-  core_print (MSG_INFO, " %s\n", core_get_version_string ());
-  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
-
   // Init threading
-  g_thread_init (NULL);
-  if (!g_thread_supported ())
+  if (thread_init ())
     {
       core_print (MSG_ERROR, "GThreads' stuff is  not supported on your platform.\n    CORE could not be initialized.\n");
       close_instance ();
       return -1;
     }
 
+  core_init ();
+
+  // Print banner
+  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+  core_print (MSG_INFO, " %s\n", core_get_version_string ());
+  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
+
+
   log_init (log_file);
 
-  core_print (MSG_INFO, "Initializing CORE...\n");
+#ifdef __DEBUG
+  core_print (MSG_INFO, "Initializing CORE in DEBUG node...\n");
+#else
+  if (!core_is_debug_mode ())
+    core_print (MSG_INFO, "Initializing CORE...\n"); else
+    core_print (MSG_INFO, "Initializing CORE in DEBUG node...\n");
+#endif
 
   // Hook signals
   signal (SIGINT,  signal_term);
   signal (SIGHUP,  signal_term);
-  signal (SIGSTOP, signal_term);
+//  signal (SIGSTOP, signal_term);
   signal (SIGTERM, signal_term);
 
   // Chech for multiinstances
@@ -166,6 +171,19 @@ init_instance                      (void)
     core_print (MSG_INFO, "ok.\n"); else
     core_print (MSG_ERROR, "failed, Using at most default configuration.\n");
 
+#ifdef USER_DEBUG
+  {
+    char tmp[100]={0};
+    CONFIG_PCHAR_KEY (tmp, "CORE/DebugMode");
+    if (is_truth (tmp))
+      {
+        core_print (MSG_INFO, "    Switching CORE into DEBUG mode... ");
+        core_enter_debug_mode ();
+        core_print (MSG_INFO, "ok.\n");
+      }
+  }
+#endif
+
   core_register_paths_from_config ();
 
   init_iterator ("Initializing scheduler",        scheduler_init,        "", FALSE);
@@ -180,10 +198,12 @@ init_instance                      (void)
   init_iterator ("Initializing HTTP stuff",       http_init,          "", FALSE);
   init_iterator ("Initializing transport stuff",  wt_transport_init,  "", FALSE);
   init_iterator ("Initializing IPC stuff",        wt_ipc_init,        "", FALSE);
+  init_iterator ("Initializing stat stuff",       wt_stat_init,       "", FALSE);
+
   init_iterator ("Initializing testing mainloop", wt_mainloop_init,   "", TRUE);
 
   core_print (MSG_INFO, "CORE initialized. Activating...\n");
-  hook_call (CORE_ACTIVATE);
+  hook_call (CORE_ACTIVATE, 0);
   core_print (MSG_INFO, "CORE activated. %s ready for work.\n", PACKAGE_NAME);
   return 0;
 }
@@ -192,11 +212,13 @@ static void     // Uninitialization of WebTester Server
 close_instance                     (void)
 {
   core_print (MSG_INFO, "Deactivating CORE...\n");
-  hook_call_backward  (CORE_DEACTIVATE);
+  hook_call_backward  (CORE_DEACTIVATE, 0);
   core_print (MSG_INFO, "CORE deactivated.\n");
   core_print (MSG_INFO, "Uninitializing CORE...\n");
 
   close_instance_iterator ("Uninitializing testing mainloop", wt_mainloop_done);
+
+  close_instance_iterator ("Uninitializing stat stuff",       wt_stat_done);
   close_instance_iterator ("Uninitializing IPC stuff",        wt_ipc_done);
   close_instance_iterator ("Uninitializing transport stuff",  wt_transport_done);
   close_instance_iterator ("Uninitializing HTTP stuff",       http_done);
@@ -206,6 +228,7 @@ close_instance                     (void)
   plugin_unload_all ();
 
   close_instance_iterator ("Unloading scheduler",             scheduler_done);
+  close_instance_iterator ("Unloading hooks" ,                hook_done);
 
   delete_pid_file (PID_FILE);
   config_done ();
@@ -213,6 +236,8 @@ close_instance                     (void)
   core_print (MSG_INFO, "Core uninitialized.\n");
   log_done ();
   core_done ();
+
+  thread_done ();
 }
 
 void

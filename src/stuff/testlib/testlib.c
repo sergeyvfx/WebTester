@@ -176,10 +176,10 @@ testlib_read_string                (FILE *__stream, char *__buf, int __maxlen)
     Quit (_CR, "Specified file not opened");
 
   ch=fgetc (__stream);
-
+  
   if (ch==EOF)
     Quit (_PE, "Unexpected end of file");
-
+  
   // Read string
   while (ch!='\n' && ch!='\r' && ch!=EOF && len<__maxlen)
     {
@@ -188,10 +188,8 @@ testlib_read_string                (FILE *__stream, char *__buf, int __maxlen)
     }
 
   if (ch=='\r')
-    {
-      if (fgetc (__stream)!='\n')
-        goback (__stream);
-    }
+    if (fgetc (__stream)!='\n')
+      goback (__stream);
 
   __buf[len]=0;
 }

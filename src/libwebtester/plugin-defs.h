@@ -39,21 +39,30 @@
 struct _plugin_t;
 typedef struct _plugin_t plugin_t;
 
-typedef int (*plugin_init_proc)   (plugin_t *__plugin);
+typedef int (*plugin_init_proc)         (plugin_t *__plugin);
 
-typedef int (*plugin_load_proc)   (plugin_t *__plugin);
-typedef int (*plugin_unload_proc) (plugin_t *__plugin);
+typedef int (*plugin_load_proc)         (plugin_t *__plugin);
+typedef int (*plugin_unload_proc)       (plugin_t *__plugin);
+
+typedef int (*plugin_activate_proc)     (plugin_t *__plugin);
+typedef int (*plugin_deactivate_proc)   (plugin_t *__plugin);
+
 
 typedef struct {
   plugin_init_proc Init;
 } plugin_procs_t;
 
 typedef struct {
+  // General info
   int major_version;
   int minor_version;
 
+  // Callbacks
   plugin_load_proc   plugin_load;
   plugin_unload_proc plugin_unload;
+
+  plugin_activate_proc   plugin_activate;
+  plugin_deactivate_proc plugin_deactivate;
 } plugin_info_t;
 
 struct _plugin_t {
@@ -63,6 +72,8 @@ struct _plugin_t {
   plugin_procs_t procs;
 
   plugin_info_t info;
+
+  int activated;
 };
 
 #include <libwebtester/plugin.h>

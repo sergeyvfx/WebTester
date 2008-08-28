@@ -16,6 +16,7 @@
 #include <libwebtester/dynastruc.h>
 #include <libwebtester/conf.h>
 #include <libwebtester/log.h>
+#include <libwebtester/mutex.h>
 
 #include <time.h>
 #include <malloc.h>
@@ -33,7 +34,7 @@ static double  getstats_delay       = RUN_HV_POOL_GETSTATS_DELAY;
 // MAX counter of tries in GetStats stuff
 static long    getstats_max_counter = RUN_HV_POOL_GETSTATS_MAX_COUNTER;
 
-static GMutex *mutex=NULL;
+static mutex_t mutex=NULL;
 
 ////////////////////////////////////////
 // Internal built-in
@@ -140,14 +141,14 @@ run_hvpool_init                    (void)
 {
   read_config ();
   pool=dyna_create ();
-  mutex=g_mutex_new ();
+  mutex=mutex_create ();
   return 0;
 }
 
 void            // Uninitialize HV pool stuff
 run_hvpool_done                    (void)
 {
-  G_FREE_LOCKED_MUTEX (mutex);
+  mutex_free (mutex);
 
   dyna_destroy (pool, pool_dyna_deleter);
 }
@@ -161,7 +162,7 @@ run_hvpool_put                     (struct taskstats *__self)
   if (!mutex)
     return;
 
-  g_mutex_lock (mutex);
+  mutex_lock (mutex);
 
   DEBUG_LOG ("librun", "hvpool: Put task with pid %u...\n", __self->ac_pid);
 
@@ -192,7 +193,7 @@ run_hvpool_put                     (struct taskstats *__self)
       dyna_append (pool, arr, 0);
     }
 
-  g_mutex_unlock (mutex);
+  mutex_unlock (mutex);
 
   DEBUG_LOG ("librun", "hvpool: Task %u added to pool\n", __self->ac_pid);
 
@@ -205,7 +206,7 @@ run_hvpool_stats_by_pid_iter       (__u32 __pid, struct taskstats *__stats)
   run_hvpool_arr_t *arr;
   int              i;
 
-  g_mutex_lock (mutex);
+  mutex_lock (mutex);
 
   cur=dyna_head (pool);
 
@@ -218,13 +219,13 @@ run_hvpool_stats_by_pid_iter       (__u32 __pid, struct taskstats *__stats)
           if (arr->data[i].t.ac_pid==__pid)
             {
               (*__stats)=arr->data[i].t;
-              g_mutex_unlock (mutex);
+              mutex_unlock (mutex);
               return TRUE;
             }
         }
       cur=dyna_next (cur);
     }
-  g_mutex_unlock (mutex);
+  mutex_unlock (mutex);
 
   return FALSE;
 }
@@ -234,8 +235,8 @@ run_hvpool_stats_by_pid            (__u32 __pid, struct taskstats *__stats)
 {
   long counter=0;
   static struct timespec timestruc;
-  timestruc.tv_sec  = ((long)(getstats_delay*NSEC_COUNT))/NSEC_COUNT;
-  timestruc.tv_nsec = ((long)(getstats_delay*NSEC_COUNT))%NSEC_COUNT;
+  timestruc.tv_sec  = ((unsigned long long)(getstats_delay*NSEC_COUNT))/NSEC_COUNT;
+  timestruc.tv_nsec = ((unsigned long long)(getstats_delay*NSEC_COUNT))%NSEC_COUNT;
 
   DEBUG_LOG ("librun", "hvpool: Get acct status by pid %u\n", __pid);
 

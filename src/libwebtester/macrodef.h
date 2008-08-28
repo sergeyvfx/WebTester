@@ -13,6 +13,7 @@
 #ifndef _macrodef_h_
 #define _macrodef_h_
 
+#include <libwebtester/smartinclude.h>
 #include <libwebtester/core-debug.h>
 #include <libwebtester/log.h>
 
@@ -84,19 +85,12 @@
 #  define DEBUG_LOG(__module, __text, __args...) \
   log_printf ("[DEBUG] "  __module ": " __text, ##__args)
 #else
-#  define DEBUG_LOG(__module, __text, __args...)
+#  ifdef USER_DEBUG
+#    define DEBUG_LOG(__module, __text, __args...) \
+      if (core_is_debug_mode ()) log_printf ("[DEBUG] "  __module ": " __text, ##__args)
+#  else
+#    define DEBUG_LOG(__module, __text, __args...)
+#  endif
 #endif
-
-#define G_SAFE_FREE_MUTEX(__self)\
-  if (__self) { g_mutex_free (__self); __self=0; }
-
-#define G_FREE_LOCKED_MUTEX(__self)\
-  if (__self) \
-    { \
-      g_mutex_lock (__self); \
-      g_mutex_unlock (__self); \
-      g_mutex_free (__self); \
-      __self=0; \
-    }
 
 #endif

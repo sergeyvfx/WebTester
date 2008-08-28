@@ -190,7 +190,7 @@ parse_client                       (run_ipc_client *__self)
 
   // Update last action info
   __self->timestamp=now ();
-
+  
   // If process is locked, the safest way not to execute command
   if (__self->unique>=0)
     {

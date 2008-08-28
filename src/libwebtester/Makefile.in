@@ -37,11 +37,13 @@ SOURCES = \
 	ipc_proc.c \
 	locale.c \
 	md5.c \
+	uid.c \
 	plugin.c \
 	sock.c \
 	utf8.c \
 	unique.c \
 	scheduler.c \
+	thread.c \
 	network-smb.c \
 	network-soup.c
 

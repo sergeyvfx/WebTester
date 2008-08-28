@@ -36,7 +36,7 @@ typedef struct
     long length;
     void **data;
   } array;
-  
+
   //
   int allocated;
 } flex_value_t;
@@ -45,10 +45,10 @@ flex_value_t*
 flexval_alloc                      (void);
 
 flex_value_t*
-flexval_unserialize_entry          (char *__data, int __base_line, char *__error);
-
-flex_value_t*
 flexval_unserialize                (char *__data);
+
+void
+flexval_serialize                  (flex_value_t *__self, char *__res);
 
 void
 flexval_set_string                 (flex_value_t *__self, char *__str);
@@ -130,5 +130,11 @@ flexval_atol                       (char *__self);
 
 double
 flexval_atolf                      (char *__self);
+
+int
+flexval_cmp                        (flex_value_t *__a, flex_value_t *__b);
+
+void
+flexval_copy                       (flex_value_t *__src, flex_value_t *__dst);
 
 #endif

@@ -58,6 +58,7 @@ void
 core_done                          (void)
 {
   core_unregister_paths ();
+  core_io_done ();
 }
 
 time_t

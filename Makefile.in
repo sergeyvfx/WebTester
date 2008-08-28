@@ -40,6 +40,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/webtester.pc.in $(top_srcdir)/configure \
 	$(top_srcdir)/intl/Makefile.in $(top_srcdir)/mk/rules.mk.in \
+	$(top_srcdir)/src/frontend/Makefile.in \
 	$(top_srcdir)/src/librun/Makefile.in \
 	$(top_srcdir)/src/librun/kill/Makefile.in \
 	$(top_srcdir)/src/librun/lrvm/Makefile.in \
@@ -52,6 +53,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/src/webtester/Makefile.in \
 	$(top_srcdir)/src/webtester/modules/informatics/Makefile.in \
 	$(top_srcdir)/src/webtester/modules/nullmodule/Makefile.in \
+	$(top_srcdir)/src/webtester/plugins/nullplugin/Makefile.in \
+	$(top_srcdir)/src/webtester/plugins/pipe/Makefile.in \
 	$(top_srcdir)/src/webtester/plugins/rundll/Makefile.in \
 	$(top_srcdir)/src/webtester/plugins/webinterface/Makefile.in \
 	AUTHORS COPYING ChangeLog INSTALL NEWS TODO config.guess \
@@ -75,8 +78,10 @@ CONFIG_CLEAN_FILES = webtester.pc mk/rules.mk intl/Makefile \
 	src/test/Makefile src/webtester/Makefile \
 	src/webtester/modules/nullmodule/Makefile \
 	src/webtester/modules/informatics/Makefile \
+	src/webtester/plugins/nullplugin/Makefile \
+	src/webtester/plugins/pipe/Makefile \
 	src/webtester/plugins/webinterface/Makefile \
-	src/webtester/plugins/rundll/Makefile
+	src/webtester/plugins/rundll/Makefile src/frontend/Makefile
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -156,6 +161,10 @@ GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
 GTHREAD_LIBS = @GTHREAD_LIBS@
 GTHREAD_PREFIX = @GTHREAD_PREFIX@
 GTHREAD_VERSION = @GTHREAD_VERSION@
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_LIBS = @GTK_LIBS@
+GTK_PREFIX = @GTK_PREFIX@
+GTK_VERSION = @GTK_VERSION@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -378,9 +387,15 @@ src/webtester/modules/nullmodule/Makefile: $(top_builddir)/config.status $(top_s
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/webtester/modules/informatics/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/modules/informatics/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
+src/webtester/plugins/nullplugin/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/plugins/nullplugin/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+src/webtester/plugins/pipe/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/plugins/pipe/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/webtester/plugins/webinterface/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/plugins/webinterface/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/webtester/plugins/rundll/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/plugins/rundll/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+src/frontend/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/frontend/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
@@ -545,7 +560,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/intl $(distdir)/m4 $(distdir)/mk $(distdir)/po $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/test $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
+	$(mkdir_p) $(distdir)/. $(distdir)/intl $(distdir)/m4 $(distdir)/mk $(distdir)/po $(distdir)/src/frontend $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/test $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/nullplugin $(distdir)/src/webtester/plugins/pipe $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

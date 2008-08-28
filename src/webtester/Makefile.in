@@ -18,11 +18,13 @@ SOURCES = \
 	cmdline.c \
 	mainloop.c \
 	ipc.c \
+	ipc_builtin.c \
 	library.c \
 	queue.c \
 	belts.c \
 	task.c \
-	transport.c
+	transport.c \
+	stat.c
 
 OBJECTS = ${SOURCES:.c=.o}
 

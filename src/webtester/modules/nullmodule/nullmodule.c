@@ -16,13 +16,13 @@
 #include <libwebtester/hook.h>
 
 static int
-activate                           (void *__unused)
+activate                           (void *__unused, void *__call_unused)
 {
   return 0;
 }
 
 static int
-deactivate                         (void *__deactivate)
+deactivate                         (void *__unused, void *__call_unused)
 {
   return 0;
 }
@@ -61,7 +61,10 @@ static plugin_info_t Info={
   0,        // Minor version
 
   0,        // Onload handler
-  OnUnload  // OnUnload handler
+  OnUnload, // OnUnload handler
+
+  0,  // No activation callback
+  0   // No deactivation callback
 };
 
 PLUGIN_INIT  ("nullmodule", Init, Info);

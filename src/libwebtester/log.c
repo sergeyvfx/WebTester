@@ -21,13 +21,11 @@
 
 #include <glib.h>
 
-#include "mutex.h"
+#include "thread.h"
 
 static char filename[4096];
 static FILE *stream=0;
 static int put_timestamp=1;
-
-static mutex_t mutex=0;
 
 static void
 logfile_open                       (void)
@@ -109,8 +107,6 @@ check_size                         (void)
 int
 log_init                           (const char *__fn)
 {
-  mutex=mutex_create ();
-
   strcpy (filename, __fn);
 
   logfile_open ();
@@ -124,8 +120,6 @@ void
 log_done                           (void)
 {
   logfile_close ();
-
-  mutex_free (mutex);
 }
 
 void
@@ -134,10 +128,13 @@ log_printf                         (char *__text, ...)
   char print_buf[4096];
   char timestamp[128];
 
-  mutex_lock (mutex);
+  CS_Begin
 
   if (!stream)
-    return;
+    {
+      CS_End
+      return;
+    }
 
   PACK_ARGS (__text, print_buf, 4096);
 
@@ -155,5 +152,5 @@ log_printf                         (char *__text, ...)
 
   check_size ();
 
-  mutex_unlock (mutex);
+  CS_End
 }

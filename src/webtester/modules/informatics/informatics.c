@@ -19,14 +19,14 @@
 #include <libwebtester/scheduler.h>
 
 static int
-activate                           (void *__unused)
+activate                           (void *__unused, void *__call_unused)
 {
   Informatics_init_testing ();
   return 0;
 }
 
 static int
-deactivate                         (void *__deactivate)
+deactivate                         (void *__unused, void *__call_unused)
 {
   Informatics_done_testing ();
   return 0;
@@ -86,8 +86,11 @@ static plugin_info_t Info={
   INFORMATICS_MAJOR_VERSION, // Major version
   INFORMATICS_MINOR_VERSION, // Minor version
 
-  0,        // Onload handler
-  OnUnload  // OnUnload handler
+  0,         // Onload handler
+  OnUnload,  // OnUnload handler
+  
+  0,   // No activation callback
+  0    // No deactivation callback
 };
 
 PLUGIN_INIT  (INFORMATICS_LIBNAME, Init, Info);

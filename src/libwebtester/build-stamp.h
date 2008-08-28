@@ -12,11 +12,10 @@
 
 #ifndef _build_stamp_h_
 
-//#define __UNSTABLE
 //#define __DEBUG
-#undef  __DEBUG
+#undef __DEBUG
+//#define __UNSTABLE
 //#define __TESTING
-#define __STABLE
 #define LINUX
 #define BUILD_HOST  HOST
 

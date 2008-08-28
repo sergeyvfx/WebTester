@@ -1,11 +1,111 @@
+2008-02-13  Sergey Sharybin <sharybin@nm.ru>
+
+	* incformatics/problem-uploader.c :  fixed  incorrect  spawming  of   problem's
+uploading thread. 
+
+  WebTester Server 5.0.1-1 updated.
+
+2008-02-12  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTester Server 5.0.1, WebTester Frontend 1.0.0 released!
+
+2008-01-04  Sergey Sharybin <sharybin@nm.ru>
+
+	Added missing libraries to Informatics to run solutions in fakeroot.
+
+	WebTester Server 5.0.1-RC, WebTester Server Frontend 1.0.0-RC1 is out!
+
+2008-01-02  Sergey Sharybin <sharybin@nm.ru>
+
+	* core-io.c : debugged core_print() to work properly in silent mode.
+
+	Added init.d script.
+
+2007-12-31  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTester Server 5.0.1-RC1, WebTester Server Frontend 1.0.0-RC1 are coming...
+
+2007-12-30  Sergey Sharybin <sharybin@nm.ru>
+
+	Pipe stiff moved to plugin. Added pipe support to frontend. Some strange  bugs
+in frontend has been found. 
+
+	Added read chrooting.
+
+	* lrvm/main.c : debugged chrroting and setugid() splitted into  two  functions:
+setugid_prepare()   whitch  reads  sequrity  information  from  config  file and 
+chugid() whichs changes user and group ID of process.
+
+2007-12-29  Sergey Sharybin <sharybin@nm.ru>
+
+	* fs-packer.c : use ${unpackdir} and ${file} in packer's configuration string.
+
+	Small changes in WebTester Server hypervisor. Added support of `--debug` option
+in command line and CORE/DebugMode in config file.
+
+2007-12-28  Sergey Sharybin <sharybin@nm.ru>
+
+	* informatics/testing.c : added Informatics_SuspendTesting() and
+Informatics_resumeTesting(). Will be usefull for task uploading stuff.
+	* informatics/uploader-problem.c  :  changed   for  usage  of  new  stuff  from
+testing.c
+
+	TODO:
+		* Change unpacker params string mask in config file for using variables, like
+${file}, ${dir}, etc..
+
+2007-12-14  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/hook.h    : added __data parameter to hook_call().
+
+2007-12-12  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/plugin.c  :  added stuff for activating/deactivating plugins.
+
+2007-12-08  Sergey Sharybin <sharybin@nm.ru>
+
+	Started working towards PIPE between server and frontend to send CORE messages.
+
 2007-12-07  Sergey Sharybin <sharybin@nm.ru>
 
-	* testlib.pas    : fixed bug in ReadString()
-
-2007-11-30  Sergey Sharybin <sharybin@nm.ru>
-
-	* librun/run.c   : Fixed  bug  with  incorrect   detecting of  zombies,   added
+	* testlib.pas  : fixed bug in ReadString()
+	* librun/run.c : Fixed  bug  with   incorrect   detecting of   zombies,   added
 corrections of RSS memory and time usage.
+
+2007-11-17  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/flexval.c : added flexval_cmp()
+
+	And a lot of working on stat stuff.
+
+2007-11-10  Sergey Sharybin <sharybin@nm.ru>
+
+	Continue working towards server's  frontend.  Some  bugfixes  in  libwebtester.
+Hard worked towards stat stuff in frontend. Base of its is written.
+
+2007-11-02  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/fs-packer.c : all   packing   and    unpacking  stuff  is    now
+configured  by  config file.
+	* testlib/testlib.c        : closed bug with newlines in testlib_read_string().
+	* libwebtester/util.c      : fixed bug in trim().
+	* informatics/tester.c     : call trim()  before   unpacking  tests. Added some
+additional information to log file.
+
+2007-10-30  Sergey Sharybin <sharybin@nm.ru>
+
+	* stat.c                 : start writting statistics stuff
+	* libwebtester/flexval.c : added flexval_serialize().
+
+2007-10-29  Sergey Sharybin <sharybin@nm.ru>
+
+	Started working under WebTester Server 5.0.1
+
+	* libwebtester/ipc.c : small changes in logging stuff
+	* ipc.c              : added integration  from  libwebtester,  authontification
+stuff.
+	* queue.c, belts.c   : added `active` stuff. Added integration with IPC  stuff.
+  * hive.c             : added including support
 
 2007-10-28  Sergey Sharybin <sharybin@nm.ru>
 

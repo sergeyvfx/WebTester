@@ -48,7 +48,7 @@ BOOL            // Initialize testing stuff
 Informatics_init_testing           (void);
 
 int             // Wait for stopping all testing threads
-Informatics_stop_testing           (void *__unused);
+Informatics_stop_testing           (void *__unused, void *__call_unused);
 
 void            // Uninitialize testing stuff
 Informatics_done_testing           (void);
@@ -69,15 +69,21 @@ Informatics_compiler_common_val    (char *__path);
 //
 
 int
-Informatics_UploadProblem          (void *__unused);
+Informatics_UploadProblem          (void *__unused, void *__call_unused);
 
 int
 Informatics_UploadChecker          (void *__unused);
 
 int
-Informatics_StopCheckerUploading   (void *__unused);
+Informatics_StopCheckerUploading   (void *__unused, void *__call_unused);
 
 int
-Informatics_StopProblemUploading   (void *__unused);
+Informatics_StopProblemUploading   (void *__unused, void *__call_unused);
+
+int
+Informatics_SuspendTesting         (void);
+
+int
+Informatics_ResumeTesting          (void);
 
 #endif

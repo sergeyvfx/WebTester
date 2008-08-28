@@ -25,7 +25,7 @@ main                               (int __argc, char **__argv)
   DYNA_FOREACH (dyna, dir);
   printf ("%s\n", dir);
 
-  DYNA_DONE ();
+  DYNA_DONE;
   
   dyna_destroy (dyna, dyna_deleter_free_ref_data);
 

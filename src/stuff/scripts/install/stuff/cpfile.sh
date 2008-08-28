@@ -8,8 +8,10 @@ DIST_DIR=`./stuff/opt_get.sh DIST_DIR`
 echo -n "Coping file \`$1\`... "
 if ( `cp $SRC_TOPDIR$1 $DIST_DIR/webtester$2 > /dev/null 2>&1` ); then
   echo "ok.";
-  chown $3:$4 "$DIST_DIR/webtester$2";
-  chmod $5 "$DIST_DIR/webtester$2";
+  if ( `test -e "$DIST_DIR/webtester$2"` ); then
+    chown $3:$4 "$DIST_DIR/webtester$2";
+    chmod $5 "$DIST_DIR/webtester$2";
+  fi;
 else
   echo "failed!";
   exit -1;

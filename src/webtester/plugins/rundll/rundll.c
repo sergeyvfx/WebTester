@@ -21,7 +21,7 @@
 #include "rundll.h"
 
 static int
-activate                           (void *__unused)
+activate                           (void *__unused, void *__call_unused)
 {
   // Initialize profiling stuff
 
@@ -35,7 +35,7 @@ activate                           (void *__unused)
 }
 
 static int
-deactivate                         (void *__deactivate)
+deactivate                         (void *__unused, void *__call_unused)
 {
   run_done ();
   core_print (MSG_INFO, "    **** Profiling throught LibRUN is now unavaliable.\n");
@@ -67,7 +67,9 @@ static plugin_info_t Info={
   RUNDLL_MINOR_VERSION,
 
   0,
-  OnUnload
+  OnUnload,
+  0,
+  0
 };
 
 PLUGIN_INIT  (RUNDLL_LIBNAME, Init, Info);

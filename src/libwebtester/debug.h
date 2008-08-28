@@ -13,6 +13,7 @@
 #ifndef _debug_h_
 #define _debug_h_
 
+#include <config.h>
 #include <libwebtester/build-stamp.h>
 #include <libwebtester/core.h>
 #include <libwebtester/debug.h>
@@ -21,7 +22,12 @@
 #  include <stdio.h>
 #  define DEBUG(__text, __args...) core_print (MSG_DEBUG, __text, ##__args)
 #else
-#  define DEBUG(__text, __args...)
+#  ifdef USER_DEBUG
+#    include <stdio.h>
+#    define DEBUG(__text, __args...) printf ("@@@@@@@@@@@2\n");
+#  else
+#    define DEBUG(__text, __args...)
+#  endif
 #endif
 
 #endif

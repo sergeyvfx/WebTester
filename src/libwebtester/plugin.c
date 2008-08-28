@@ -40,6 +40,15 @@ plugin_search_by_fn_comparator     (void *__data, void *__name)
 }
 
 int
+plugin_search_by_ptr_comparator    (void *__left, void *__right)
+{
+  return __left==__right;
+}
+
+////
+//
+
+int
 plugin_call_onload                 (plugin_t *__self)
 {
   if (__self->info.plugin_load)
@@ -54,6 +63,41 @@ plugin_call_onunload               (plugin_t *__self)
     return __self->info.plugin_unload (__self);
   return 0;
 }
+
+int
+plugin_call_activate               (plugin_t *__self)
+{
+  if (__self->info.plugin_activate)
+    return __self->info.plugin_activate (__self);
+  return 0;
+}
+
+int
+plugin_call_deactivate             (plugin_t *__self)
+{
+  if (__self->info.plugin_activate)
+    return __self->info.plugin_deactivate (__self);
+  return 0;
+}
+
+////
+//
+
+plugin_t*
+plugin_by_fn                       (char *__fn)
+{
+  dyna_item_t *item;
+  if (!plugins_registered || !__fn) return 0;
+  dyna_search_reset (plugins_registered);
+  item=dyna_search (plugins_registered, __fn, 0, plugin_search_by_fn_comparator);
+	 if (!item)
+    return 0;
+  return dyna_data (item);
+}
+
+
+////
+//
 
 int
 plugin_load_symbols                (plugin_t *__self)
@@ -142,6 +186,7 @@ plugin_register                    (plugin_t *__self)
 void
 plugin_dyna_deleter                (void *__self)
 {
+  plugin_deactivate (__self);
   plugin_call_onunload (__self);
   plugin_free (__self);
 }
@@ -153,6 +198,19 @@ plugin_unload_with_fn              (char *__fn)
   if (!plugins_registered) return 0;
   dyna_search_reset (plugins_registered);
   item=dyna_search (plugins_registered, __fn, 0, plugin_search_by_fn_comparator);
+	 if (!item)
+    return -1;
+  dyna_delete (plugins_registered, item, plugin_dyna_deleter);
+  return 0;
+}
+
+int
+plugin_unload                      (plugin_t *__self)
+{
+  dyna_item_t *item;
+  if (!plugins_registered) return 0;
+  dyna_search_reset (plugins_registered);
+  item=dyna_search (plugins_registered, __self, 0, plugin_search_by_ptr_comparator);
 	 if (!item)
     return -1;
   dyna_delete (plugins_registered, item, plugin_dyna_deleter);
@@ -195,4 +253,58 @@ plugin_load_error                  (void)
   if (strcmp (error, ""))
     return error;
   return dlerror ();
+}
+
+int
+plugin_activate                    (plugin_t *__self)
+{ 
+  if (!__self)
+     return -1;
+
+  if (__self->activated)
+    return 0;
+
+  if (__self->info.plugin_activate)
+    return __self->info.plugin_activate (__self);
+
+  return 0;
+}
+
+int
+plugin_activate_by_name            (char *__name)
+{
+  return plugin_activate (plugin_search (__name));
+}
+
+int
+plugin_activate_by_fn              (char *__fn)
+{
+  return plugin_activate (plugin_by_fn (__fn));
+}
+
+int
+plugin_deactivate                  (plugin_t *__self)
+{ 
+  if (!__self)
+     return -1;
+
+  if (!__self->activated)
+    return 0;
+
+  if (__self->info.plugin_deactivate)
+    return __self->info.plugin_deactivate (__self);
+
+  return 0;
+}
+
+int
+plugin_deactivate_by_name          (char *__name)
+{
+  return plugin_deactivate (plugin_search (__name));
+}
+
+int
+plugin_deactivate_by_fn            (char *__fn)
+{
+  return plugin_deactivate (plugin_by_fn (__fn));
 }

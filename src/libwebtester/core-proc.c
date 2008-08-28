@@ -19,6 +19,5 @@
 void
 core_kill_process                  (int __pid, int __signal)
 {
-  if (kill (__pid, __signal))
-    perror ("kill");
+  kill (__pid, __signal);
 }

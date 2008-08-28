@@ -53,3 +53,6 @@ banner;
 ./stuff/delete_user.sh webtester-nobody
 ./stuff/delete_group.sh webtester
 ./stuff/delete_group.sh webtester-nobody
+
+unlink /etc/init.d/webtester 
+

@@ -43,6 +43,10 @@
 #define CMSG_FAILED_S(__err)    core_print (MSG_INFO, " failed! %s\n", __err)
 #define CMSG_DONE()             core_print (MSG_INFO, " done.\n")
 
+#define CORE_OUTPUT_LINES       256
+
+#define CORE_PRINT_HOOK 1
+
 int
 core_init                          (void);
 
@@ -125,5 +129,11 @@ core_is_debug_mode                 (void);
 
 void
 core_kill_process                  (int __pid, int __signal);
+
+char**
+core_output_buffer                 (int *__count);
+
+void
+core_io_done                       (void);
 
 #endif

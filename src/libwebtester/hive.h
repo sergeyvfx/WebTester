@@ -56,7 +56,7 @@ int
 hive_add_variable	                 (hive_item_t *__self, char *__name, char *__value, int __flags);
 
 int
-hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__error);
+hive_parse_buf                     (char *__data, dynastruc_t **__self, char *__error, char *__cur_dur);
 
 int
 hive_parse_file                    (char *__fn, dynastruc_t **__self, char *__error);

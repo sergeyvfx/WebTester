@@ -309,7 +309,7 @@ Informatics_UploadChecker          (void *__unused)
 }
 
 int
-Informatics_StopCheckerUploading   (void *__unused)
+Informatics_StopCheckerUploading   (void *__unused, void *__call_unused)
 {
   active=FALSE;
   return 0;

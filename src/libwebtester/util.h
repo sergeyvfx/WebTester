@@ -67,4 +67,10 @@ get_datetime_strf                  (char *__out, int __size, char *__format);
 int
 is_truth                           (char *__self);
 
+double
+fabs                               (double __self);
+
+double
+sign                               (double __self);
+
 #endif
