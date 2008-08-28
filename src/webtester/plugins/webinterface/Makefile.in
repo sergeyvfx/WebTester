@@ -1,0 +1,18 @@
+.SILENT:
+
+top_builddir = ../../../..
+
+include ../../../../mk/rules.mk
+include ../../../../mk/init.mk
+
+OBJECTIVE_LIBS = libwebinterface.so
+
+CFLAGS += @GLIB_CFLAGS@ @SOUP_CFLAGS@ -I..   
+
+SOURCES = \
+	webinterface.c \
+	transport.c \
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../../mk/objective.mk

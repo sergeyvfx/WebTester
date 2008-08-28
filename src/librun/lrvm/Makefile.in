@@ -1,0 +1,21 @@
+.SILENT:
+include ../../../mk/rules.mk
+include ../../../mk/init.mk
+
+srcdir = .
+top_builddir = ../../..
+
+SUBDIRS = 
+
+OBJECTIVE_BINS = lrvm
+
+LIBADD = -ldl @GLIB_LIBS@ -L../../libwebtester -lwebtester  
+CFLAGS += -I.. -I../.. @GLIB_CFLAGS@ 
+
+HEADERS = 
+SOURCES = \
+	main.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../mk/objective.mk

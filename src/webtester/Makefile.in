@@ -1,0 +1,29 @@
+.SILENT:
+
+top_builddir = ../..
+
+include ../../mk/rules.mk
+include ../../mk/init.mk
+
+SUBDIRS = plugins modules 
+
+OBJECTIVE_BINS = webtester.bin
+
+LIBADD = -Wl,-export-dynamic -L$(srcdir)/libwebtester -lwebtester -ldl  @GLIB_LIBS@ @PCRE_LIBS@ @GTHREAD_LIBS@ @SOUP_LIBS@ 
+CFLAGS += @GLIB_CFLAGS@ @PCRE_CFLAGS@ @GTHREAD_CFLAGS@ @SOUP_CFLAGS@  -I./plugins 
+
+HEADERS = 
+SOURCES = \
+	main.c \
+	cmdline.c \
+	mainloop.c \
+	ipc.c \
+	library.c \
+	queue.c \
+	belts.c \
+	task.c \
+	transport.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../mk/objective.mk

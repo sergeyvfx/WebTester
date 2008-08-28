@@ -1,0 +1,23 @@
+.SILENT:
+include ../../../mk/rules.mk
+include ../../../mk/init.mk
+
+srcdir = .
+top_builddir = ../../..
+
+SUBDIRS = 
+
+OBJECTIVE_DATA = \
+	testlib.pc:$(LIBDIR)/pkgconfig
+
+OBJECTIVE_LIBS = libtestlib.so
+
+HEADERS = testlib.h
+
+SOURCES = \
+	testlib.c \
+	util.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../mk/objective.mk

@@ -1,0 +1,21 @@
+.SILENT:
+include ../../mk/rules.mk
+include ../../mk/init.mk
+
+srcdir = .
+top_builddir = ../..
+
+SUBDIRS = checker checker++
+
+OBJECTIVE_BINS = wttest
+
+LIBADD = -L../libwebtester -lwebtester  @GLIB_LIBS@ @PCRE_LIBS@ @GTHREAD_LIBS@ @SOUP_LIBS@ 
+CFLAGS += -Wall -I..  @GLIB_CFLAGS@ @PCRE_CFLAGS@ @GTHREAD_CFLAGS@ @SOUP_CFLAGS@  -I./plugins -I../librun
+
+HEADERS = 
+SOURCES = \
+	main.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../mk/objective.mk

@@ -1,0 +1,18 @@
+.SILENT:
+
+all:
+	printf "%10s     %-20s\n" LINK checker
+	gcc -L../../stuff/testlib -I../../stuff/testlib -ltestlib -o checker main.c
+
+depend:	
+
+configure:	
+
+install:
+
+clean:
+	rm -f checker *.o
+
+distclean:
+	rm -f checker *.o
+

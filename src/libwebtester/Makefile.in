@@ -1,0 +1,52 @@
+.SILENT:
+
+top_builddir = ../..
+
+include ../../mk/rules.mk
+include ../../mk/init.mk
+
+OBJECTIVE_LIBS = libwebtester.so
+
+LIBADD = -ldl  @GLIB_LIBS@ @PCRE_LIBS@ @SOUP_LIBS@ @GTHREAD_LIBS@ @SMBCLIENT_LIBS@  
+CFLAGS +=  @GLIB_CFLAGS@ @PCRE_CFLAGS@ @SOUP_CFLAGS@ @GTHREAD_CFLAGS@ @SMBCLIENT_CFLAGS@ 
+
+HEADERS = 
+SOURCES = \
+	assarr.c \
+	core.c \
+	core-io.c \
+	core-fs.c \
+	core-debug.c \
+	core-error.c \
+	core-proc.c \
+	conf.c \
+	flexval.c \
+	hive.c \
+	ipc.c \
+	pid.c \
+	log.c \
+	regexp.c  \
+	strlib.c \
+	mutex.c \
+	util.c \
+	cmd.c \
+	dynastruc.c \
+	fs.c \
+	fs-packer.c \
+	hook.c \
+	ipc_proc.c \
+	locale.c \
+	md5.c \
+	plugin.c \
+	sock.c \
+	utf8.c \
+	unique.c \
+	scheduler.c \
+	network-smb.c \
+	network-soup.c
+
+#	libgda.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../mk/objective.mk

@@ -1,0 +1,18 @@
+.SILENT:
+include ../../../../mk/rules.mk
+include ../../../../mk/init.mk
+
+srcdir = .
+top_builddir = ../../../..
+
+OBJECTIVE_LIBS = librundll.so
+
+LIBADD = -L ../../../librun -lrun 
+CFLAGS += -Wall @GLIB_CFLAGS@ @GTHREAD_CFLAGS@ @SOUP_CFLAGS@  -I../../..  
+
+SOURCES = \
+	rundll.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../../mk/objective.mk

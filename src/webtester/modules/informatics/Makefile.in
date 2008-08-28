@@ -1,0 +1,23 @@
+.SILENT:
+
+top_builddir = ../../../..
+
+include ../../../../mk/rules.mk
+include ../../../../mk/init.mk
+
+
+OBJECTIVE_LIBS = libinformatics.so
+
+LIBADD = -L$(srcdir)/librun -lrun -lm @GLIB_LIBS@ @GTHREAD_LIBS@ 
+CFLAGS += @GLIB_CFLAGS@ @GTHREAD_CFLAGS@ @SOUP_CFLAGS@ @SMBCLIENT_CFLAGS@ -I$(srcdir)/stuff -I../..  
+
+SOURCES = \
+	informatics.c \
+	compiler.c \
+	tester.c \
+	uploader-problem.c \
+	uploader-checker.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../../mk/objective.mk

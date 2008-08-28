@@ -1,0 +1,5 @@
+List of known bugs:
+
+	- Strange segfolting at random moment.
+	- Time limit exceeding while executing checker in Informatics library.
+  - Maybe error in seekeof() in testlib.pas.

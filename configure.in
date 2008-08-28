@@ -1,0 +1,297 @@
+AC_INIT(webtester, 5.0.0)
+#AC_CONFIG_SRCDIR(src/libwebtester/includes.h)
+AC_CONFIG_MACRO_DIR([m4])
+
+AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+
+AM_MAINTAINER_MODE
+AM_CONFIG_HEADER(config.h)
+
+AC_PROG_CC
+AC_PROG_CPP
+AM_PROG_LEX
+AM_PROG_LIBTOOL
+AC_PROG_INTLTOOL([0.31])
+
+AC_ARG_ENABLE(pidfile, AC_HELP_STRING([--enable-pidfile], [Set the file name to save PID of WebTester (default=/home/webtester/var/run/webtester.pid)]),pidfile="$enableval",pidfile="/home/webtester/var/run/webtester.pid")
+AC_ARG_ENABLE(pidfile, AC_HELP_STRING([--enable-logfile], [Set the file name to save log of WebTester (default=/home/webtester/var/log/webtester.log)]),logfile="$enableval",logfile="/home/webtester/var/log/webtester.log")
+AC_ARG_ENABLE(kernel,  AC_HELP_STRING([--enable-kernel], [Set the release version of kernel to built with]),KERNEL_RELEASE="$enableval",KERNEL_RELEASE=`uname -r`)
+
+dnl make sure we keep ACLOCAL_FLAGS around for maintainer builds to work
+AC_SUBST(ACLOCAL_AMFLAGS, "$ACLOCAL_FLAGS -I m4")
+
+dnl ===================
+dnl Gettext stuff
+dnl ===================
+
+GETTEXT_PACKAGE=webtester
+AC_SUBST(GETTEXT_PACKAGE)
+ALL_LINGUAS="en_GB"
+AM_GLIB_GNU_GETTEXT
+
+
+dnl ===================
+dnl Check for libraries
+dnl ===================
+
+GLIB_REQ=2.6.0
+GMODULE_REQ=2.0.0
+GTHREAD_REQ=2.0.0
+GNOME_REQ=2.0.0
+SOUP_REQ=2.2.3
+PCRE_REQ=6.7
+
+AC_SUBST(GLIB_REQ)
+
+dnl plugin stuff
+dnl ========================
+
+dnl Ok, first we find out what flags we need to use.
+AC_MSG_CHECKING([for what extension and flags to use for plugin compilation])
+case "$target" in
+	*)
+		AC_MSG_RESULT([libdl-compatible: -fPIC -DPIC -shared, .so])
+		PICFLAGS="-fPIC -DPIC"
+		PICLDFLAGS="-fPIC -DPIC -shared"
+		LIBLDFLAGS="-fPIC -DPIC -shared"
+		AUDLDFLAGS="-Wl,-export-dynamic $RPATH_VAL"
+		SHARED_SUFFIX=".so"
+		;;
+esac
+AC_SUBST(PICFLAGS)
+AC_SUBST(PICLDFLAGS)
+AC_SUBST(LIBLDFLAGS)
+AC_SUBST(AUDLDFLAGS)
+AC_SUBST(SHARED_SUFFIX)
+AC_DEFINE_UNQUOTED(SHARED_SUFFIX, "${SHARED_SUFFIX}",
+	[Define the shared module suffix extension on your platform.])
+
+dnl Check for glib
+AC_MSG_CHECKING(if glib >= ${GLIB_REQ} exists)
+if pkg-config --exists glib-2.0 ; then
+    GLIB_CFLAGS=`pkg-config --cflags glib-2.0`
+    GLIB_LIBS=`pkg-config --libs glib-2.0`
+    GLIB_PREFIX=`pkg-config --variable=prefix glib-2.0`
+    GLIB_VERSION=`pkg-config --modversion glib-2.0`
+    AC_SUBST(GLIB_VERSION)
+    AC_SUBST(GLIB_PREFIX)
+    AC_SUBST(GLIB_CFLAGS)
+    AC_SUBST(GLIB_LIBS)
+
+    if pkg-config --exists glib-2.0 '>=' ${GLIB_REQ} ; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_ERROR("only ${GLIB_VERSION} found")
+    fi
+else
+    AC_MSG_ERROR(no)
+fi
+
+dnl Check for gthread
+AC_MSG_CHECKING(if gthread >= ${GTHREAD_REQ} exists)
+if pkg-config --exists gthread-2.0 ; then
+    GLIB_CFLAGS=`pkg-config --cflags gthread-2.0`
+    GLIB_LIBS=`pkg-config --libs gthread-2.0`
+    GLIB_PREFIX=`pkg-config --variable=prefix gthread-2.0`
+    GLIB_VERSION=`pkg-config --modversion gthread-2.0`
+    AC_SUBST(GTHREAD_VERSION)
+    AC_SUBST(GTHREAD_PREFIX)
+    AC_SUBST(GTHREAD_CFLAGS)
+    AC_SUBST(GTHREAD_LIBS)
+
+    if pkg-config --exists gthread-2.0 '>=' ${GTHREAD_REQ} ; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_ERROR("only ${GTHREAD_VERSION} found")
+    fi
+else
+    AC_MSG_ERROR(no)
+fi
+
+dnl Check for gmodule
+AC_MSG_CHECKING(if gmodule >= ${GMODULE_REQ} exists)
+if pkg-config --exists gmodule-2.0 ; then
+    if pkg-config --exists gmodule-2.0 '>=' ${GMODULE_REQ} ; then
+        AC_MSG_RESULT(yes)
+        GMODULE_AVAIL="yes"
+    else
+        AC_MSG_ERROR("only `pkg-config --modversion gmodule-2.0` found")
+        GMODULE_AVAIL="no"
+    fi
+else
+    AC_MSG_ERROR(no)
+    GMODULE_AVAIL="no"
+fi
+AC_SUBST(GMODULE_AVAIL)
+
+dnl Check for libsoup
+AC_MSG_CHECKING(if libsoup >= ${SOUP_REQ} exists)
+if pkg-config --exists libsoup-2.2 ; then
+    SOUP_CFLAGS=`pkg-config --cflags libsoup-2.2`
+    SOUP_LIBS=`pkg-config --libs libsoup-2.2`
+    SOUP_PREFIX=`pkg-config --variable=prefix libsoup-2.2`
+    SOUP_VERSION=`pkg-config --modversion libsoup-2.2`
+    AC_SUBST(SOUP_VERSION)
+    AC_SUBST(SOUP_PREFIX)
+    AC_SUBST(SOUP_CFLAGS)
+    AC_SUBST(SOUP_LIBS)
+
+    if pkg-config --exists libsoup-2.2 '>=' ${SOUP_REQ} ; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_ERROR("only ${SOUP_VERSION} found")
+    fi
+else
+    AC_MSG_ERROR(no)
+fi
+
+dnl Check for libpcre
+AC_MSG_CHECKING(if libpcre >= ${PCRE_REQ} exists)
+if pkg-config --exists libpcre ; then
+    PCRE_CFLAGS=`pkg-config --cflags libpcre`
+    PCRE_LIBS=`pkg-config --libs libpcre`
+    PCRE_PREFIX=`pkg-config --variable=prefix libpcre`
+    PCRE_VERSION=`pkg-config --modversion libpcre`
+    AC_SUBST(PCRE_VERSION)
+    AC_SUBST(PCRE_PREFIX)
+    AC_SUBST(PCRE_CFLAGS)
+    AC_SUBST(PCRE_LIBS)
+
+    if pkg-config --exists libpcre '>=' ${PCRE_REQ} ; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_ERROR("only ${PCRE_VERSION} found")
+    fi
+else
+    AC_MSG_ERROR(no)
+fi
+
+dnl Check for smbclient
+SMBCLIENT_CFLAGS=""
+SMBCLIENT_LIBS="-lsmbclient -ldl"
+AC_SUBST(SMBCLIENT_CFLAGS)
+AC_SUBST(SMBCLIENT_LIBS)
+
+
+#libgda_modules="libgda"
+#PKG_CHECK_MODULES(LIBGDA, [$libgda_modules])
+#AC_SUBST(LIBGDA_CFLAGS)
+#AC_SUBST(LIBGDA_LIBS)
+
+dnl Check for kernel source
+echo -n "Checking for kernel... "
+KERNEL_SOURCE="/lib/modules/${KERNEL_RELEASE}/source"
+if [[ -d ${KERNEL_SOURCE} ]]; then
+  echo "ok."
+else
+  echo "failed."
+  exit -1;
+fi
+
+dnl =============================
+dnl Checks for library functions
+dnl =============================
+
+AC_FUNC_MMAP
+
+dnl =====================
+dnl Set stuff in config.h
+dnl =====================
+
+dnl Get the prefix
+if test "x${prefix}" = "xNONE"; then
+  PREFIX="${ac_default_prefix}"
+  AC_DEFINE_UNQUOTED(PREFIX, "${ac_default_prefix}", [definition of PREFIX])
+else
+  PREFIX="${prefix}"
+  AC_DEFINE_UNQUOTED(PREFIX, "${prefix}", [definition of PREFIX])
+fi
+AC_SUBST(PREFIX)
+
+
+dnl Set PACKAGE_LOCALE_DIR in config.h.
+AC_DEFINE_UNQUOTED(PACKAGE_LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale", [definition of PACKAGE_LOCALE_DIR])
+
+dnl Set PIXMAPS_DIR in config.h.
+AC_DEFINE_UNQUOTED(PIXMAPS_DIR, "${PREFIX}/share/pixmaps/${PACKAGE}", [pixmaps location])
+
+
+dnl Set DATA_DIR in config.h.
+if test "x${datadir}" = 'x${prefix}/share'; then
+  if test "x${prefix}" = "xNONE"; then
+    AC_DEFINE_UNQUOTED(DATA_DIR, "${ac_default_prefix}/share/${PACKAGE}", [Directory of data files])
+  else
+    AC_DEFINE_UNQUOTED(DATA_DIR, "${prefix}/share/${PACKAGE}", [Directory of data files])
+  fi
+else
+  AC_DEFINE_UNQUOTED(DATA_DIR, "${datadir}/${PACKAGE}", [Directory of data files])
+fi
+
+dnl Set HELP_DIR in config.h.
+AC_DEFINE_UNQUOTED(HELP_DIR, "${PREFIX}/share/gnome/help/${PACKAGE}", "")
+
+# Host
+AC_DEFINE_UNQUOTED(HOST, "${host}", [definition of HOST])
+
+# PID file
+AC_DEFINE_UNQUOTED(PID_FILE,"${pidfile}",[Define for pid file])
+
+# Log file
+AC_DEFINE_UNQUOTED(LOG_FILE,"${logfile}",[Define for log file])
+
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Package name for gettext])
+
+# Kernel release
+AC_DEFINE_UNQUOTED(KERNEL_RELEASE, "${KERNEL_RELEASE}", [definition of kernel release])
+AC_DEFINE_UNQUOTED(KERNEL_SOURCE,  "${KERNEL_SOURCE}",  [definition of kernel source dir])
+KERNEL_CFLAGS="-I${KERNEL_SOURCE}/include"
+AC_SUBST(KERNEL_CFLAGS)
+
+PLUGIN_LIBTOOL_FLAGS="-module -avoid-version"
+AC_SUBST(PLUGIN_LIBTOOL_FLAGS)
+
+dnl =====================
+dnl Write some output
+dnl =====================
+
+AC_OUTPUT([
+Makefile
+webtester.pc
+mk/rules.mk
+intl/Makefile
+po/Makefile.in
+src/libwebtester/Makefile
+src/librun/Makefile
+src/librun/lrvm/Makefile
+src/librun/kill/Makefile
+src/stuff/testlib/Makefile
+src/stuff/testlib/testlib.pc
+src/stuff/testlib++/Makefile
+src/stuff/testlib++/testlib++.pc
+src/test/Makefile
+src/webtester/Makefile
+src/webtester/modules/nullmodule/Makefile
+src/webtester/modules/informatics/Makefile
+src/webtester/plugins/webinterface/Makefile
+src/webtester/plugins/rundll/Makefile
+])
+
+
+echo "
+Configuration for $PACKAGE $VERSION :
+-----------------------------------
+
+  Host System Type ................ : $host
+  Compiler ........................ : $CC $CPPFLAGS
+  CFLAGS .......................... : ${PICFLAGS} ${CFLAGS}
+  LDFLAGS ......................... : ${PICLDFLAGS} ${LDFLAGS}
+  Linker .......................... : $CC $LDFLAGS ${LIBLDFLAGS} $LIBS
+  GLIB version .................... : ${GLIB_VERSION} in ${GLIB_PREFIX}
+  Installation prefix ............. : ${prefix}
+  PID file ........................ : ${pidfile}
+  Log file ........................ : ${logfile}
+  Building for kernel release ..... : ${KERNEL_RELEASE}
+
+  Now type 'make' to build $PACKAGE $VERSION,
+  and then type 'make install' for installation.
+"

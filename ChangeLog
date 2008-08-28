@@ -1,0 +1,338 @@
+2007-12-07  Sergey Sharybin <sharybin@nm.ru>
+
+	* testlib.pas    : fixed bug in ReadString()
+
+2007-11-30  Sergey Sharybin <sharybin@nm.ru>
+
+	* librun/run.c   : Fixed  bug  with  incorrect   detecting of  zombies,   added
+corrections of RSS memory and time usage.
+
+2007-10-28  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTester Server 5.0.0 released!
+
+2007-10-24  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/dynastruc.c : added dyna_sort()
+	* libwebtester/fs.c        : added smart sorting in dir_listing()
+	* webinterface.c           : closed   bug  with   unpacking   of  zero   buffer
+in webiface_get_task()
+
+	Project turned to status `Testing`. Debug messages  are  still  presents.  Work
+towars release is in progress.
+
+2007-10-15  Sergeu Sharybin <sharybin@nm.ru>
+
+	LOG stuff causses some troubles: when  packing  of  logfile  is  started  while
+logging message about reading socket from LRVM, we're  caucghing  CR  because  of
+timeout answering from LRVM. I  move  packing  stuff  to  separated  thread,  but
+copying of ogfile is still stopping logging stuff. Anyway, it became not so  bad.
+I'll try to fix bugs with logging and testlib.pas soon.
+
+	I'm expecting RC2 tonight =)
+
+	Hm.. I looked towards trouble in testlib.pas. It is good. Maybe there  was  not
+latest version of compiled binaries at school olympiad?
+
+	There is nothing more beautiful with fixing bug in logging stuff, than up  some
+configurations. Sure, it is not bad at all.
+
+	* libwebtester/fs-packer.c : maked working properly with files whitch  contains
+dot in name.
+
+	* Some hourses later * Oh, yeah! RC2 is out!
+
+	Webinterface is unfreezed. Some small changes towards intarface.
+
+	Oh, some bugfixes in logick of webinterface.
+
+2007-10-14  Sergey Sharybin <sharybin@nm.ru>
+
+	Today we've had an olympiad in our school and we used new WebTester Server  and
+Client. So, it wasn't bad at all. There were some troubles, but they were not too
+difficult to fix.
+
+	So that, it will be the realse in few days =)
+
+2007-10-09  Sergey Sharybin <sharybin@nm.ru>
+
+	Is it time to start code cleanup? And one more difficult question: is  it  time
+to realise WebTester Server 5.0.0 or it  would  be  better  to  realise  RC1  and
+contunue working towards perfect release?
+
+	Well, on Sunday 14th of October we'll see.
+
+2007-10-07  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTester Server 5.0.0-RC1 is out.
+
+2007-10-05  Sergey Sharybin <sharybin@nm.ru>
+
+	Small bugfixes in LibRUN's hypervisor pool.
+
+	RC1 is coming soon.. I hope...
+
+	TODO (after unfreezing)
+		- Write IPC stuff (IPC builtin)
+		- Add some hooks to such functions, as  core_print,  queue_fill,  belts_fill,
+etc. to make community with frontend more easyly and quick.
+		- Change system() to execve() in sys_launch()
+		- Pack log files in background
+
+2007-10-01  Sergey Sharybin <sharybin@nm.ru>
+
+	Practically permanent working of  server.  Rarely  segfols  and  crashes  while
+testing tasks.
+
+	* librun/hv.c       :  added mutexes in run_hv_proc_stats().
+	* librun/hv_pool.c  :  added mutexes in run_hvpool_proc_stats_by_pid_iter().
+
+2007-09-28  Sergey Sharybin <sharybin@nm.ru>
+
+	Closed some small bugs and fixed memory leak in run_unpack_cmd().  Socket  from
+which librun stuff copllects info about finished tasks converted to locking mode.
+Troubles with `couldn't find accounting info`  in  busy  processors  occurs  much
+occasional.
+
+	TODO:
+		Server is now use much more processor's resources. But why ad is  it  normal?
+		Is it time to start refactoring?
+
+2007-09-26  Sergey Sharybin <sharybin@nm.ru>
+
+	WebTEtser Server, WebTester Client interface  is  frozen.  Only  bugfixes  will
+be accepted.
+
+2007-09-23  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/log.c  : written log stuff
+	* libwebtester/fs.c   : added packable file duplicating.
+	* libwebtester/util.c : added some function for logging stuff and not only.
+
+2007-09-22  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/network-smb.c : all samba's stuff is now here
+	* informatics/tester.c       : limited  maximal  length  of  the  message  from
+compiler
+
+2007-09-10  Sergey Sharybin <sharybin@nm.ru>
+
+	* webtester/mainloop.c : separated delay between updating status  of  queue and
+belts.
+	* webtester/belts.c    : added some beauty in printing messages.
+	* informatics/tester.c : changed mode of  testing  directory.  Reading  is  not
+allowed to users different from webtester:webtester.
+
+	TODO:
+		- add some hash as suffix to current testing directory.
+
+2007-09-03  Sergey Sharybin <sharybin@nm.ru>
+
+	* librun/hv.c         : written stuff for autodetecting and generating CPU mask
+	* libwebtester/conf.c :  debugged  config_open_key()  for  correct  working  in
+multiply threads.
+	* libwebtester/cmd    : added mutexes for more safty
+
+2007-09-02  Sergey Sharybin <sharybin@nm.ru>
+	A lot of hardwork towards to finish WebTester  to  new  study  year.  A  lot of
+different bugfixes, optinizations,  some  modules  are  rewritten  and  some  new
+modules has been written.
+	Practically stable working of server part of WebTester. There  were  a  lot  of
+work under WebInterface too. Now it works practically stable.
+	Written installation and uninstallation scripts.
+
+	And more, and more, and more..
+
+2007-07-23  Sergey Sharybin <sharybin@nm.ru>
+
+	* librun/hv.c : fixed bug with illegular reading CPU mask from config  file  in
+function run_hypervisor_init().
+	* informatics/tester.c : added some beauty to source code.
+
+	Some parameters was put to config file.
+
+2007-07-20  Sergey Sharybin <sharybin@nm.ru>
+	Some bugfixes in informatics/tester.c Debugged buildage of debian package. Some
+work during testlib and testlib++.
+
+	librun/run.c : fixed irregular overviewing of belts.
+	librun/ipc.c : debugged getting client by unique.
+  librun/run.c : added process terminating if there is no answer from LRVM throug
+IPC.
+
+2007-07-18  Sergey Sharybin <sharybin@nm.ru>
+	A lot of optimizing and bugfixes in LibRUN. Continue writting  Informatics  and
+started writting of testlib.
+
+	* libwebtester/strlib.h : fixed illegular counting of elements in explode().
+
+	Some small changes in Makefile-s
+  
+	TODO: (total list)
+		- Debug librun stuff
+		- Finish writting Informatics
+		- Realize logging stuff
+		- IPC
+
+	* informatics/tester.c : written logging stuff. some bugfixes.
+
+	Hm.. Some troubles with testlib. Need check EOF of output file before returning
+_OK, but how have we say to this lib descruptor of output file?
+	Eh.. Flexibility...
+
+	Updates to TODO list:
+		- Write some macroses to make testlib stuff more flexible.
+
+2007-07-16  Sergey Sharybin <sharybin@nm.h>
+	Some heave work towards librun. Practically written and little tested.  But  it
+needs some more deeply testing.
+	Some small bugfixes in main stuff.  Small  changes  in  the  structure  of  the
+project. Start writting Informatics.
+
+2007-06-23  Sergey Sharybin <sharybin@nm.ru>
+	* webinterface.c   : some debugging, optimizing. Added task restore stuff.
+	* webtester/task.c : added dynastruc deleter with task restoring stuff.
+
+2007-05-17  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/hive.c : fixed bug with uncorrect  calculating  of  current line
+number
+	* libwebtester/network-soup.c : fixed memory leaks
+
+2007-05-16  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/core-fs.c :
+	* fs.c                   : added   stuff  for     cating  files  in  registered
+  derictories
+	* libwebtester/hook.c    : added hook_unregister ().
+
+	TODO:
+	* libwebtester/hook.c : write stuff for different types of unregistering hook.
+
+2007-05-15  Sergey Sharybin <sharybin@nm.ru>
+
+	TODO:
+	* libwebtester/regexp.c : check  for  memory   leaks  in   preg_replace()   and
+preg_match(),
+
+2007-05-14  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/hive.c : patched function hive_open_key() to work  with  arrays.
+
+2007-05-13  Sergey Sharybin <sharybin@nm.ru>
+	Some hardworking during configuration and flexval stuff
+
+	* libwebtester/flexval.c  :
+	* libwebtester/hive.c     : added stuff for  flexible  arrays.  Minor  testing.
+	Fixed some old and new bugs, fixed memory leaks
+
+  TODO:
+	* libwebtester/flexval.c : add  stuff  for  deleting  and insertings  elements.
+	Check error-handling stuff. Add comments support to parsering stuff.
+
+	* libwebtester/hive.c    : realize opening keys by path like "smth/arr/val[123]".
+	Add error-handling error for unserialization of  array  values.  Check  current
+  errors handling.
+
+2007-05-08  Sergey Sharybin <sharybin@nm.ru>
+	Optimised for debian-way making and installation stuff.
+
+2007-05-02  Sergey Sharybin <sharybin@nm.ru>
+
+	* libwebtester/plugin.h : fixed bug in plugin_search_by_name_comparator()
+
+	Some work in task.c and mainloop.c. Now its more flexible uses WebIFACE.
+
+2007-05-01  Sergey Sharybin <sharybin@nm.ru>
+	Contunue working with client webinterface. Some changes and bugfixes in  server
+stuff:
+
+	* task.h               :  all task-specified defenitions will be here.
+	* webiface/transport.h :  dropped declaration of `wt_task_t` structure.
+	* libwebtester/network-soup.c : fixed bug with recieveing  content  with  empty
+body.
+	* belts.c              : just started to write
+
+	Headers' including is now more protable.
+
+2007-94-23  Sergey Sharybin <sharybin@nm.ru>
+	* dynastruc.c    : sebuged function dyna_get_item_by_index()
+	* hive.c         : added hive_next_sibling() and hive_prev_sibling() functions.
+	And some other smaller bugfixes.
+
+2007-04-03  Sergey Sharybin <sharybin@nm.ru>
+	* core-error.c   : written core error backtracking
+	* webinterface   : continue writting WebIface stuff
+	* pcre.c         : fixed bug with uncorrect parsing of pattern
+
+2007-04-02  Sergey Sharybin <sharybin@nm.ru>
+	* libwebtester/hive.c  :  used old-written hive-tree support stuff
+	* webtester/mainloop.c :  started to write testing mainloop
+	* webtester/main.c     : small changes in initialization stuff
+  
+	TODO:
+		* Write hive_dump_to_buf() and hive_dump_to_file() for new hive stuff
+		* Check for memory leaks new hive stuff
+
+2007-03-22  Sergey Sharybin <<sharybin@nm.ru>
+	* mk/objective.mk        : debugged stuff for compiling dynamic libraries.
+	* webinterface/Makefile  : rewritten with using new stuff from objective.mk
+
+2007-03-19  Sergey Sgarybin <sharybin@nm.ru>
+	* webtester/ipc.c      :  just starded to write
+	* webtester/mainloop.c :  just starded to write
+	* webtester/main.c     :  initializing/uninitializing stuff is  now  more  e2u.
+
+  Some bugfixes in libwebtester. Started to use hooks :)
+
+2007-03-16  Sergey Sharybin <sharybin@nm.ru>
+	Some gugfixes. Started to write WebTester's stuff.
+
+2007-03-16  Sergey Sharybin <sharybin@nm.ru>
+	Forked from temporary project Core and renamed to  Webtester. Some  new- witten
+stuff. Small changes in build stuff.
+
+2007-03-13  Sergey Sharybin <sharybin@nm.ru>
+	Some changes in building stuff.
+
+2007-03-04  Sergay Sharybin <sharybin@nm.ru>
+	Started to write packing stuff. Some changes in makefile's stuff.
+
+2007-03-03  Sergey Sharybin <sharybin@nm.ru>
+	Appened regexp stuff. Small changes in project's structure. Appened locale  and
+libgda stuff.
+	
+	TODO:
+		- Move parsering flags outsize of errors.h
+
+2007-02-27  Sergey Sharybin <sharybin@nm.ru>
+	* hive.c : updated  child  nodes storage  stuff  to  using  dynastruc.  Written
+hive_dump_to_buf() and hive_dump_to_file().
+
+	Added a lot of different stuff, mainly from old-written  stuff.  But  smth  has
+been rewritten.
+
+	TODO:
+		* hive.c:
+			- Write stuff for dumping comments
+
+		- Write logging stuff
+		- Write GDA stuff
+		- Write debugging stuff
+		- Write regexp stuff
+		- Realise core built-in for strings (?)
+
+2007-02-26  Sergey Sharybin <sharybin@nm.ru>
+	* hive.c : written single line commants stuff in  hive_parse_iterator().  Fixed
+some bugs in option definition stuff. Fixed memory leak in hive_node_free().
+
+2007-02-25  Sergey Sharybin <sharybin@nm.ru>
+	Just started to this new stuff. Ready the plug-in stuff, hook  stuff  and  hive
+stuff practically written. Dynastruc stuff is old :)
+	Maybe in the future this will be the core of our new WebTester. But now it   is
+just a collection of different usefull and e2u stuff.
+
+	TODO:
+		* hive.c:
+			- Write the errors' handling stuff to hive_parse_iterator()
+			- Write the comments' stiff to hive_parse_iterator()

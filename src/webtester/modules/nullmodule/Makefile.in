@@ -1,0 +1,19 @@
+.SILENT:
+
+top_builddir = ../../../..
+
+include ../../../../mk/rules.mk
+include ../../../../mk/init.mk
+
+
+OBJECTIVE_LIBS = libnullmodule.so
+
+LIBADD = @GLIB_LIBS@ @GTHREAD_LIBS@   
+CFLAGS += @GLIB_CFLAGS@ @GTHREAD_CFLAGS@   
+
+SOURCES = \
+	nullmodule.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+include ../../../../mk/objective.mk
