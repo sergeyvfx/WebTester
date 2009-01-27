@@ -1,19 +1,22 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  md5.h
- * ================================================================================
+ * MD5 password encryption stuff
  *
- *  MD5 password encryption stuff
+ * Based on PHP MD5 stuff source
  *
- *  Based on PHP MD5 stuff source
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _nd5_h_
 #define _md5_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 #define MD5_MAGIC	"assword"
 #define MD5_MAGIC_LEN	7
@@ -68,21 +71,20 @@
 
 typedef struct
 {
-  unsigned int state[4];    /* state (ABCD) */
-  unsigned int count[2];    /* number of bits, modulo 2^64 (lsb first) */
+  unsigned int state[4]; /* state (ABCD) */
+  unsigned int count[2]; /* number of bits, modulo 2^64 (lsb first) */
   unsigned char buffer[64]; /* input buffer */
 } md5_ctx_t;
 
 void
-md5_to64                           (char *__s, unsigned int __v, int __n);
+md5_to64 (char *__s, unsigned int __v, int __n);
 
 unsigned
-md5_strlcpy                        (char *__dst, const char *__src, unsigned __siz);
+md5_strlcpy (char *__dst, const char *__src, unsigned __siz);
 
 void
-md5_crypt                          (const char *__pw, const char *__salt, char *__out);
+md5_crypt (const char *__pw, const char *__salt, char *__out);
 
-void            // Hack against linker optimizer
-md5_dn                             (void);
+END_HEADER
 
 #endif

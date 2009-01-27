@@ -1,84 +1,110 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  acct_hv.c - part of the LibRUN
- * ================================================================================
+ * This module contains hypervisor under all accounting informatin,
+ * going from kernel space to user space.
  *
- *  This module contains hypervisor under all accounting informatin,
- *  going from kernel space to user space.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _run_hypervisor_h_
-#define _run_hypervisor_h_
+#ifndef _RUN_HYPERVISOR_H_
+#define _RUN_HYPERVISOR_H_
 
 #include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 #include <linux/types.h>
 #include <linux/taskstats.h>
 
-// Default CPU mask
+/********
+ * Constants
+ */
+
+/* Default CPU mask */
 #define RUN_HV_CPUMASK              "0"
 
-// Default delay in listening thread. secs.
+/* Default delay in listening thread. secs. */
 #define RUN_HV_DELAY                0.01
 
-// Default size of one array in HV pool stuff
+/* Default size of one array in HV pool stuff */
 #define RUN_HV_POOL_ARR_SIZE        512
 
-// Default lifetime of info in pool. secs.
+/* Default lifetime of info in pool. secs. */
 #define RUN_HV_POOL_LIFETIME        10
 
-// Default delay in GetStats delay. secs.
+/* Default delay in GetStats delay. secs. */
 #define RUN_HV_POOL_GETSTATS_DELAY        0.2
 
-// Default count of tries in GetStats stuff
+/* Default count of tries in GetStats stuff */
 #define RUN_HV_POOL_GETSTATS_MAX_COUNTER  15
 
-////////
-// Type defenintions
+/********
+ * Type defenintions
+ */
 
-typedef struct {
+/* Item of hypervisor pool */
+typedef struct
+{
+  /* Timestamp of item */
   int timestamp;
+
+  /* Task information */
   struct taskstats t;
 } run_hvpool_item_t;
 
-typedef struct {
+/* Pool array */
+typedef struct
+{
+  /* Count of items in array */
   int count;
+
+  /* Size of array (maximal capacity) */
   int size;
+
+  /* Data stored in the array */
   run_hvpool_item_t *data;
 } run_hvpool_arr_t;
 
-////////////////
-//
+/*******
+ *
+ */
 
-int             // Initialize HyperVisor stuff
-run_hypervisor_init                (void);
+/* Initialize hypervisor stuff */
+int
+run_hypervisor_init (void);
 
-void            // Uninitialize HyperVisor stuff
-run_hypervisor_done                (void);
+/* Uninitialize HyperVisor stuff */
+void
+run_hypervisor_done (void);
 
-////////////////
-// POOL
+/****
+ * POOL
+ */
 
-int             // Initialize HV pool stuff
-run_hvpool_init                    (void);
+/* Initialize hupervisor pool stuff */
+int
+run_hvpool_init (void);
 
-void            // Uninitialize HV pool stuff
-run_hvpool_done                    (void);
+/* Uninitialize hypervisor pool stuff */
+void
+run_hvpool_done (void);
 
-void            // Put data to HV pool
-run_hvpool_put                     (struct taskstats *__self);
+/* Put data to hypervisor pool */
+void
+run_hvpool_put (const struct taskstats *__self);
 
-BOOL            // Get ACCT stats by PID of finished process
-run_hvpool_stats_by_pid            (__u32 __pid, struct taskstats *__stats);
+/* Get ACCT stats by PID of finished process */
+BOOL
+run_hvpool_stats_by_pid (__u32 __pid, struct taskstats *__stats);
 
-////////////////
-//
+/* Get ACCT stats by PID of running process */
+int
+run_hv_proc_stats (__u32 __pid, struct taskstats *__stats);
 
-int             // Get ACCT stats by PID of running process
-run_hv_proc_stats                  (__u32 __pid, struct taskstats *__stats);
+END_HEADER
 
 #endif

@@ -1,60 +1,74 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  queue.c - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_queue_h_
-#define _wt_queue_h_
+#ifndef _WT_QUEUE_H_
+#define _WT_QUEUE_H_
+
+#include "autoinc.h"
+
+BEGIN_HEADER
 
 #include <libwebtester/types.h>
 #include <libwebtester/dynastruc.h>
 
-// Default size of queue
+/* Default size of queue */
 #define QUEUE_SIZE   4
-// Default count of unpacking tasks
+
+/* Default count of unpacking tasks */
 #define UNPACK_COUNT  1
 
 #define QUEUE_AUTOSTART 0
 
-////
-//
-
-int             // Initialize queue stuff
-wt_queue_init                      (void);
-
-void            // Uninitialize queue stuff
-wt_queue_done                      (void);
-
+/* Initialize queue stuff */
 int
-wt_queue_update                    (void);
+wt_queue_init (void);
 
-void            // Unpack parameters for some tasks
-wt_queue_unpack                    (void);
+/* Uninitialize queue stuff */
+void
+wt_queue_done (void);
 
-void            // Free all cells of queue
-wt_queue_free                      (void);
+/* Update queue */
+int
+wt_queue_update (void);
 
-long            // Size of queue
-wt_queue_size                      (void);
+/* Unpack parameters for some tasks */
+void
+wt_queue_unpack (void);
 
-long            // Current length oq queue
-wt_queue_length                    (void);
+/* Free all cells of queue */
+void
+wt_queue_free (void);
 
+/* Size of queue */
+long
+wt_queue_size (void);
+
+/* Current length of queue */
+long
+wt_queue_length (void);
+
+/* Is queue empty? */
 BOOL
-wt_queue_empty                     (void);
+wt_queue_empty (void);
 
+/* Get queue descriptor */
 dynastruc_t*
-wt_queue                           (void);
+wt_queue (void);
 
+/* Start queue */
 void
-wt_queue_start                     (void);
+wt_queue_start (void);
 
+/* Stop queue */
 void
-wt_queue_stop                      (void);
+wt_queue_stop (void);
+
+END_HEADER
 
 #endif

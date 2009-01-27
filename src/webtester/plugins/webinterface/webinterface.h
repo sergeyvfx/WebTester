@@ -1,21 +1,25 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  webinterface.h - partof the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_webinterface_h_
-#define _wt_webinterface_h_
+#ifndef _WT_WEBINTERFACE_H_
+#define _WT_WEBINTERFACE_H_
+
+#include <webtester/autoinc.h>
+
+BEGIN_HEADER
 
 #include "transport.h"
 
 #define WEBIFACE_MAJOR_VERSION   1
-#define WEBIFACE_MINOR_VERSION   0
+#define WEBIFACE_MINOR_VERSION   1
 #define WEBIFACE_LIBNAME         "WebInterface"
 
-#endif
+END_HEADER
 
+#endif

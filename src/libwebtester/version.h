@@ -1,18 +1,17 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  version.h
- * =============================================================================
+ * Version definition
  *
- *  Version definition
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _version_h_
 #define _version_h_
 
-#define CORE_VERSION "5.0.2-RC1"
+#define CORE_VERSION "5.0.3"
 
 #endif

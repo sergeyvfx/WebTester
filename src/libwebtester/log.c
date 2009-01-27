@@ -1,12 +1,13 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  log.c - part of the WebTester Server
- * ================================================================================
+ * Hooks' stuff
  *
- *  Written (by Nazgul) under General Public License.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #include "log.h"
 #include "macrodef.h"
@@ -24,13 +25,16 @@
 #include "thread.h"
 
 static char filename[4096];
-static FILE *stream=0;
-static int put_timestamp=1;
+static FILE *stream = 0;
+static int put_timestamp = 1;
 
+/**
+ * Open LOG file
+ */
 static void
-logfile_open                       (void)
+logfile_open (void)
 {
-  int print_banner=0;
+  int print_banner = 0;
   char dir[4096];
 
   dirname (filename, dir);
@@ -38,41 +42,61 @@ logfile_open                       (void)
   fmkdir (dir, 00775);
 
   if (stream)
-    fclose (stream);
+    {
+      fclose (stream);
+    }
 
   if (!fexists (filename))
-    print_banner=1;
+    {
+      print_banner = 1;
+    }
 
-  stream=fopen (filename, "a");
+  stream = fopen (filename, "a");
 
   if (!stream)
-    return;
+    {
+      return;
+    }
 
   if (print_banner)
     {
-      fprintf (stream, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+      fprintf (stream, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                       "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
       fprintf (stream, "%s\n", core_get_version_string ());
-      fprintf (stream, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
-    } else
+      fprintf (stream, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                       "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
+    }
+  else
+    {
       fprintf (stream, "\n\n");
+    }
 
   chmod (filename, 0640);
 }
 
+/**
+ * Close LOG file
+ */
 static void
-logfile_close                      (void)
+logfile_close (void)
 {
   if (stream)
     {
       fclose (stream);
-      stream=0;
+      stream = 0;
     }
 }
 
+/**
+ * Entry point for LOG file packing
+ *
+ * @param __fname - name of file to pack
+ */
 static gpointer
-logfile_pack_entry                 (gpointer __fname)
+logfile_pack_entry (gpointer __fname)
 {
-  char *fn=__fname;
+  char *fn = __fname;
+
   pack_file (fn, LOG_PACKER);
   free (fn);
 
@@ -80,22 +104,28 @@ logfile_pack_entry                 (gpointer __fname)
   return 0;
 }
 
+/**
+ * Pack LOG file
+ */
 static void
-logfile_pack                       (void)
+logfile_pack (void)
 {
-  char *fname=malloc (4096);
+  char *fname = malloc (4096);
   GThread *thread;
   fdup (filename, fname, LOG_PACKED_EXT, MAX_LOG_FILES);
 
-  thread=g_thread_create (logfile_pack_entry, fname, FALSE, 0);
+  thread = g_thread_create (logfile_pack_entry, fname, FALSE, 0);
 
   unlink (filename);
 }
 
+/**
+ * Check size of LOG file
+ */
 static void
-check_size                         (void)
+check_size (void)
 {
-  if (fsize (stream)>MAX_LOG_SIZE)
+  if (fsize (stream) > MAX_LOG_SIZE)
     {
       printf ("Packing LOG file...\n");
       logfile_close ();
@@ -104,30 +134,47 @@ check_size                         (void)
     }
 }
 
-////////
-//
+/********
+ * User's backend
+ */
 
+/**
+ * Initialize LOG stuff
+ *
+ * @param __fn - name of LOG file
+ * @return zero on success, non-zero otherwise
+ */
 int
-log_init                           (const char *__fn)
+log_init (const char *__fn)
 {
   strcpy (filename, __fn);
 
   logfile_open ();
 
   if (!stream)
-    return -1;
+    {
+      return -1;
+    }
 
   return 0;
 }
 
+/**
+ * Uninitialize LOG stuff
+ */
 void
-log_done                           (void)
+log_done (void)
 {
   logfile_close ();
 }
 
+/**
+ * Print text to LOG file
+ *
+ * @oaram __text - teft t oprint
+ */
 void
-log_printf                         (char *__text, ...)
+log_printf (char *__text, ...)
 {
   char print_buf[4096];
   char timestamp[128];
@@ -145,12 +192,20 @@ log_printf                         (char *__text, ...)
   get_datetime_strf (timestamp, 128, "%F %T");
 
   if (put_timestamp)
-    fprintf (stream, "[%s] %s", timestamp, print_buf); else
-    fputs (print_buf, stream);
+    {
+      fprintf (stream, "[%s] %s", timestamp, print_buf);
+    }
+  else
+    {
+      fputs (print_buf, stream);
+    }
 
-  put_timestamp=1;
-  if (print_buf[strlen (print_buf)-1]!='\n')
-    put_timestamp=0;
+  put_timestamp = 1;
+
+  if (print_buf[strlen (print_buf) - 1] != '\n')
+    {
+      put_timestamp = 0;
+    }
 
   fflush (stream);
 

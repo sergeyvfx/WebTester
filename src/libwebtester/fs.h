@@ -1,15 +1,18 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  file.c
- * =============================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _fs_h_
 #define _fs_h_
+
+#include "smartinclude.h"
+
+BEGIN_HEADER
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -18,52 +21,66 @@
 
 #define FS_COPY_BUF_SIZE 65535
 
-////////////////////////////////////////
-//
-
+/* Get listing of directory */
 dynastruc_t*
-dir_listing                        (char *__dir);
+dir_listing (const char *__dir);
 
+/* Get full path name */
 char*
-get_full_path                      (char *__fn);
+get_full_path (const char *__fn);
 
+/* Get full path to file */
 char*
-get_full_file                      (char *__fn);
+get_full_file (const char *__fn);
 
+/* Get file size */
 size_t
-fsize                              (FILE *__stream);
+fsize (FILE *__stream);
 
+/* Load file content */
 char*
-fload                              (char *__fn);
+fload (const char *__fn);
 
+/* Check is file exists */
 int
-fexists                            (char *__fn);
+fexists (const char *__fn);
 
+/* Check if specified file name is a regular file */
 int
-isfile                             (char *__fn);
+isfile (const char *__fn);
 
+/* Create directory with all parents */
 int
-fmkdir                             (char *__dir, mode_t __mode);
+fmkdir (const char *__dir, mode_t __mode);
 
+/* Recursively deletion of directory */
 int
-unlinkdir                          (char *__dir);
+unlinkdir (const char *__dir);
 
+/* Copy file */
 int
-copyfile                           (char *__src, char *__dst);
+copyfile (const char *__src, const char *__dst);
 
+/* Write buffer to file */
 int
-fwritebuf                          (char *__fs, char *__buf);
+fwritebuf (const char *__fs, const char *__buf);
 
+/* Unpack file */
 int
-unpack_file                        (char *__fn, char *__dstdir);
+unpack_file (const char *__fn, const char *__dstdir);
 
+/* Pack file */
 int
-pack_file                          (char *__fn, char *__packer);
+pack_file (const char *__fn, const char *__packer);
 
+/* Copy directory (recursively) */
 int
-fcopydir                           (char *__src, char *__dst);
+fcopydir (const char *__src, const char *__dst);
 
+/* Make new itered file name */
 int
-fdup                               (char *__fn, char *__out, char *__add_ext, int __count);
+fdup (const char *__fn, char *__out, const char *__add_ext, int __count);
+
+END_HEADER
 
 #endif

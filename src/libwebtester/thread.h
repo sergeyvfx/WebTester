@@ -1,23 +1,22 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  thread.h - part of the WebTester Server
- * ================================================================================
+ * Threading stuff
  *
- *  Threading stuff
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _threads_h_
 #define _threads_h_
 
 #include <libwebtester/smartinclude.h>
-#include <libwebtester/mutex.h>
 
-////////
-//
+BEGIN_HEADER
+
+#include <libwebtester/mutex.h>
 
 #define CS_Begin \
   static mutex_t __cs_mutex = NULL; \
@@ -31,16 +30,15 @@
 #define CS_End \
   mutex_unlock (__cs_mutex);
 
-////////
-//
-
 int
-thread_init                        (void);
+thread_init (void);
 
 void
-thread_done                        (void);
+thread_done (void);
 
 void
-thread_cs_mutex_register           (mutex_t __self);
+thread_cs_mutex_register (mutex_t __self);
+
+END_HEADER
 
 #endif

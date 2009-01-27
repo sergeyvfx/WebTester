@@ -1,21 +1,25 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  autoinc.h - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_autoinc_h_
-#define _wt_autoinc_h_
+#ifndef _WT_AUTOINC_H_
+#define _WT_AUTOINC_H_
 
 #include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
+
 #include <libwebtester/core.h>
 #include <libwebtester/conf.h>
 
 #include <webtester/const.h>
 #include <webtester/core.h>
+
+END_HEADER
 
 #endif

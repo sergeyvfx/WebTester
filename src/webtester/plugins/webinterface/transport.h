@@ -1,55 +1,66 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  transport.h - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_webiface_transport_h_
-#define _wt_webiface_transport_h_
+#ifndef _WT_WEBIFACE_TRANSPORT_H_
+#define _WT_WEBIFACE_TRANSPORT_H_
 
 #include <libwebtester/dynastruc.h>
 #include <libwebtester/network-soup.h>
 #include <libwebtester/types.h>
 #include <webtester/task.h>
 
-int             // Initialize 
-webiface_transport_init            (void);
+/* Initialize transporting */
+int
+webiface_transport_init (void);
 
+/* Uninitialize transporting */
 void
-webiface_transport_done            (void);
+webiface_transport_done (void);
 
-int             // Delete task from testing queue
-webiface_delete_task               (wt_task_t *__self);
+/* Delete task from testing queue */
+int
+webiface_delete_task (wt_task_t *__self);
 
-int             // Restore task in testing queue
-webiface_restore_task              (wt_task_t *__self);
+/* Restore task in testing queue */
+int
+webiface_restore_task (wt_task_t *__self);
 
-int             // Get detailed task information
-webiface_get_task                  (wt_task_t *__self);
+/* Get detailed task information */
+int
+webiface_get_task (wt_task_t *__self);
 
-int             // Return tested task to WebInterface
-webiface_put_soution               (wt_task_t *__self);
+/* Return tested task to WebInterface */
+int
+webiface_put_soution (wt_task_t *__self);
 
-int             // Reset status of half-tested tasks
-webiface_reset_status              (void);
+/* Reset status of half-tested tasks */
+int
+webiface_reset_status (void);
 
-int             // Recieve list of untested problems
-webiface_get_task_list             (dynastruc_t *__tasklist, int __queue_size);
+/* Recieve list of untested problems */
+int
+webiface_get_task_list (dynastruc_t *__tasklist, int __queue_size);
 
+/* Prepare URL to send */
 void
-webiface_prepare_url               (char *__self, char *__out);
+webiface_prepare_url (const char *__self, char *__out);
 
-http_message_t* // Send simple message with URL
-webiface_send_message              (char *__url);
+/* Send simple message with URL */
+http_message_t*
+webiface_send_message (const char *__url);
 
+/* Get number of bytes send */
 DWORD
-webiface_bytes_send                (void);
+webiface_bytes_send (void);
 
+/* Get number of bytes received */
 DWORD
-webiface_bytes_recv                (void);
+webiface_bytes_recv (void);
 
 #endif

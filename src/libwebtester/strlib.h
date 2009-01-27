@@ -1,52 +1,71 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  strlib.h
- * ================================================================================
+ * String library. Includes some powerfull
+ * functions to work with strings.
  *
- *  String library. Includes some powerfull functions to work with strings.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef strlib_h
-#define strlib_h
 
+#ifndef _strlib_h_
+#define _strlib_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
+
+/* Convert string to upper case */
 void
-strupr                             (char *__src, char *__dest);
+strupr (const char *__src, char *__dest);
 
+/* Convert string to lower case */
 void
-strlowr                            (char *__src, char *__dest);
+strlowr (const char *__src, char *__dest);
 
+/* Get last occurence of character in string */
 int
-strlastchar                        (char *__str, char __ch);
+strlastchar (const char *__str, char __ch);
 
+/* Extract substring from string */
 void
-strsubstr                          (char *__src, int __start, int __len, char *__out);
+strsubstr (const char *__src, int __start, int __len, char *__out);
 
+/* Split string by separator into array of string */
 long
-explode                            (char *__s, char *__separator, char ***__out);
+explode (const char *__s, const char *__separator, char ***__out);
 
+/* Free array from explode */
 void
-free_explode_data                  (char **__self);
+free_explode_data (char **__self);
 
+/* Add slashed before `dangerous` characters */
 void
-addslashes                         (char *__self, char *__out);
+addslashes (const char *__self, char *__out);
 
+/* Strinp slashes from string */
 void
-stripslashes                       (char *__self, char *__out);
+stripslashes (const char *__self, char *__out);
 
+/* Append string to array of string */
 void
-strarr_append                      (char ***__arr, char *__s, int *__count);
+strarr_append (char ***__arr, const char *__s, int *__count);
 
+/* Free array f string */
 void
-strarr_free                        (char **__arr, int __count);
+strarr_free (char **__arr, int __count);
 
+/* Realloc memory allocated for string */
 char*
-realloc_string                     (char *__s, int __delta);
+realloc_string (const char *__s, int __delta);
 
+/* Trim space characters from beginning and ending of string */
 void
-trim                               (char *__self, char *__out);
+trim (const char *__self, char *__out);
+
+END_HEADER
 
 #endif

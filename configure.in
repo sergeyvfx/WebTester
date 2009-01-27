@@ -1,4 +1,4 @@
-AC_INIT(webtester, 5.0.2)
+AC_INIT(webtester, 5.0.3)
 #AC_CONFIG_SRCDIR(src/libwebtester/includes.h)
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -306,7 +306,6 @@ src/stuff/testlib/Makefile
 src/stuff/testlib/testlib.pc
 src/stuff/testlib++/Makefile
 src/stuff/testlib++/testlib++.pc
-src/test/Makefile
 src/webtester/Makefile
 src/webtester/modules/nullmodule/Makefile
 src/webtester/modules/informatics/Makefile

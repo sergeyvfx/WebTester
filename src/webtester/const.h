@@ -1,12 +1,13 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  const.h - part of the WebTester Server
- * ================================================================================
+ * Constant definitions
  *
- *  Written (by Nazgul) under General Public License.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _wt_cont_h_
 #define _wt_cont_h_
@@ -23,8 +24,9 @@
 
 #define CONFIG_FILE "/home/webtester/conf/webtester.conf"
 
-////
-// CORE HOOK callbacks names
+/****
+ * CORE HOOK callbacks names
+ */
 
 #define CORE_ACTIVATE        "CORE_Activate"
 #define CORE_DEACTIVATE      "CORE_Deactivate"

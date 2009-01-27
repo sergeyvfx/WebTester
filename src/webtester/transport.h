@@ -1,31 +1,37 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  transport.h - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_transport_h_
-#define _wt_transport_h_
+#ifndef _WT_TRANSPORT_H_
+#define _WT_TRANSPORT_H_
+
+#include "autoinc.h"
+
+BEGIN_HEADER
 
 #include <libwebtester/network-soup.h>
 
+/* Initialize transport stuff */
 int
-wt_transport_init                  (void);
+wt_transport_init (void);
 
+/* Uninitialize transport stuff */
 void
-wt_transport_done                  (void);
+wt_transport_done (void);
 
-////////
-//
-
+/* Prepare URL for transporting */
 void
-wt_transport_prepare_url           (char *__self, char *__out);
+wt_transport_prepare_url (const char *__self, char *__out);
 
+/* Send message */
 http_message_t*
-wt_transport_send_message          (char *__url);
+wt_transport_send_message (const char *__url);
+
+END_HEADER
 
 #endif

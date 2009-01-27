@@ -1,21 +1,24 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  assarr.h
- * ================================================================================
+ * Implementation of assaciave arrays
  *
- *  Assaciative arrays module
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
+#include "smartinclude.h"
 
 #ifndef _assarr_h_
 #define _assarr_h_
 
-////////////////////////////////////////
-// Type defenitions
+BEGIN_HEADER
+
+/********
+ * Type defenitions
+ */
 
 typedef struct
 {
@@ -32,10 +35,11 @@ typedef struct
   assarr_entry_t **data;
 } assarr_t;
 
-typedef void (*assarr_deleter)     (void *__item);
+typedef void (*assarr_deleter) (void *__item);
 
-////////////////////////////////////////
-// Macroses
+/********
+ * Macroses
+ */
 
 #define ASSARR_FOREACH_DO(__self, __key, __value) \
  { \
@@ -50,7 +54,7 @@ typedef void (*assarr_deleter)     (void *__item);
           __value=__cur_->value; \
           __next_=__cur_->next_ptr; \
           {
-          
+
 #define ASSARR_FOREACH_DONE \
           } \
           __cur_=__next_; \
@@ -58,35 +62,53 @@ typedef void (*assarr_deleter)     (void *__item);
     } \
  }
 
-void            // Assarr deleter with freeing of each elements
-assarr_deleter_free_ref_data       (void *__item);
+/* Deleter of element of assaciative array */
+/* Calls free() for each element */
+void
+assarr_deleter_free_ref_data (void *__item);
 
-assarr_t*       // Create new ass. array
-assarr_create                      (void);
+/* Create new assaciative array */
+assarr_t*
+assarr_create (void);
 
-void            // Destroy ass. array
-assarr_destroy                     (assarr_t *__self, assarr_deleter __deleter);
+/* Destroy assaciative array */
+void
+assarr_destroy (assarr_t *__self, assarr_deleter __deleter);
 
-void*           // Get value by key
-assarr_get_value                   (assarr_t *__self, char *__key);
+/* Get value by key */
+void*
+assarr_get_value (assarr_t *__self, const char *__key);
 
-int             // Check for set
-assarr_isset                       (assarr_t *__self, char *__key);
+/* Check if element is set */
+int
+assarr_isset (assarr_t *__self, const char *__key);
 
-void            // Set value by key
-assarr_set_value                   (assarr_t *__self, char *__key, void *__value);
+/* Set value by key */
+void
+assarr_set_value (assarr_t *__self, const char *__key, void *__value);
 
-int             // Unset value by key
-assarr_unset_value                 (assarr_t *__self, char *__key, assarr_deleter __deleter);
+/* Unset value by key */
+int
+assarr_unset_value (assarr_t *__self, const char *__key,
+                    assarr_deleter __deleter);
 
-int             // Unset all values
-assarr_unset_all                   (assarr_t *__self, assarr_deleter __deleter);
+/* Unset all values */
+int
+assarr_unset_all (assarr_t *__self, assarr_deleter __deleter);
 
-// !!! WARNING !!! Works ONLY with PCHAR data
-void            // Pack assarr PCHAR data to string
-assarr_pack                        (assarr_t *__self, char **__out);
+/* Pack ass. array PCHAR data to string */
+/* !!! WARNING !!! Works ONLY with PCHAR data */
+void
+assarr_pack (assarr_t *__self, char **__out);
 
-void            // Unpack string to assaciative array
-assarr_unpack                      (char *__data, assarr_t *__arr);
+/* Unpack string to assaciative array */
+void
+assarr_unpack (const char *__data, assarr_t *__arr);
+
+/* Get count of elements in array */
+int
+assarr_get_count (assarr_t *__self);
+
+END_HEADER
 
 #endif

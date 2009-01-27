@@ -1,15 +1,18 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  ipc.h - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_ipc_h_
-#define _wt_ipc_h_
+#ifndef _WT_IPC_H_
+#define _WT_IPC_H_
+
+#include "autoinc.h"
+
+BEGIN_HEADER
 
 #define WT_IPC_HOST   "*"
 #define WT_IPC_PORT   13666
@@ -22,22 +25,30 @@
 #define WT_IPC_BLACKLIST_BL_ON_TRIES_EXPIRED   1
 #define WT_IPC_BLACKLIST_REVIEW_LOGIN_INFO_INTERVAL (300*USEC_COUNT)
 
-int             // Initialize IPC stuff
-wt_ipc_init                        (void);
-
-void            // Uninitialize IPC stuff
-wt_ipc_done                        (void);
-
+/* Initialize IPC stuff */
 int
-wt_ipc_get_incorrect_login_delay   (void);
+wt_ipc_init (void);
 
-int
-wt_ipc_supported                   (void);
-
-int
-wt_ipc_builtin_init                (void);
-
+/* Uninitialize IPC stuff */
 void
-wt_ipc_builtin_done                (void);
+wt_ipc_done (void);
+
+/* Get delay in incorrect login  */
+int
+wt_ipc_get_incorrect_login_delay (void);
+
+/* Is IPC supported? */
+int
+wt_ipc_supported (void);
+
+/* Initialize IPC builtin */
+int
+wt_ipc_builtin_init (void);
+
+/* Uninitialize IPC builtin */
+void
+wt_ipc_builtin_done (void);
+
+END_HEADER
 
 #endif

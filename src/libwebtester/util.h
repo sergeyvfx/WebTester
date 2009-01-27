@@ -1,81 +1,100 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  util.h
- * ================================================================================
+ * Some usefull procedures
  *
- *  Some usefull procedures
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef util_h
 #define util_h
 
 #include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
+
 #include <sys/time.h>
 
 #define leapyear(year)((year % 100 ? year : year / 100) % 4 == 0)
 
+/* Check is string a number */
 int
-is_number                          (char *__self);
+is_number (const char *__self);
 
+/* Check is string an integer number */
 int
-is_integer                         (char *__self);
+is_integer (const char *__self);
 
+/* Drop trilling zeroes from number in string */
 void
-drop_triling_zeroes                (char *__self);
+drop_triling_zeroes (char *__self);
 
+/* System parser */
 int
-fname                              (char *__full, char *__out);
+fname (const char *__full, char *__out);
 
+/* Get name of a directory */
 int
-dirname                            (char *__full, char *__out);
+dirname (const char *__full, char *__out);
 
+/* Drop extension from name of file */
 int
-dropextension                      (char *__fn, char *__out);
+dropextension (const char *__fn, char *__out);
 
+/* Get file's extension */
 int
-getextension                       (char *__fn, char *__out);
+getextension (const char *__fn, char *__out);
 
+/* Launch command */
 int
-sys_launch                         (char *__args, ...);
+sys_launch (const char *__args, ...);
+
+/* Get current time */
+timeval_t
+now (void);
 
 timeval_t
-now                                (void);
+timedist (timeval_t __from, timeval_t __to);
 
+/* Get current time */
 timeval_t
-timedist                           (timeval_t __from, timeval_t __to);
+timedistnow (timeval_t __from);
 
-timeval_t
-timedistnow                        (timeval_t __from);
-
+/* Compare timeval and milliseconds */
 int
-tv_usec_cmp                        (timeval_t __tv, __u64_t __usec);
+tv_usec_cmp (timeval_t __tv, __u64_t __usec);
 
+/* Prepare argument for command line */
 void
-prepare_cmdarg                     (char *__src, char *__dst);
+prepare_cmdarg (const char *__src, char *__dst);
 
+/* Get user's id by its name */
 long
-uid_by_name                        (char *__name);
+uid_by_name (const char *__name);
 
+/* Get group's id by its name */
 long
-gid_by_name                        (char *__name);
+gid_by_name (const char *__name);
 
+/* Format current date with given format string */
 void
-get_datetime_strf                  (char *__out, int __size, char *__format);
+get_datetime_strf (char *__out, int __size, const char *__format);
 
+/* Check is given string is a truth value */
 int
-is_truth                           (char *__self);
+is_truth (const char *__self);
 
+/* Floating absolutely value */
 double
-fabs                               (double __self);
+fabs (double __self);
 
+/* Get sign of number */
 double
-sign                               (double __self);
+sign (double __self);
 
-//time_t
-//unixtime                           (int __y, int __m, int __d, int __h, int __min, int __s);
+END_HEADER
 
 #endif

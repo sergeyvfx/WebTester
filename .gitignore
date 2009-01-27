@@ -1,6 +1,7 @@
 *~
 *.o
 *.a
+*.so
 .depend*
 nbproject/
 *.mo
@@ -13,3 +14,12 @@ mk/rules.mk
 stamp-h1
 autom4te.cache/
 Makefile
+*.pc
+src/webtester/webtester.bin
+src/frontend/gwebtester
+src/librun/lrvm/lrvm
+src/librun/kill/lrvm_kill
+aclocal.m4
+intltool-extract
+intltool-merge
+intltool-update

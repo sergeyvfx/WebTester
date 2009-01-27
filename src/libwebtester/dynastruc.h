@@ -1,15 +1,13 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  DYNASTRUC
- * ================================================================================
+ * Dynamic structures stuff (stack, queues, deks).
  *
- *  Dynamic structures stuff (stack, queues, deks).
- *  Practically stable. I hope :)
- *  
- *  Written (by Nazgul) under General Public License.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef dyna_h
 #define dyna_h
@@ -51,76 +49,112 @@ typedef struct
   void *prev_ptr;
 } dyna_item_t;
 
-typedef struct 
+typedef struct
 {
- dyna_item_t *head, *tail;
- dyna_item_t *find_data;
- long count;
+  dyna_item_t *head, *tail;
+  dyna_item_t *find_data;
+  long count;
 } dynastruc_t;
 
 
-typedef void (*dyna_deleter)    (void* item);
-typedef int  (*dyna_comparator) (void *left, void *right);
+typedef void (*dyna_deleter) (void* item);
+typedef int (*dyna_comparator) (void *left, void *right);
 
-// Basic properties
+/********
+ * Basic properties
+ */
+
+/* Create new dynastruc */
 dynastruc_t*
-dyna_create                   (void);
+dyna_create (void);
 
+/* Destroy dynastruc */
 int
-dyna_destroy                  (dynastruc_t *__self, dyna_deleter __deleter );
+dyna_destroy (dynastruc_t *__self, dyna_deleter __deleter);
 
+/* Delete all items of dynastruc */
 int
-dyna_delete_all               (dynastruc_t *__self, dyna_deleter __deleter);
+dyna_delete_all (dynastruc_t *__self, dyna_deleter __deleter);
 
+/* Delete element of dynastruc */
 int
-dyna_delete                   (dynastruc_t *__self, dyna_item_t *__item, dyna_deleter __deleter);
+dyna_delete (dynastruc_t *__self, dyna_item_t *__item, dyna_deleter __deleter);
 
+/* Deleter which frees memory of data */
 void
-dyna_deleter_free_ref_data         (void *__self);
+dyna_deleter_free_ref_data (void *__self);
 
+/* Start new search */
 int
-dyna_search_reset             (dynastruc_t *__self);
+dyna_search_reset (dynastruc_t *__self);
 
+/* Search for element */
 dyna_item_t*
-dyna_search                   (dynastruc_t *__self, void *__data, int __tag,  dyna_comparator __comparator);
+dyna_search (dynastruc_t *__self, void *__data, int __tag,
+             dyna_comparator __comparator);
 
-// Stack properties
-int
-dyna_push                     (dynastruc_t *__self, void *__data, int __tag);
+/********
+ * Stack properties
+ */
 
+/* Push element to stack */
 int
-dyna_pop                      (dynastruc_t *__self, void **__data, int *__tag);
+dyna_push (dynastruc_t *__self, void *__data, int __tag);
 
-// Queue properties
+/* Pop element from stack */
 int
-dyna_add_to_front             (dynastruc_t *__self, void *__data, int __tag);
+dyna_pop (dynastruc_t *__self, void **__data, int *__tag);
 
-int
-dyna_add_to_back              (dynastruc_t *__self, void *__data, int __tag);
+/********
+ * Queue properties
+ */
 
+/* Add element to front of list */
 int
-dyna_del_from_front           (dynastruc_t *__self, void **__data, int *__tag);
+dyna_add_to_front (dynastruc_t *__self, void *__data, int __tag);
 
+/* Add element to back of list */
 int
-dyna_del_from_back            (dynastruc_t *__self, void **__data, int *__tag);
-                                   
-int
-dyna_empty                    (dynastruc_t *__self);
+dyna_add_to_back (dynastruc_t *__self, void *__data, int __tag);
 
+/* Delete element from front of list */
+int
+dyna_del_from_front (dynastruc_t *__self, void **__data, int *__tag);
+
+/* Delete element from back of list */
+int
+dyna_del_from_back (dynastruc_t *__self, void **__data, int *__tag);
+
+/********
+ *
+ */
+
+/* Check is dynastruc is empty */
+int
+dyna_empty (dynastruc_t *__self);
+
+/* Get element by index */
 dyna_item_t*
-dyna_get_item_by_index        (dynastruc_t *__self, int __i);
+dyna_get_item_by_index (dynastruc_t *__self, int __i);
 
+/* Sort dynastruc */
 void
-dyna_sort                     (dynastruc_t *__self, dyna_comparator __comparator);
+dyna_sort (dynastruc_t *__self, dyna_comparator __comparator);
 
-// Default comparators
-int
-dyna_string_comparator        (void *__l, void *__r);
+/********
+ * Default comparators
+ */
 
+/* Compare strings */
 int
-dyna_eq_comparator            (void *__l, void *__r);
+dyna_string_comparator (void *__l, void *__r);
 
+/* Check for equal */
 int
-dyna_sort_listing_comparator  (void *__l, void *__r);
+dyna_eq_comparator (void *__l, void *__r);
+
+/* Sortrer for directory listing */
+int
+dyna_sort_listing_comparator (void *__l, void *__r);
 
 #endif

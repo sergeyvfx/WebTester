@@ -1,15 +1,18 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  mainloop.h - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_mainloop_h_
-#define _wt_mainloop_h_
+#ifndef _WT_MAINLOOP_H_
+#define _WT_MAINLOOP_H_
+
+#include "autoinc.h"
+
+BEGIN_HEADER
 
 #define MAINLOOP_QUEUE_UPDATE_INTERVAL  1.0  /* secs */
 #define MAINLOOP_BELTS_UPDATE_INTERVAL  1.0  /* secs */
@@ -21,10 +24,14 @@
 
 #define MAINLOOP_DELAY                  0.2  /* secs */
 
-int             // Initialize MainLoop stuff
-wt_mainloop_init                   (void);
+/* Initialize MainLoop stuff */
+int
+wt_mainloop_init (void);
 
-void            // Uninitialize MainLoop stuff
-wt_mainloop_done                   (void);
+/* Uninitialize MainLoop stuff */
+void
+wt_mainloop_done (void);
+
+END_HEADER
 
 #endif

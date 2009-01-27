@@ -1,19 +1,24 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  cmdline.h - part of the WebTester Server
- * ================================================================================
+ * Command line parameters' parser
  *
- *  Command line parameters parser
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_cmdline_h_
-#define _wt_cmdline_h_
+#ifndef _WT_CMDLINE_H_
+#define _WT_CMDLINE_H_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 void
-wt_cmdline_parse_args              (int __argc, char **__argv);
+wt_cmdline_parse_args (int __argc, char **__argv);
+
+END_HEADER
 
 #endif

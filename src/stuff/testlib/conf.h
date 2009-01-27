@@ -1,14 +1,16 @@
-/*
- * ================================================================================
- *  conf.h - part of the TestLib
- * ================================================================================
+/**
+ * WebTester Server - server of on-line testing system
  *
- *  Written (by Nazgul) under General Public License.
+ * Config file for TestLib
  *
-*/
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
+ *
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_testlib_conf_h_
-#define _wt_testlib_conf_h_
+#ifndef _WT_TESTLIB_CONF_H_
+#define _WT_TESTLIB_CONF_H_
 
 #define MAXINT     32767
 #define MAXLONGINT 2147483647

@@ -1,64 +1,78 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  belts,h
- * ================================================================================
+ * Belts' stuff
  *
- *  Belts' stuff
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_belts_h_
-#define _wt_belts_h_
+#ifndef _WT_BELTS_H_
+#define _WT_BELTS_H_
 
 #include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
+
 #include <libwebtester/dynastruc.h>
 
 #include <webtester/task.h>
 
-// Default size of belts
+/* Default size of belts */
 #define BELTS_SIZE   4
 
 #define BELTS_AUTOSTART 0
 
-int             // Max avaliable size of belts
-wt_belts_size                      (void);
+/* Initialize belts' stuff */
+int
+wt_belts_init (void);
 
-int             // Initialize belts' stuff
-wt_belts_init                      (void);
-
-void            // Uninitialize belts size
-wt_belts_done                      (void);
-
-void            // Free all cells of belts
-wt_belts_free                      (void);
-
-BOOL            // Check for task is in belts
-wt_task_in_belts                   (wt_task_t *__self);
-
-int             // Renew status and put new tasks
-wt_belts_update                    (void);
-
-BOOL            // Is belts empty?
-wt_belts_empty                     (void);
-
-BOOL            // Is belts full?
-wt_belts_full                      (void);
-
-long            // Current length of belts
-wt_belts_length                    (void);
-
+/* Uninitialize belts size */
 void
-wt_belts_start                     (void);
+wt_belts_done (void);
 
-void
-wt_belts_stop                      (void);
+/* Max avaliable size of belts */
+int
+wt_belts_size (void);
 
-#ifndef _wt_task_h
+/* Free all cells of belts */
 void
-wt_task_status_changed             (void);
-#endif
+wt_belts_free (void);
+
+/* Check for task is in belts */
+BOOL
+wt_task_in_belts (wt_task_t *__self);
+
+/* Renew status and put new tasks */
+int
+wt_belts_update (void);
+
+/* Is belts empty? */
+BOOL
+wt_belts_empty (void);
+
+/* Is belts full? */
+BOOL
+wt_belts_full (void);
+
+/* Current length of belts */
+long
+wt_belts_length (void);
+
+/* Start belts */
+void
+wt_belts_start (void);
+
+/* Stop belts */
+void
+wt_belts_stop (void);
+
+/* Is beltsstatus is changed */
+void
+wt_belts_status_changed (void);
+
+END_HEADER
 
 #endif

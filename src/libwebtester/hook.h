@@ -1,17 +1,20 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  hook.c
- * =============================================================================
+ * Hooks' stuff
  *
- *  Hooks stuff
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _hook_h_
 #define _hook_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 #define HOOK_MAX_PRIORITY 64
 #define HOOK_MAX_PROC_LEN 1024
@@ -20,32 +23,50 @@
 #define HOOK_PRIORITY_NORMAL 2
 #define HOOK_PRIORITY_HIGHT  (HOOK_MAX_PRIORITY - 1)
 
-typedef int (*hook_callback_proc)   (void *__userData, void *__callData);
+/********
+ * Type definitions
+ */
 
-typedef struct {
+typedef int (*hook_callback_proc) (void *__userData, void *__callData);
+
+typedef struct
+{
   hook_callback_proc callback;
-  void               *userData;
-  char               proc[HOOK_MAX_PROC_LEN+1];
+  void *userData;
+  char proc[HOOK_MAX_PROC_LEN + 1];
 } hook_t;
 
 typedef hook_t *hook_node_t;
 
-int
-hook_init                          (void);
+/********
+ *
+ */
 
+/* Initialize hooks' stuff */
+int
+hook_init (void);
+
+/* Uninitialize hooks' stuff */
 void
-hook_done                          (void);
+hook_done (void);
 
+/* Register hook */
 int
-hook_register                      (char *__proc, hook_callback_proc __callback, void *__userData, int _priority);
+hook_register (char *__proc, hook_callback_proc __callback,
+               void *__userData, int _priority);
 
+/* Unregister hook */
 int
-hook_unregister                    (char *__proc, hook_callback_proc __callback, int __priority);
+hook_unregister (char *__proc, hook_callback_proc __callback, int __priority);
 
+/* Call hook */
 int
-hook_call                          (char *__proc, void *__data);
+hook_call (char *__proc, void *__data);
 
+/* Call hook in backward mode */
 int
-hook_call_backward                 (char *__proc, void *__data);
+hook_call_backward (char *__proc, void *__data);
+
+END_HEADER
 
 #endif

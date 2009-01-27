@@ -11,7 +11,7 @@
 #                    placed in /etc/init.d.
 ### END INIT INFO
 
-# Author: Sergey Sharybin <sharybin@nm.ru>
+# Author: Sergey Sharybin <g.ulairi@gmail.com>
 #
 
 # Do NOT "set -e"

@@ -1,26 +1,37 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  library.h - part of the WebTester Server
- * ================================================================================
+ * Plugins and testing modules stuff
  *
- *  Written (by Nazgul) under General Public License.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_library_h_
-#define _wt_library_h_
+#ifndef _WT_LIBRARY_H_
+#define _WT_LIBRARY_H_
 
 #include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
+
 #include <webtester/task.h>
 
 #define MODULE_MESSAGE(__type, __module, __text,__args...) \
   core_print (__type, "    " __module ": " __text, ##__args)
 
-#define MODULE_INFO(__module, __text, __args...)    MODULE_MESSAGE (MSG_INFO,    __module, __text, ##__args)
-#define MODULE_WARNING(__module, __text, __args...) MODULE_MESSAGE (MSG_WARNING, __module, __text, ##__args)
-#define MODULE_ERROR(__module, __text, __args...)   MODULE_MESSAGE (MSG_ERROR,   __module, __text, ##__args)
-#define MODULE_DEBUG(__module, __text, __args...)   MODULE_MESSAGE (MSG_DEBUG,   __module, __text, ##__args)
+#define MODULE_INFO(__module, __text, __args...) \
+  MODULE_MESSAGE (MSG_INFO,    __module, __text, ##__args)
+
+#define MODULE_WARNING(__module, __text, __args...) \
+  MODULE_MESSAGE (MSG_WARNING, __module, __text, ##__args)
+
+#define MODULE_ERROR(__module, __text, __args...) \
+  MODULE_MESSAGE (MSG_ERROR,   __module, __text, ##__args)
+
+#define MODULE_DEBUG(__module, __text, __args...) \
+  MODULE_MESSAGE (MSG_DEBUG,   __module, __text, ##__args)
 
 
 #define MODULE_KEY_ENTRY(__proc, __module, __val, __path) \
@@ -39,22 +50,34 @@
 #define MODULE_PCHAR_KEY(__module, __val, __path)  \
   MODULE_KEY_ENTRY (CONFIG_PCHAR_KEY, __module, __val, __path)
 
-int             // Load modules for testing stuff
-wt_load_modules                    (void);
+/****
+ *
+ */
 
-void            // Unload testing stuff's modules
-wt_unload_modules                  (void);
+/* Load modules for testing stuff */
+int
+wt_load_modules (void);
 
-int             // Send task to module for testing
-wt_module_send_for_testing         (wt_task_t *__task, char *__error);
+/* Unload testing stuff's modules */
+void
+wt_unload_modules (void);
 
-char*           // Returns name of testing module
-wt_module_name                     (int __lid);
+/* Send task to module for testing */
+int
+wt_module_send_for_testing (wt_task_t *__task, char *__error);
 
-////////////////////////////////////////
-// Plugins' library stuff
+/* Returns name of testing module */
+char*
+wt_module_name (int __lid);
 
-int             // Load all plugins
-wt_load_plugins                    (void);
+/****
+ * Plugins' library stuff
+ */
+
+/* Load all plugins */
+int
+wt_load_plugins (void);
+
+END_HEADER
 
 #endif

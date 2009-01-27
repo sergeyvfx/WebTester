@@ -1,14 +1,13 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  util.h
- * ================================================================================
+ * Some usefull procedures
  *
- *  Some useful procedures
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #include "util.h"
 #include "smartinclude.h"
@@ -23,8 +22,6 @@
 #include <memory.h>
 #include <unistd.h>
 
-#include <glib.h>
-
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
@@ -33,345 +30,499 @@
 #include <stdlib.h>
 #include <signal.h>
 
-//////
-//
-
-/*#define BASE_YEAR        1970
-#define MAX_CACHED_YEARS 128
-
-static int days_per_month[2][12]={
-    {31,28,31,30,31,30,31,31,30,31,30,31},
-    {31,29,31,30,31,30,31,31,30,31,30,31}
-  };
-
-static long days_per_year[MAX_CACHED_YEARS];*/
-
-//////
-//
-
+/**
+ * Common part of in_number and is_integer
+ *
+ * @param __self - number in string
+ * @param __float - is input number is floating-point
+ * @return non-zero if given string is a number, zero otherwise
+ */
 static int
-is_number_entry                    (char *__self, int __float)
+is_number_entry (const char *__self, int __float)
 {
-  int i, n=strlen (__self);
-  int decimal=0;
-  for (i=0; i<n; i++)
+  int i, n = strlen (__self);
+  int decimal = 0;
+  for (i = 0; i < n; i++)
     {
-      if (__self[i]=='-' && i!=0) return 0;
-      if (__self[i]=='.' || __self[i]==',')
+      if (__self[i] == '-' && i != 0)
         {
-          if (!__float) return 0;
-          if (decimal) return 0;
-          decimal=1;
+          return 0;
+        }
+      if (__self[i] == '.' || __self[i] == ',')
+        {
+          if (!__float)
+            {
+              return 0;
+            }
+          if (decimal)
+            {
+              return 0;
+            }
+          decimal = 1;
           continue;
         }
-      if ((__self[i]<'0' || __self[i]>'9') && __self[i]!='-') return 0;
+      if ((__self[i] < '0' || __self[i] > '9') && __self[i] != '-')
+        {
+          return 0;
+        }
     }
   return 1;
 }
 
+/**
+ * Check is string a number
+ *
+ * @param __self - number in string
+ * @return non-zero if given string is a number, zero otherwise
+ */
 int
-is_number                          (char *__self)
+is_number (const char *__self)
 {
   return is_number_entry (__self, 1);
 }
 
+/**
+ * Check is string an integer number
+ *
+ * @param __self - number in string
+ * @return non-zero if given string is a number, zero otherwise
+ */
 int
-is_integer                         (char *__self)
+is_integer (const char *__self)
 {
   return is_number_entry (__self, 0);
 }
 
+/**
+ * Drop trilling zeroes from number in string
+ *
+ * @param __self - string to operate with
+ */
 void
-drop_triling_zeroes                (char *__self)
+drop_triling_zeroes (char *__self)
 {
-  int uk=strlen (__self)-1;
-  while (__self[uk]=='0')
-    __self[uk]=0,
-    uk--;
-  if (__self[uk]=='.' || __self[uk]==',')
-    __self[uk]=0;
+  int uk = strlen (__self) - 1;
+  while (__self[uk] == '0')
+    {
+      __self[uk] = 0;
+      uk--;
+    }
+  if (__self[uk] == '.' || __self[uk] == ',')
+    {
+      __self[uk] = 0;
+    }
 }
 
+/**
+ * System parser
+ *
+ * @param __data - input string
+ * @param __token - catched token
+ * @return new shift of data string
+ */
 char*
-sys_parse                          (char *__data, char *__token)
+sys_parse (char *__data, char *__token)
 {
-  int len=0;
+  int len = 0;
   char ch;
-  __token[len]=0;
-  if (!__data || !*__data) return 0;
-//__skip_while:
-  ch=*__data;
-  while ((ch<=32 || ch>=127) && ch)
-    ch=*(++__data);
-    
-  if (ch=='"')
+  __token[len] = 0;
+  if (!__data || !*__data)
     {
-      ch=*(++__data);
-      while (ch!='"' && ch)
+      return 0;
+    }
+  ch = *__data;
+  while ((ch <= 32 || ch >= 127) && ch)
+    {
+      ch = *(++__data);
+    }
+
+  if (ch == '"')
+    {
+      ch = *(++__data);
+      while (ch != '"' && ch)
         {
-          if (ch=='\\')
+          if (ch == '\\')
             {
-              ch=*(++__data);
-              if (ch=='n') *(__token+len++)='\n'; else
-              if (ch=='r') *(__token+len++)='\r'; else
-              if (ch=='t') *(__token+len++)='\t'; else
-                *(__token+len++)=ch;
-            } else *(__token+len++)=ch;
-          ch=*(++__data);
+              ch = *(++__data);
+              if (ch == 'n') *(__token + len++) = '\n'; else
+              if (ch == 'r') *(__token + len++) = '\r'; else
+              if (ch == 't') *(__token + len++) = '\t'; else
+                *(__token + len++) = ch;
+            }
+          else
+            {
+              *(__token + len++) = ch;
+            }
+          ch = *(++__data);
         }
       __data++;
-    } else
-    while (ch>32 && ch<127)
+    }
+  else
+    while (ch > 32 && ch < 127)
       {
-        *(__token+len++)=ch;
-        ch=*(++__data);
+        *(__token + len++) = ch;
+        ch = *(++__data);
       }
 
-  *(__token+len)=0;
+  *(__token + len) = 0;
   return __data;
 }
 
+/**
+ * Get name of file
+ *
+ * @param __full - full name of file
+ * @param __out - name of file
+ * @return zero on success, non-zero otherwise
+ */
 int
-fname                              (char *__full, char *__out)
+fname (const char *__full, char *__out)
 {
-  int i, n=strlen (__full),lastuk=0, len=0;
-  for (i=0; i<n; i++) if (__full[i]=='/') lastuk=i;
-  for (i=lastuk+1; i<n; i++) __out[len++]=__full[i];
-  __out[len]=0;
+  int i, n = strlen (__full), lastuk = 0, len = 0;
+  for (i = 0; i < n; i++) if (__full[i] == '/')
+    {
+      lastuk = i;
+    }
+  for (i = lastuk + 1; i < n; i++)
+    {
+      __out[len++] = __full[i];
+    }
+  __out[len] = 0;
   return 0;
 }
 
+/**
+ * Get name of a directory
+ *
+ * @param __full - full name of file
+ * @param __out - directory name
+ * @return zero on success, non-zero otherwise
+ */
 int
-dirname                            (char *__full, char *__out)
+dirname (const char *__full, char *__out)
 {
-  int i, n=strlen (__full),lastuk=0, len=0;
-  for (i=0; i<n; i++) if (__full[i]=='/') lastuk=i;
-  for (i=0; i<lastuk; i++) __out[len++]=__full[i];
-  __out[len]=0;
+  int i, n = strlen (__full), lastuk = 0, len = 0;
+  for (i = 0; i < n; i++) if (__full[i] == '/')
+    {
+      lastuk = i;
+    }
+  for (i = 0; i < lastuk; i++)
+    {
+      __out[len++] = __full[i];
+    }
+  __out[len] = 0;
   return 0;
 }
 
+/**
+ * Drop extension from name of file
+ *
+ * @param __fn - name of file
+ * @param __out - name of file without extension
+ * @return zero on success, non-zero otherwise
+ */
 int
-dropextension                      (char *__fn, char *__out)
+dropextension (const char *__fn, char *__out)
 {
-  int firstuk=0,i,n,len=0;
-  n=strlen (__fn);
-  for (i=0; i<n; i++) if (__fn[i]=='.') {firstuk=i; break;}
-  for (i=0; i<firstuk; i++) __out[len++]=__fn[i];
-  __out[len]=0;
+  int firstuk = 0, i, n, len = 0;
+  n = strlen (__fn);
+  for (i = 0; i < n; i++)
+    {
+      if (__fn[i] == '.')
+        {
+          firstuk = i;
+          break;
+        }
+    }
+  for (i = 0; i < firstuk; i++)
+    {
+      __out[len++] = __fn[i];
+    }
+  __out[len] = 0;
   return 0;
 }
 
+/**
+ * Get file's extension
+ *
+ * @param __fn - name of file
+ * @param __out - file's extension
+ * @return zero on success, non-zero otherwise
+ */
 int
-getextension                       (char *__fn, char *__out)
+getextension (const char *__fn, char *__out)
 {
-  int lastuk=0,i,n,len=0;
-  n=strlen (__fn);
-  for (i=0; i<n; i++) if (__fn[i]=='.') lastuk=i;
-  for (i=lastuk+1; i<n; i++) __out[len++]=__fn[i];
-  __out[len]=0;
+  int lastuk = 0, i, n, len = 0;
+  n = strlen (__fn);
+  for (i = 0; i < n; i++)
+    {
+      if (__fn[i] == '.')
+        {
+          lastuk = i;
+        }
+    }
+  for (i = lastuk + 1; i < n; i++)
+    {
+      __out[len++] = __fn[i];
+    }
+  __out[len] = 0;
   return 0;
 }
 
+/**
+ * Launch command
+ *
+ * @params __args - arguments
+ * @return zero on success, non-zero otherwise
+ */
 int
-sys_launch                         (char *__args, ...)
+sys_launch (const char *__args, ...)
 {
   char buf[65536], dummy[65536];
   int ret;
 
-  PACK_ARGS (__args, dummy, 1024);
+  PACK_ARGS (__args, dummy, 65535);
   sprintf (buf, "%s > /dev/null 2>&1", dummy);
 
-  ret=system (buf);
-  if (WIFSIGNALED (ret) && (WTERMSIG (ret)==SIGINT || WTERMSIG (ret)==SIGQUIT))
-    core_kill_process (0, WTERMSIG (ret));
+  ret = system (buf);
+  if (WIFSIGNALED (ret) && (WTERMSIG (ret) == SIGINT ||
+      WTERMSIG (ret) == SIGQUIT))
+    {
+      core_kill_process (0, WTERMSIG (ret));
+    }
 
   return 0;
 }
 
+/**
+ * Get current time
+ *
+ * @return current time
+ */
 timeval_t
-now                                (void)
+now (void)
 {
   timeval_t res;
   gettimeofday (&res, 0);
   return res;
 }
 
+/**
+ * Get distance between two times
+ *
+ * @param __from - start timestamp
+ * @param __to - finito timestamp
+ * @return distance between given timestamps
+ */
 timeval_t
-timedist                           (timeval_t __from, timeval_t __to)
+timedist (timeval_t __from, timeval_t __to)
 {
   timeval_t res;
 
-  res.tv_sec=0;
-  res.tv_usec=0;
+  res.tv_sec = 0;
+  res.tv_usec = 0;
 
-  if ( (__from.tv_sec>__to.tv_sec) ||
-       (__from.tv_sec==__to.tv_sec && __from.tv_usec>__to.tv_usec)
-     )
-    return res;
-
-  res.tv_sec=__to.tv_sec-__from.tv_sec;
-
-  if (__to.tv_usec>=__from.tv_usec)
+  if ((__from.tv_sec > __to.tv_sec) ||
+      (__from.tv_sec == __to.tv_sec && __from.tv_usec > __to.tv_usec)
+      )
     {
-      res.tv_usec=__to.tv_usec-__from.tv_usec;
-    } else
+      return res;
+    }
+
+  res.tv_sec = __to.tv_sec - __from.tv_sec;
+
+  if (__to.tv_usec >= __from.tv_usec)
+    {
+      res.tv_usec = __to.tv_usec - __from.tv_usec;
+    }
+  else
     {
       res.tv_sec--;
-      res.tv_usec=__to.tv_usec+1000000-__from.tv_usec;
+      res.tv_usec = __to.tv_usec + 1000000 - __from.tv_usec;
     }
 
   return res;
 }
 
+/**
+ * Compare timeval and milliseconds
+ *
+ * @param __tv - timeval
+ * @param __usec - milliseconds
+ * @return the same as strcmp()
+ */
 int
-tv_usec_cmp                        (timeval_t __tv, __u64_t __usec)
+tv_usec_cmp (timeval_t __tv, __u64_t __usec)
 {
   __u64_t sec, usec;
-  sec=__usec/1000000;
-  usec=__usec%1000000;
+  sec = __usec / 1000000;
+  usec = __usec % 1000000;
 
-  if (__tv.tv_sec>sec) return 1;
-  if (__tv.tv_sec<sec) return -1;
-  if (__tv.tv_usec>usec) return 1;
-  if (__tv.tv_usec<usec) return -1;
+  if (__tv.tv_sec > sec)
+    {
+      return 1;
+    }
+  if (__tv.tv_sec < sec)
+    {
+      return -1;
+    }
+  if (__tv.tv_usec > usec)
+    {
+      return 1;
+    }
+  if (__tv.tv_usec < usec)
+    {
+      return -1;
+    }
   return 0;
 }
 
+/**
+ * Get distance from given timestamp and current timestamp
+ *
+ * @param __from - base timestamp
+ * @return distance from given and current timestamps
+ */
 timeval_t
-timedistnow                        (timeval_t __from)
+timedistnow (timeval_t __from)
 {
-  timeval_t to=now ();
+  timeval_t to = now ();
   return timedist (__from, to);
 }
 
+/**
+ * Prepare argument for command line
+ *
+ * @param __src - source string
+ * @param __dst - destination string
+ */
 void
-prepare_cmdarg                     (char *__src, char *__dst)
+prepare_cmdarg (const char *__src, char *__dst)
 {
-  int i, n=strlen (__src), clen=0;
-  char *buf=malloc (n*2+1);
+  int i, n = strlen (__src), clen = 0;
+  char *buf = malloc (n * 2 + 1);
   char ch;
 
-  for (i=0; i<n; i++)
+  for (i = 0; i < n; i++)
     {
-      ch=__src[i];
-      if (ch==' ' || ch=='!' || ch=='&' || ch=='|' || ch==';' || ch=='>' ||
-          ch=='(' || ch==')')
-        buf[clen++]='\\';
-      buf[clen++]=ch;
+      ch = __src[i];
+      if (ch == ' ' || ch == '!' || ch == '&' || ch == '|' || ch == ';'||
+          ch == '>' || ch == '(' || ch == ')')
+        {
+          buf[clen++] = '\\';
+        }
+      buf[clen++] = ch;
     }
 
-  buf[clen]=0;
+  buf[clen] = 0;
   strcpy (__dst, buf);
   free (buf);
 }
 
+/**
+ * Get user's id by its name
+ *
+ * @param __name - name of user
+ * @return id of user
+ */
 long
-uid_by_name                        (char *__name)
+uid_by_name (const char *__name)
 {
-  struct passwd *p=getpwnam (__name);
-  if (!p) return -1;
-  return (long)p->pw_uid;
+  struct passwd *p = getpwnam (__name);
+  if (!p)
+    {
+      return -1;
+    }
+  return (long) p->pw_uid;
 }
 
+/**
+ * Get group's id by its name
+ *
+ * @param __name - name of group
+ * @return id of group
+ */
 long
-gid_by_name                        (char *__name)
+gid_by_name (const char *__name)
 {
-  struct group *g=getgrnam (__name);
-  if (!g) return -1;
-  return (long)g->gr_gid;
+  struct group *g = getgrnam (__name);
+  if (!g)
+    {
+      return -1;
+    }
+  return (long) g->gr_gid;
 }
 
+/**
+ * Format current date with given format string
+ *
+ * @param __out - result will be stored here
+ * @param __size - size of buffer
+ * @param __format - format string
+ */
 void
-get_datetime_strf                  (char *__out, int __size, char *__format)
+get_datetime_strf (char *__out, int __size, const char *__format)
 {
   time_t t;
   struct tm *tm;
-  t=time (0);
-  tm=localtime (&t);
+  t = time (0);
+  tm = localtime (&t);
   strftime (__out, __size, __format, tm);
 }
 
+/**
+ * Check is given string is a truth value
+ *
+ * @param __self - string
+ * @return non-zero if string is truth, zero otherwise
+ */
 int
-is_truth                          (char *__self)
+is_truth (const char *__self)
 {
-  int res=0;
+  int res = 0;
   char *pchar;
   if (is_number (__self))
-    return atol (__self)!=0;
-  pchar=malloc (strlen (__self)+1);
+    {
+      return atol (__self) != 0;
+    }
+  pchar = malloc (strlen (__self) + 1);
   strupr (__self, pchar);
   if (!strcmp (pchar, "TRUE") || !strcmp (pchar, "T"))
-    res=1;
+    {
+      res = 1;
+    }
   free (pchar);
   return res;
 }
 
+/**
+ * Floating absolutely value
+ *
+ * @param __self - input number
+ * @return absolyte value
+ */
 double
-fabs                               (double __self)
+fabs (double __self)
 {
-  return ((__self>0)?(__self):(-__self));
+  return ((__self > 0) ? (__self) : (-__self));
 }
 
+/**
+ * Get sign of number
+ *
+ * @param __self - input number
+ * @reutrn sign of number
+ */
 double
-sign                               (double __self)
+sign (double __self)
 {
-  if (fabs (__self)<1e-8) return 0;
-  if (__self>0) return 1;
+  if (fabs (__self) < 1e-8)
+    {
+      return 0;
+    }
+  if (__self > 0)
+    {
+      return 1;
+    }
   return -1;
 }
-/*
-time_t
-unixtime                           (int __year, int __month, int __day, int __hour, int __minute, int __second)
-{
-  static int init=0;
-  int i, l;
-  time_t t=0;
-
-  // Normalization
-  l=LEAP_YEAR (__year);
-  while (__day>days_per_month[l][__month-1])
-    {
-      __day-=days_per_month[l][__month-1];
-      __month++;
-    }
-
-  if (__month>12)
-    {
-      long yd=__month/12;
-      if (!(__month%12)) yd--;
-      __year+=yd;
-      __month-=yd*12;
-    }
-
-  // Check for valid date
-  if (__year<BASE_YEAR || __year>=BASE_YEAR+MAX_CACHED_YEARS)
-    return (time_t)(-1);
-
-  // Initialize cache  
-  if (!init)
-    {
-      int i, j, l;
-      long days=0;
-      for (i=0; i<MAX_CACHED_YEARS-1; i++)
-        {
-          l=LEAP_YEAR ((i+BASE_YEAR));
-          for (j=0; j<12; j++)
-            days+=days_per_month[l][j];
-          days_per_year[i+1]=days;
-        }
-      init=1;
-    }
-
-  t=__second+__minute*60+__hour*60*60;
-  t+=days_per_year[__year-BASE_YEAR]*24*60*60;
-
-  l=LEAP_YEAR (__year);
-  for (i=0; i<__month-1; i++)
-    __day+=days_per_month[l][i];
-
-  t+=(__day-1)*24*60*60;
-
-  return t;
-}
-*/

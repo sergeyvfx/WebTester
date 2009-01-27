@@ -1,18 +1,21 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  plugin_defs.h
- * =============================================================================
+ * Plugins support stuff
  *
- *  PLugins support suff
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 
 #ifndef _plugin_defs_h_
 #define _plugin_defs_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 #include <libwebtester/dynastruc.h>
 
@@ -39,33 +42,35 @@
 struct _plugin_t;
 typedef struct _plugin_t plugin_t;
 
-typedef int (*plugin_init_proc)         (plugin_t *__plugin);
+typedef int (*plugin_init_proc) (plugin_t *__plugin);
 
-typedef int (*plugin_load_proc)         (plugin_t *__plugin);
-typedef int (*plugin_unload_proc)       (plugin_t *__plugin);
+typedef int (*plugin_load_proc) (plugin_t *__plugin);
+typedef int (*plugin_unload_proc) (plugin_t *__plugin);
 
-typedef int (*plugin_activate_proc)     (plugin_t *__plugin);
-typedef int (*plugin_deactivate_proc)   (plugin_t *__plugin);
+typedef int (*plugin_activate_proc) (plugin_t *__plugin);
+typedef int (*plugin_deactivate_proc) (plugin_t *__plugin);
 
-
-typedef struct {
+typedef struct
+{
   plugin_init_proc Init;
 } plugin_procs_t;
 
-typedef struct {
-  // General info
+typedef struct
+{
+  /* General info */
   int major_version;
   int minor_version;
 
-  // Callbacks
-  plugin_load_proc   plugin_load;
+  /* Callbacks */
+  plugin_load_proc plugin_load;
   plugin_unload_proc plugin_unload;
 
-  plugin_activate_proc   plugin_activate;
+  plugin_activate_proc plugin_activate;
   plugin_deactivate_proc plugin_deactivate;
 } plugin_info_t;
 
-struct _plugin_t {
+struct _plugin_t
+{
   void *dl;
   char fn[128];
   char name[128];
@@ -77,5 +82,7 @@ struct _plugin_t {
 };
 
 #include <libwebtester/plugin.h>
+
+END_HEADER
 
 #endif

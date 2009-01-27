@@ -1,218 +1,274 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  ipc_builtin.c - part of the WebTester Server
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  IPC builtin functions
- *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#include "autoinc.h"
 #include "ipc.h"
 
 #include <libwebtester/ipc.h>
 #include <libwebtester/md5.h>
-#include <libwebtester/core.h>
 #include <libwebtester/assarr.h>
 #include <libwebtester/mutex.h>
 #include <libwebtester/scheduler.h>
 
 #include <malloc.h>
 
-static char *default_procs[][2]={
-    {"exit",   "Close connection to server"},
-    {"help",   "Prints this message"},
-    {"login",  "Login to system"},
-    {"tail",   "Print tail of CORE output buffer"},
-    {"uptime", "CORE's uptime"},
-    {0, 0}
-  };
+static char *default_procs[][2] = {
+  {"exit", "Close connection to server"},
+  {"help", "Prints this message"},
+  {"login", "Login to system"},
+  {"tail", "Print tail of CORE output buffer"},
+  {"uptime", "CORE's uptime"},
+  {0, 0}
+};
 
 static long incorrect_login_delay = WT_IPC_INCORRECT_LOGIN_DELAY;
 
 static assarr_t *login_info = NULL;
-static long tries_before_lock     = WT_IPC_BLACKLIST_TRIES_BEFORE_LOCK;
-static long time_for_count_tries  = WT_IPC_BLACKLIST_TIME_FOR_COUNT_TRIES;
+static long tries_before_lock = WT_IPC_BLACKLIST_TRIES_BEFORE_LOCK;
+static long time_for_count_tries = WT_IPC_BLACKLIST_TIME_FOR_COUNT_TRIES;
 static BOOL blacklist_on_tries_expired = WT_IPC_BLACKLIST_BL_ON_TRIES_EXPIRED;
 
-static mutex_t login_info_mutex=NULL;
+static mutex_t login_info_mutex = NULL;
 
-static __u64_t login_info_review_interval=WT_IPC_BLACKLIST_REVIEW_LOGIN_INFO_INTERVAL;
+static __u64_t login_info_review_interval =
+  WT_IPC_BLACKLIST_REVIEW_LOGIN_INFO_INTERVAL;
 
-typedef struct {
+typedef struct
+{
   time_t *access_times;
-  int     access_ptr;
+  int access_ptr;
 } login_info_t;
 
 #define PASSWD_SALT "#RANDOM#"
 
-//////
-//
-
+/**
+ * Deleter for login information
+ *
+ * @param __self - informaton to be deleted
+ */
 static void
-login_info_deleter                 (void *__self)
+login_info_deleter (void *__self)
 {
   if (!__self)
-    return;
+    {
+      return;
+    }
 
-  login_info_t *info=__self;
+  login_info_t *info = __self;
   SAFE_FREE (info->access_times);
   free (info);
 }
 
+/**
+ * Read some data from config file
+ */
 static void
-read_config                        (void)
+read_config (void)
 {
   char dummy[1024];
   double fdummy;
 
-  fdummy=-1;
-  CONFIG_FLOAT_KEY   (fdummy,  "Server/IPC/IncorrectLoginDelay");
-  if (fdummy>=0)
-    incorrect_login_delay=fdummy*1000;
+  fdummy = -1;
+  CONFIG_FLOAT_KEY (fdummy, "Server/IPC/IncorrectLoginDelay");
+  if (fdummy >= 0)
+    incorrect_login_delay = fdummy * 1000;
 
-  fdummy=-1;
-  CONFIG_FLOAT_KEY   (fdummy,  "Server/IPC/Blacklisting/ReviewLoginInfoInterval");
-  if (fdummy>=0)
-    login_info_review_interval=fdummy*USEC_COUNT;
+  fdummy = -1;
+  CONFIG_FLOAT_KEY (fdummy, "Server/IPC/Blacklisting/ReviewLoginInfoInterval");
+  if (fdummy >= 0)
+    login_info_review_interval = fdummy * USEC_COUNT;
 
-  CONFIG_INT_KEY   (tries_before_lock,     "Server/IPC/Blacklisting/TriesBeforeLock");
-  CONFIG_INT_KEY   (time_for_count_tries,  "Server/IPC/Blacklisting/TimeForCountTries");
+  CONFIG_INT_KEY (tries_before_lock, "Server/IPC/Blacklisting/TriesBeforeLock");
+  CONFIG_INT_KEY (time_for_count_tries,
+                  "Server/IPC/Blacklisting/TimeForCountTries");
 
-  CONFIG_PCHAR_KEY (dummy,  "Server/IPC/Blacklisting/BlacklistOnTriesExpired");
-  blacklist_on_tries_expired=is_truth (dummy);
+  CONFIG_PCHAR_KEY (dummy, "Server/IPC/Blacklisting/BlacklistOnTriesExpired");
+  blacklist_on_tries_expired = is_truth (dummy);
 }
 
+/**
+ * Strin unused login information from pool
+ */
 static void
-strip_unused_login_info            (void)
+strip_unused_login_info (void)
 {
   char *key;
   login_info_t *info;
-  time_t t=time (0);
+  time_t t = time (0);
 
   mutex_lock (login_info_mutex);
 
   ASSARR_FOREACH_DO (login_info, key, info)
 
-    if (info->access_ptr>0 && t-info->access_times[info->access_ptr]>time_for_count_tries)
-      assarr_unset_value (login_info, key, login_info_deleter);
+    if (info->access_ptr > 0 &&
+            t - info->access_times[info->access_ptr] > time_for_count_tries)
+      {
+        assarr_unset_value (login_info, key, login_info_deleter);
+      }
 
   ASSARR_FOREACH_DONE
 
-	mutex_unlock (login_info_mutex);
+  mutex_unlock (login_info_mutex);
 }
 
+/**
+ * Check is login from given IP allowed
+ *
+ * @param __ip - ip to check
+ * @return non-zero if login is allowed, zero otherwise
+ */
 static BOOL
-login_allowed                      (char *__ip)
+login_allowed (const char *__ip)
 {
   if (!__ip)
-    return -1;
+    {
+      return FALSE;
+    }
 
-  if (tries_before_lock<=0 || time_for_count_tries<0)
-    return TRUE;
-		
-  // We don't wonna to keep trash
+  if (tries_before_lock <= 0 || time_for_count_tries < 0)
+    {
+      return TRUE;
+    }
+
+  /* We don't wonna to keep trash */
   strip_unused_login_info ();
 
-	mutex_lock (login_info_mutex);
+  mutex_lock (login_info_mutex);
 
-  BOOL res=TRUE;
-  login_info_t *info=assarr_get_value (login_info, __ip);
+  BOOL res = TRUE;
+  login_info_t *info = assarr_get_value (login_info, __ip);
 
-  // If tehere is no info, user hadn't tried to login
-  if (info && info->access_ptr==tries_before_lock-1 && time (0)-info->access_times[0]<=time_for_count_tries)
-    res=FALSE;
+  /* If tehere is no info, user hadn't tried to login */
+  if (info && info->access_ptr == tries_before_lock - 1 &&
+          time (0) - info->access_times[0] <= time_for_count_tries)
+    {
+      res = FALSE;
+    }
 
-	mutex_unlock (login_info_mutex);
+  mutex_unlock (login_info_mutex);
 
   return res;
 }
 
+/**
+ * Add login stamp to pool
+ *
+ * @param __ip - ip to add
+ */
 static void
-add_login_stamp                    (char *__ip)
+add_login_stamp (const char *__ip)
 {
   if (!__ip)
-    return;
+    {
+      return;
+    }
 
-  if (tries_before_lock<=0 || time_for_count_tries<0)
-    return;
+  if (tries_before_lock <= 0 || time_for_count_tries < 0)
+    {
+      return;
+    }
 
- 	mutex_lock (login_info_mutex);
+  mutex_lock (login_info_mutex);
 
-  login_info_t *info=assarr_get_value (login_info, __ip);
+  login_info_t *info = assarr_get_value (login_info, __ip);
 
-  // Create login info if hasn't found
+  /* Create login info if hasn't found */
   if (!info)
     {
-      info=malloc (sizeof (login_info_t));
+      info = malloc (sizeof (login_info_t));
       memset (info, 0, sizeof (login_info_t));
-      info->access_times=malloc (tries_before_lock*sizeof (time));
-      info->access_ptr=-1;
+      info->access_times = malloc (tries_before_lock * sizeof (time));
+      info->access_ptr = -1;
       assarr_set_value (login_info, __ip, info);
     }
 
-  if (info->access_ptr<tries_before_lock-1)
+  if (info->access_ptr < tries_before_lock - 1)
     {
       info->access_ptr++;
-    } else {
+    }
+  else
+    {
       int i;
-      for (i=0; i<info->access_ptr-1; i++)
-        info->access_times[i]=info->access_times[i+1];
+      for (i = 0; i < info->access_ptr - 1; i++)
+        {
+        }info->access_times[i] = info->access_times[i + 1];
     }
 
-  info->access_times[info->access_ptr]=time (0);
+  info->access_times[info->access_ptr] = time (0);
 
-	mutex_unlock (login_info_mutex);
+  mutex_unlock (login_info_mutex);
 }
 
+/**
+ * Unset all login stamps for given IP
+ *
+ * @param __ip - ip to unset stamps for
+ */
 static void
-unset_login_stamps                 (char *__ip)
+unset_login_stamps (const char *__ip)
 {
   mutex_lock (login_info_mutex);
   assarr_unset_value (login_info, __ip, login_info_deleter);
   mutex_unlock (login_info_mutex);
 }
 
-//////
-//
-
+/**
+ * Handler of IPC command `help`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_help                           (int __argc, char **__argv)
+ipc_help (int __argc, char **__argv)
 {
-  int i=0;
+  int i = 0;
 
-  if (__argc>1)
+  if (__argc > 1)
     {
       IPC_PROC_ANSWER ("-ERR Usage: `help`\n");
       return 0;
     }
 
-  IPC_PROC_ANSWER ("+OK WebTester Server IPC console help\n\nList of default registered procedures:\n");
+  IPC_PROC_ANSWER ("+OK WebTester Server IPC console help\n\n"
+                   "List of default registered procedures:\n");
 
   while (default_procs[i][0])
     {
-      IPC_PROC_ANSWER ("  %s\t\t - %s\n", default_procs[i][0], default_procs[i][1]);
+      IPC_PROC_ANSWER ("  %s\t\t - %s\n", default_procs[i][0],
+                       default_procs[i][1]);
       i++;
     }
 
-  IPC_PROC_ANSWER ("When you run difficult procedures without parameters, you'll receive short help about usage of this procedures.\n");
+  IPC_PROC_ANSWER ("When you run difficult procedures without parameters, "
+                   "you'll receive short help about usage "
+                   "of this procedures.\n");
 
   return 0;
 }
 
+/**
+ * Handler of IPC command `login`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_login                          (int __argc, char **__argv)
+ipc_login (int __argc, char **__argv)
 {
   ipc_client_t *client;
-  void *node=0;
-  char prefix[1024], dummy[1024], pass[1024]={0};
+  void *node = 0;
+  char prefix[1024], dummy[1024], pass[1024] = {0};
 
-  client=ipc_get_current_client ();
+  client = ipc_get_current_client ();
 
-  if (__argc!=3)
+  if (__argc != 3)
     {
       IPC_PROC_ANSWER ("-ERR Usage: `login <OGIN> <ASSWORD>`\n");
       return 0;
@@ -220,14 +276,16 @@ ipc_login                          (int __argc, char **__argv)
 
   if (!login_allowed (client->ip))
     {
-      IPC_PROC_ANSWER ("-ERR You isn't allowed to login to this service. Maybe, you have tried to authontificate to frequently.\n");
-      
+      IPC_PROC_ANSWER ("-ERR You isn't allowed to login to this service. "
+                       "Maybe, you have tried to authontificate "
+                       "to frequently.\n");
+
       if (blacklist_on_tries_expired)
         {
           IPC_PROC_ANSWER ("Your IP has been blacklisted,\n");
           ipc_blacklist_ip (client->ip, -1);
         }
-      
+
       ipc_disconnect_client (client, 1);
       return 0;
     }
@@ -241,17 +299,21 @@ ipc_login                          (int __argc, char **__argv)
   sprintf (prefix, "Server/IPC/Users/%s", __argv[1]);
   CONFIG_OPEN_KEY (node, prefix);
   if (!node)
-    goto __fail_;
+    {
+      goto __fail_;
+    }
 
   sprintf (dummy, "%s/password-hash", prefix);
   CONFIG_PCHAR_KEY (pass, dummy);
   md5_crypt (__argv[2], PASSWD_SALT, dummy);
-  if (strcmp (pass, dummy+8))
-    goto __fail_;
+  if (strcmp (pass, dummy + 8))
+    {
+      goto __fail_;
+    }
 
   sprintf (dummy, "%s/access", prefix);
 
-  client->authontificated=1;
+  client->authontificated = 1;
   strcpy (client->login, __argv[1]);
   CONFIG_INT_KEY (client->access, dummy);
 
@@ -267,91 +329,135 @@ __fail_:
   return 0;
 }
 
+/**
+ * Handler of IPC command `logout`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_logout                         (int __argc, char **__argv)
+ipc_logout (int __argc, char **__argv)
 {
-  ipc_client_t *client=ipc_get_current_client ();
-  
+  ipc_client_t *client = ipc_get_current_client ();
+
   if (!client->authontificated)
     {
       IPC_PROC_ANSWER ("-ERR You didn't pass authontification\n");
       return 0;
     }
 
-  client->authontificated=0;
+  client->authontificated = 0;
   strcpy (client->login, "");
-  client->access=0;
-  
+  client->access = 0;
+
   IPC_PROC_ANSWER ("+OK\n");
 
   return 0;
 }
 
+/**
+ * Handler of IPC command `tail`
+ * Returns tail of CORE messages
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_tail                           (int __argc, char **__argv)
+ipc_tail (int __argc, char **__argv)
 {
   char **lines;
   int count, i;
 
   IPC_ADMIN_REQUIRED
 
-  lines=core_output_buffer (&count);
+  lines = core_output_buffer (&count);
 
   IPC_PROC_ANSWER ("+OK ");
 
-  for (i=0; i<count; ++i)
-    IPC_PROC_ANSWER ("%s", lines[i]);
+  for (i = 0; i < count; ++i)
+    {
+      IPC_PROC_ANSWER ("%s", lines[i]);
+    }
 
   return 0;
 }
 
+/**
+ * Handler of IPC command `uptime`
+ * Uptime of CORE
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_uptime                         (int __argc, char **__argv)
+ipc_uptime (int __argc, char **__argv)
 {
   time_t uptime;
   unsigned long s, m, h;
-  ipc_client_t *client=ipc_get_current_client ();
+  ipc_client_t *client = ipc_get_current_client ();
 
   if (!client->authontificated)
     {
-      IPC_PROC_ANSWER ("-ERR You must be authentificated to run this command\n");
+      IPC_PROC_ANSWER ("-ERR You must be authentificated to "
+                       "run this command\n");
       return 0;
     }
 
-  uptime=core_get_uptime ();
+  uptime = core_get_uptime ();
 
-  s=uptime%60; uptime/=60;
-  m=uptime%60; uptime/=60;
-  h=uptime;
+  s = uptime % 60;
+  uptime /= 60;
+  m = uptime % 60;
+  uptime /= 60;
+  h = uptime;
 
   IPC_PROC_ANSWER ("+OK %ld:%02ld:%02ld\n", h, m, s);
 
   return 0;
 }
 
+/**
+ * Handler of IPC command `ip`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_ip                             (int __argc, char **__argv)
+ipc_ip (int __argc, char **__argv)
 {
   int i;
 
   IPC_ADMIN_REQUIRED
 
-  if (__argc<3)
-    goto __help_;
+  if (__argc < 3)
+    {
+      goto __help_;
+    }
 
   if (!strcmp (__argv[1], "blacklist"))
     {
-      for (i=2; i<__argc; i++)
-        ipc_blacklist_ip (__argv[i], -1);
+      for (i = 2; i < __argc; i++)
+        {
+          ipc_blacklist_ip (__argv[i], -1);
+        }
       IPC_PROC_ANSWER ("+OK\n");
-    } else
-  if (!strcmp (__argv[1], "unblacklist"))
+    }
+  else if (!strcmp (__argv[1], "unblacklist"))
     {
-      for (i=2; i<__argc; i++)
-        ipc_unblacklist_ip (__argv[i]);
+      for (i = 2; i < __argc; i++)
+        {
+          ipc_unblacklist_ip (__argv[i]);
+        }
       IPC_PROC_ANSWER ("+OK\n");
-    } else
+    }
+  else
+    {
       goto __help_;
+    }
 
   return 0;
 
@@ -360,11 +466,20 @@ __help_:
   return 0;
 }
 
+/**
+ * Handler of IPC command `version`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
 static int
-ipc_version                        (int __argc, char **__argv)
+ipc_version (int __argc, char **__argv)
 {
-  if (__argc!=1)
-    goto __help_;
+  if (__argc != 1)
+    {
+      goto __help_;
+    }
 
   IPC_PROC_ANSWER ("+OK %s\n", core_get_version_string ());
 
@@ -375,41 +490,50 @@ __help_:
   return 0;
 }
 
-////
-//
-
+/**
+ * Review login information in pool
+ */
 static int
-login_info_review                  (void *__unused)
+login_info_review (void *__unused)
 {
   strip_unused_login_info ();
   return 0;
 }
 
-//////
-// User's backend
+/****
+ * User's backend
+ */
 
+/**
+ * Initialize IPC builtin
+ *
+ * @return zero on success, non-zero otherwise
+ */
 int
-wt_ipc_builtin_init                (void)
+wt_ipc_builtin_init (void)
 {
   read_config ();
-	login_info_mutex=mutex_create ();
-  login_info=assarr_create ();
+  login_info_mutex = mutex_create ();
+  login_info = assarr_create ();
 
-  ipc_proc_register ("help",     ipc_help);
-  ipc_proc_register ("login",    ipc_login);
-  ipc_proc_register ("logout",   ipc_logout);
-  ipc_proc_register ("tail",     ipc_tail);
-  ipc_proc_register ("uptime",   ipc_uptime);
-  ipc_proc_register ("ip",       ipc_ip);
-  ipc_proc_register ("version",  ipc_version);
+  ipc_proc_register ("help", ipc_help);
+  ipc_proc_register ("login", ipc_login);
+  ipc_proc_register ("logout", ipc_logout);
+  ipc_proc_register ("tail", ipc_tail);
+  ipc_proc_register ("uptime", ipc_uptime);
+  ipc_proc_register ("ip", ipc_ip);
+  ipc_proc_register ("version", ipc_version);
 
   scheduler_add (login_info_review, 0, login_info_review_interval);
 
   return 0;
 }
 
+/**
+ * Uninitialize IPC builtin
+ */
 void
-wt_ipc_builtin_done                (void)
+wt_ipc_builtin_done (void)
 {
   scheduler_remove (login_info_review);
   assarr_destroy (login_info, login_info_deleter);

@@ -1,20 +1,25 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  pid.c
- * ================================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef pid_h
-#define pid_h
+#ifndef _pid_h_
+#define _pid_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 int
-create_pid_file                    (char *__fn);
+create_pid_file (char *__fn);
 
 int
-delete_pid_file                    (char *__fn);
+delete_pid_file (char *__fn);
+
+END_HEADER
 
 #endif

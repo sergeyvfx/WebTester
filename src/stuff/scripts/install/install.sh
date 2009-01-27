@@ -12,7 +12,10 @@ curdir=`pwd`
 init_variables()
   {
     DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
-    SRC_TOPDIR=`$PREFIX/stuff/opt_get.sh SRC_TOPDIR`
+    SRC_TOPDIR="$PREFIX/../../../.."
+
+    echo "DIST_DIR $DIST_DIR" > "$PREFIX/stuff/!config"
+    echo "SRC_TOPDIR $SRC_TOPDIR" >> "$PREFIX/stuff/!config"
   }
 
 banner()

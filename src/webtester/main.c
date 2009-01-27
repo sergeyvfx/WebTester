@@ -1,24 +1,22 @@
-/*
- *
- * ================================================================================
- *  main.c - part of WebTester Server
- * ================================================================================
- *
+/**
+ * WebTester Server - server of on-line testing system
  *
  *   ==================
  *  //      /-\       ||  __            __  _________
  * ||       \-/       ||  \ \    /\    / / |  _   _  |
  * ||  /---\___/----\ ||   \ \  /  \  / /  |_| | | |_|
- * ||  \ __      ___/ ||    \ \/ /\ \/ /       | |       
+ * ||  \ __      ___/ ||    \ \/ /\ \/ /       | |
  * ||      \    /     ||     \__/  \__/        |_|
  * ||       \  |      ||
  * ||        | |      ||      WebTester Server
  * ||        \_/    //
  * =================
  *
- *  Written (by Nazgul) under General Public License.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #include "autoinc.h"
 #include "ipc.h"
@@ -57,67 +55,104 @@
 #include <grp.h>
 #include <unistd.h>
 
-////////
-// Some type defenitions
+/****
+ * Some type defenitions
+ */
 
-typedef int  (*wt_init_func)       (void);
+typedef int (*wt_init_func) (void);
 typedef void (*wt_inst_close_func) (void);
 
-////
-//
+/****
+ *
+ */
 
-static BOOL terminating=FALSE;
+static BOOL terminating = FALSE;
 
 static char config_file[4096];
 static char log_file[4096];
 
-static BOOL good_exit=FALSE;
+static BOOL good_exit = FALSE;
 
-////
-//
+/****
+ * Some prototypes
+ */
 
-static void     // Closes WebTester Server instance
-close_instance                     (void);
-
-static void     // Hook for TERM,etc.. signals
-signal_term                     (int __signum);
-
-////////////////////////////////////////
-//
-
-static long
-wt_get_uid                         (void)
-{
-  struct passwd *p=getpwnam (WEBTESTER_USER);
-  if (!p) return -1;
-  return (long)p->pw_uid;
-}
-
-static long
-wt_get_gid                         (void)
-{
-  struct group *g=getgrnam (WEBTESTER_GROUP);
-  if (!g) return -1;
-  return (long)g->gr_gid;
-}
-
+/* Close WebTester Server instance */
 static void
-check_permissions                  (void)
-{
-  long uid=wt_get_uid (), gid=wt_get_gid ();
-  long ruid=getuid (), rgid=getgid ();
-  long euid=geteuid (), egid=getegid ();
+close_instance (void);
 
-  // Check for matching of real and effective UID and PID
-  if (uid<0 || gid<0 || ruid!=uid || rgid!=gid || euid!=uid || egid!=gid)
+/****
+ *
+ */
+
+/**
+ * Get UID for Webtester user
+ *
+ * @return UID of WebTester user
+ */
+static long
+wt_get_uid (void)
+{
+  struct passwd *p = getpwnam (WEBTESTER_USER);
+
+  if (!p)
     {
-      printf ("This module must be run under user %s:%s.\n", WEBTESTER_USER, WEBTESTER_GROUP);
+      return -1;
+    }
+
+  return (long) p->pw_uid;
+}
+
+/**
+ * Get GID for Webtester group
+ *
+ * @return GID of WebTester group
+ */
+static long
+wt_get_gid (void)
+{
+  struct group *g = getgrnam (WEBTESTER_GROUP);
+
+  if (!g)
+    {
+      return -1;
+    }
+
+  return (long) g->gr_gid;
+}
+
+/**
+ * Check permissions
+ */
+static void
+check_permissions (void)
+{
+  long uid = wt_get_uid (), gid = wt_get_gid ();
+  long ruid = getuid (), rgid = getgid ();
+  long euid = geteuid (), egid = getegid ();
+
+  /* Check for matching of real and effective UID and PID */
+  if (uid < 0 || gid < 0 || ruid != uid || rgid != gid ||
+          euid != uid || egid != gid)
+    {
+      printf ("This module must be run under user %s:%s.\n",
+              WEBTESTER_USER, WEBTESTER_GROUP);
       exit (0);
     }
 }
 
+/**
+ * Iterator of initialize process
+ *
+ * @param __inf_str - information string to print of screen
+ * @param __funct - function to call
+ * @param __err_msg - message in case of error
+ * @param __fatal - if non-zero and initialization failed,
+ * WebTester will be closed
+ */
 static void
-init_iterator                      (char *__inf_str, wt_init_func __funct, char *__err_msg, int __fatal)
+init_iterator (const char *__inf_str, wt_init_func __funct,
+               const char *__err_msg, int __fatal)
 {
   core_print (MSG_INFO, "    %s...", __inf_str);
   if (!__funct ())
@@ -125,53 +160,86 @@ init_iterator                      (char *__inf_str, wt_init_func __funct, char 
       CMSG_OK ();
       return;
     }
+
   CMSG_FAILED_S (__err_msg);
+
   if (__fatal)
     {
       wt_core_panic ();
     }
 }
 
+/**
+ * Iterator for close instance  process
+ *
+ * @param __inf_str - string to print on screen
+ * @param __func - function to call
+ */
 static void
-close_instance_iterator            (char *__inf_str, wt_inst_close_func __func)
+close_instance_iterator (char *__inf_str, wt_inst_close_func __func)
 {
   core_print (MSG_INFO, "    %s...", __inf_str);
   __func ();
   CMSG_OK ();
 }
 
+/**
+ * Set name of configuration file
+ *
+ * @param __self - name of new configuration file
+ */
 void
-wt_set_config_file                 (char *__self)
+wt_set_config_file (const char *__self)
 {
   strcpy (config_file, __self);
 }
 
+/**
+ * Set name of log file
+ *
+ * @param __self - name of log file
+ */
 void
-wt_set_log_file                    (char *__self)
+wt_set_log_file (const char *__self)
 {
   strcpy (log_file, __self);
 }
 
-////////////////////////////////////////
-//
-
-int             // Initialization of WebTester Server
-init_instance                      (void)
+/**
+ * Handler of term signals
+ */
+static void
+signal_term (int __signum)
 {
-  // Init threading
+  wt_core_term ();
+}
+
+/**
+ * Initialize of WebTester Server
+ *
+ * @return zero on success, non-zero otherwise
+ */
+static int
+init_instance (void)
+{
+  /* Init threading */
   if (thread_init ())
     {
-      core_print (MSG_ERROR, "GThreads' stuff is  not supported on your platform.\n    CORE could not be initialized.\n");
+      core_print (MSG_ERROR, "GThreads' stuff is  not supported "
+                             "on your platform.\n    "
+                             "CORE could not be initialized.\n");
       close_instance ();
       return -1;
     }
 
   core_init ();
 
-  // Print banner
-  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+  /* Print banner */
+  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                        "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
   core_print (MSG_INFO, " %s\n", core_get_version_string ());
-  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
+  core_print (MSG_INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                        "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 
   log_init (log_file);
 
@@ -179,23 +247,28 @@ init_instance                      (void)
   core_print (MSG_INFO, "Initializing CORE in DEBUG node...\n");
 #else
   if (!core_is_debug_mode ())
-    core_print (MSG_INFO, "Initializing CORE...\n"); else
-    core_print (MSG_INFO, "Initializing CORE in DEBUG node...\n");
+    {
+      core_print (MSG_INFO, "Initializing CORE...\n");
+    }
+  else
+    {
+      core_print (MSG_INFO, "Initializing CORE in DEBUG node...\n");
+    }
 #endif
 
-  // Hook signals
-  signal (SIGINT,  signal_term);
-  signal (SIGHUP,  signal_term);
-//  signal (SIGSTOP, signal_term);
+  /* Hook signals */
+  signal (SIGINT, signal_term);
+  signal (SIGHUP, signal_term);
+  /*  signal (SIGSTOP, signal_term); */
   signal (SIGTERM, signal_term);
 
-  // Chech for multiinstances
+  /* Chech for multiinstances */
   if (create_pid_file (PID_FILE))
     {
       core_print (MSG_INFO, "The WebTester Server is already running.\n");
 
-      // Do not cause a general panic
-      good_exit=TRUE;
+      /* Do not cause a general panic */
+      good_exit = TRUE;
       return -1;
     }
 
@@ -203,12 +276,17 @@ init_instance                      (void)
 
   core_print (MSG_INFO, "    Loading config file... ");
   if (!config_init (config_file))
-    core_print (MSG_INFO, "ok.\n"); else
-    core_print (MSG_ERROR, "failed, Using at most default configuration.\n");
+    {
+      core_print (MSG_INFO, "ok.\n");
+    }
+  else
+    {
+      core_print (MSG_ERROR, "failed, Using at most default configuration.\n");
+    }
 
-#ifdef USER_DEBUG
+#if USER_DEBUG
   {
-    char tmp[100]={0};
+    char tmp[100] = {0};
     CONFIG_PCHAR_KEY (tmp, "CORE/DebugMode");
     if (is_truth (tmp))
       {
@@ -221,7 +299,7 @@ init_instance                      (void)
 
   core_register_paths_from_config ();
 
-  init_iterator ("Initializing scheduler",        scheduler_init,        "", FALSE);
+  init_iterator ("Initializing scheduler", scheduler_init, "", FALSE);
 
   core_print (MSG_INFO, "    Loading plugins...\n");
   wt_load_plugins ();
@@ -229,13 +307,13 @@ init_instance                      (void)
   core_print (MSG_INFO, "    Loading modules...\n");
   wt_load_modules ();
 
-  init_iterator ("Initializing SAMBA stuff",      samba_init,         "", FALSE);
-  init_iterator ("Initializing HTTP stuff",       http_init,          "", FALSE);
-  init_iterator ("Initializing transport stuff",  wt_transport_init,  "", FALSE);
-  init_iterator ("Initializing IPC stuff",        wt_ipc_init,        "", FALSE);
-  init_iterator ("Initializing stat stuff",       wt_stat_init,       "", FALSE);
+  init_iterator ("Initializing SAMBA stuff", samba_init, "", FALSE);
+  init_iterator ("Initializing HTTP stuff", http_init, "", FALSE);
+  init_iterator ("Initializing transport stuff", wt_transport_init, "", FALSE);
+  init_iterator ("Initializing IPC stuff", wt_ipc_init, "", FALSE);
+  init_iterator ("Initializing stat stuff", wt_stat_init, "", FALSE);
 
-  init_iterator ("Initializing testing mainloop", wt_mainloop_init,   "", TRUE);
+  init_iterator ("Initializing testing mainloop", wt_mainloop_init, "", TRUE);
 
   core_print (MSG_INFO, "CORE initialized. Activating...\n");
   hook_call (CORE_ACTIVATE, 0);
@@ -243,27 +321,30 @@ init_instance                      (void)
   return 0;
 }
 
-static void     // Uninitialization of WebTester Server
-close_instance                     (void)
+/**
+ * Uninitialize of WebTester Server
+ */
+static void
+close_instance (void)
 {
   core_print (MSG_INFO, "Deactivating CORE...\n");
-  hook_call_backward  (CORE_DEACTIVATE, 0);
+  hook_call_backward (CORE_DEACTIVATE, 0);
   core_print (MSG_INFO, "CORE deactivated.\n");
   core_print (MSG_INFO, "Uninitializing CORE...\n");
 
   close_instance_iterator ("Uninitializing testing mainloop", wt_mainloop_done);
 
-  close_instance_iterator ("Uninitializing stat stuff",       wt_stat_done);
-  close_instance_iterator ("Uninitializing IPC stuff",        wt_ipc_done);
-  close_instance_iterator ("Uninitializing transport stuff",  wt_transport_done);
-  close_instance_iterator ("Uninitializing HTTP stuff",       http_done);
-  close_instance_iterator ("Uninitializing SAMBA stuff",      samba_done);
-  close_instance_iterator ("Unloading loaded modules",        wt_unload_modules);
+  close_instance_iterator ("Uninitializing stat stuff", wt_stat_done);
+  close_instance_iterator ("Uninitializing IPC stuff", wt_ipc_done);
+  close_instance_iterator ("Uninitializing transport stuff", wt_transport_done);
+  close_instance_iterator ("Uninitializing HTTP stuff", http_done);
+  close_instance_iterator ("Uninitializing SAMBA stuff", samba_done);
+  close_instance_iterator ("Unloading loaded modules", wt_unload_modules);
 
   plugin_unload_all ();
 
-  close_instance_iterator ("Unloading scheduler",             scheduler_done);
-  close_instance_iterator ("Unloading hooks" ,                hook_done);
+  close_instance_iterator ("Unloading scheduler", scheduler_done);
+  close_instance_iterator ("Unloading hooks", hook_done);
 
   delete_pid_file (PID_FILE);
   config_done ();
@@ -275,50 +356,68 @@ close_instance                     (void)
   thread_done ();
 }
 
+/****
+ * User's backend
+ */
+
+/**
+ * CORE panic handler
+ */
 void
-wt_core_panic                      (void)
+wt_core_panic (void)
 {
-  core_print (MSG_ERROR, "\nCORE PANIC!\n  Fatal error: %s\n", core_get_last_error ());
+  core_print (MSG_ERROR, "\nCORE PANIC!\n  Fatal error: %s\n",
+              core_get_last_error ());
   exit (-1);
 }
 
+/**
+ * Terminate CORE
+ */
 void
-wt_core_term                       (void)
+wt_core_term (void)
 {
-  if (terminating) return;
-  terminating=TRUE;
+  if (terminating)
+    {
+      return;
+    }
+
+  terminating = TRUE;
   close_instance ();
   exit (0);
 }
 
-void
-signal_term                        (int __signum)
-{
-  wt_core_term ();
-}
-
-////////////////////////////////////////
-// MAIN
+/****
+ *                      _  |         /   /
+ *  /\/\   /\  + |\ |  /  _+_  | | _+_  _+_
+ * /    \ |--| | | \|  \   |   \/|  |    |
+ *                     _/   \       /   /
+ * .   .      . .    .    . ...    .    .  .
+ *  ..  . .  . . .  .  .   .   .    .   . .
+ *
+ */
 
 int
-main                               (int __argc, char **__argv)
+main (int __argc, char **__argv)
 {
   struct timespec timestruc;
 
   core_init_version_string ();
 
   wt_set_config_file (CONFIG_FILE);
-  wt_set_log_file    (LOG_FILE);
+  wt_set_log_file (LOG_FILE);
 
   wt_cmdline_parse_args (__argc, __argv);
 
   check_permissions ();
 
   if (init_instance ())
-    return (good_exit)?(0):(-1);
+    {
+      return (good_exit) ? (0) : (-1);
+    }
 
-  timestruc.tv_sec=0;
-  timestruc.tv_nsec=0.2*NSEC_COUNT; // Nanoseconds :)
+  timestruc.tv_sec = 0;
+  timestruc.tv_nsec = 0.2 * NSEC_COUNT; /* Nanoseconds :) */
 
   for (;;)
     {

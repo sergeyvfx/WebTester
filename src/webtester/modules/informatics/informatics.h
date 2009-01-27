@@ -1,25 +1,27 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  informatics.c - part of the WebTester Server
- * ================================================================================
+ * Testing module for simple olympiands
  *
- *  Testing module for simple olympiands.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_informatics_h_
-#define _wt_informatics_h_
+#ifndef _WT_INFORMATICS_H_
+#define _WT_INFORMATICS_H_
 
 #include <webtester/autoinc.h>
+
+BEGIN_HEADER
+
 #include <webtester/task.h>
 #include <webtester/library.h>
 #include <libwebtester/flexval.h>
 
 #define INFORMATICS_MAJOR_VERSION  1
-#define INFORMATICS_MINOR_VERSION  0
+#define INFORMATICS_MINOR_VERSION  1
 #define INFORMATICS_LIBNAME        "Informatics"
 
 #define INFORMATICS_MAX_THREADS             10
@@ -44,46 +46,57 @@
 
 #define INFORMATICS_CHECKER_UPLOAD_INTERVAL 0.5 /* secs */
 
-BOOL            // Initialize testing stuff
-Informatics_init_testing           (void);
+/* Initialize testing stuff */
+BOOL
+Informatics_init_testing (void);
 
-int             // Wait for stopping all testing threads
-Informatics_stop_testing           (void *__unused, void *__call_unused);
+/* Wait for stopping all testing threads */
+int
+Informatics_stop_testing (void *__unused, void *__call_unused);
 
-void            // Uninitialize testing stuff
-Informatics_done_testing           (void);
+/* Uninitialize testing stuff */
+void
+Informatics_done_testing (void);
 
-BOOL            // Creates new testing thread
-Informatics_start_testing_thread   (wt_task_t *__task, char *__error);
+/* Creates new testing thread */
+BOOL
+Informatics_start_testing_thread (wt_task_t *__task, char *__error);
 
-////////
-//
+/****
+ *
+ */
 
-flex_value_t*   // Parameter in task's compiler tree
-Informatics_compiler_config_val    (char *__compiler_id, char *__path);
-
+/* Parameter in task's compiler tree */
 flex_value_t*
-Informatics_compiler_common_val    (char *__path);
+Informatics_compiler_config_val (const char *__compiler_id,
+                                 const char *__path);
 
-////////
-//
+/* Parameter in compiler tree */
+flex_value_t*
+Informatics_compiler_common_val (const char *__path);
 
-int
-Informatics_UploadProblem          (void *__unused, void *__call_unused);
-
-int
-Informatics_UploadChecker          (void *__unused);
-
-int
-Informatics_StopCheckerUploading   (void *__unused, void *__call_unused);
+/****
+ *
+ */
 
 int
-Informatics_StopProblemUploading   (void *__unused, void *__call_unused);
+Informatics_UploadProblem (void *__unused, void *__call_unused);
 
 int
-Informatics_SuspendTesting         (void);
+Informatics_UploadChecker (void *__unused);
 
 int
-Informatics_ResumeTesting          (void);
+Informatics_StopCheckerUploading (void *__unused, void *__call_unused);
+
+int
+Informatics_StopProblemUploading (void *__unused, void *__call_unused);
+
+int
+Informatics_SuspendTesting (void);
+
+int
+Informatics_ResumeTesting (void);
+
+END_HEADER
 
 #endif

@@ -49,7 +49,6 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/src/stuff/testlib++/testlib++.pc.in \
 	$(top_srcdir)/src/stuff/testlib/Makefile.in \
 	$(top_srcdir)/src/stuff/testlib/testlib.pc.in \
-	$(top_srcdir)/src/test/Makefile.in \
 	$(top_srcdir)/src/webtester/Makefile.in \
 	$(top_srcdir)/src/webtester/modules/informatics/Makefile.in \
 	$(top_srcdir)/src/webtester/modules/nullmodule/Makefile.in \
@@ -75,7 +74,7 @@ CONFIG_CLEAN_FILES = webtester.pc mk/rules.mk intl/Makefile \
 	src/librun/lrvm/Makefile src/librun/kill/Makefile \
 	src/stuff/testlib/Makefile src/stuff/testlib/testlib.pc \
 	src/stuff/testlib++/Makefile src/stuff/testlib++/testlib++.pc \
-	src/test/Makefile src/webtester/Makefile \
+	src/webtester/Makefile \
 	src/webtester/modules/nullmodule/Makefile \
 	src/webtester/modules/informatics/Makefile \
 	src/webtester/plugins/nullplugin/Makefile \
@@ -379,8 +378,6 @@ src/stuff/testlib++/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/st
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/stuff/testlib++/testlib++.pc: $(top_builddir)/config.status $(top_srcdir)/src/stuff/testlib++/testlib++.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-src/test/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/test/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/webtester/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/webtester/modules/nullmodule/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/webtester/modules/nullmodule/Makefile.in
@@ -560,7 +557,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/intl $(distdir)/m4 $(distdir)/mk $(distdir)/po $(distdir)/src/frontend $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/test $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/nullplugin $(distdir)/src/webtester/plugins/pipe $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
+	$(mkdir_p) $(distdir)/. $(distdir)/intl $(distdir)/m4 $(distdir)/mk $(distdir)/po $(distdir)/src/frontend $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/nullplugin $(distdir)/src/webtester/plugins/pipe $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

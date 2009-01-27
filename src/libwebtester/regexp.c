@@ -1,322 +1,750 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  regexp.c
- * ================================================================================
+ * Regular expressions module
  *
- *  Regular Expressions stuu
- *  Based on the GNU's PCRE
+ * Copyright 2008 Sergey I. Sharybin <g.ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
-
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #include "regexp.h"
-#include "smartinclude.h"
+#include "util.h"
 #include "strlib.h"
+
 #include <pcre.h>
-#include <string.h>
-#include <malloc.h>
 
-static regexp_modifer_t modifers[]={
-//  {'', PCRE_DOLLAR_ENDONLY},  // $ matches only at end
-//  {'', PCRE_EXTRA},           // strict escape parsing
-//  {'', PCRE_UTF8},            // handles UTF8 chars
-//  {'', PCRE_UNGREEDY},        // reverses * and *?
-//  {'', PCRE_NO_AUTO_CAPTURE}, // disables capturing parens
+/********
+ * Some macro-definitions
+ */
 
-  {'i', PCRE_CASELESS},       // case insensitive match
-  {'m', PCRE_MULTILINE},      // multiple lines match
-  {'s', PCRE_DOTALL},         // dot matches newlines
-  {'x', PCRE_EXTENDED},       // ignore whitespaces
-  {0,0}
-};
+#define REGEXP_OK                     0
+#define REGEXP_INVALID_NAMED_STRING  -1
 
-static regexp_modifer_t customModifers[]={
-  {'g', REGEXP_REPLACE_GLOBAL},
-  {0,0}
-};
+/* It's quite too dangerous */
+#  define REGEXP_REPLACE_GLOBAL 0x10000000
 
-////////////////////////////////////////
-// BUILT-IN
+/********
+ * Type definitions
+ */
 
-static char*
-preg_replace_parser_iterator       (char *__data, char **__token, int *__flags, int *__errno)
+struct regexp
 {
-  int len=0;
+  void *handle;
+  int modifiers;
+};
+
+typedef struct
+{
+   char ch;
+   int code;
+} regexp_modifier_t;
+
+/********
+ *
+ */
+
+static regexp_modifier_t modifiers[] = {
+  /* $ matches only at end */
+  /*  {'', PCRE_DOLLAR_ENDONLY}, */
+
+  /* strict escape parsing */
+  /*  {'', PCRE_EXTRA}, */
+
+  /* handles UTF-8 chars */
+  /*  {'', PCRE_UTF8}, */
+
+  /* reverses * and *? */
+  /*  {'', PCRE_UNGREEDY}, */
+
+  /* disables capturing parents */
+  /*  {'', PCRE_NO_AUTO_CAPTURE}, */
+
+  /* case insensitive match */
+  {'i', PCRE_CASELESS},
+
+  /* multiple lines match */
+  {'m', PCRE_MULTILINE},
+
+  /* dot matches newlines */
+  {'s', PCRE_DOTALL},
+
+  /* ignore white spaces */
+  {'x', PCRE_EXTENDED},
+
+  /* all occurrences will be replaced */
+  {'g', REGEXP_REPLACE_GLOBAL},
+
+  {0,0}
+};
+
+/********
+ * Internal stuff
+ */
+
+/**
+ * Parsing iterator for replacing stuff
+ *
+ * @param __data - data to parse
+ * @param __token - pointer to string where token will be placed
+ * @param __flags - flags of token
+ * @param __errno - number of occurred error
+ * @return new shift of data
+ */
+static char*
+replace_parser_iterator (const char *__data, char **__token,
+                         int *__flags, int *__errno)
+{
+  int len = 0;
   char c;
-  *__flags=0;
-  *__errno=ERR_OK;
-  
-  if (!__data||!*__data) return 0;
+
+  (*__flags) = 0;
+  (*__errno) = REGEXP_OK;
+
+  if (!__data || !*__data)
+    {
+      /* There is no data to parse */
+      return NULL;
+    }
+
   for (;;)
     {
-      c=*__data;
-      if (!c) break;
-      if (c=='$')
+      c = *__data;
+
+      if (!c)
         {
-          // Numbered string
-          if (len) break; // Token is not empty - return it for correct replacing
-          *__flags|=PF_NAMED_STRING;
-          __data++;
+          /* End of line occurred */
+          break;
+        }
+
+      if (c == '$')
+        {
+          /* Named string */
+          if (len)
+            {
+              /* Token is not empty - return it for correct replacing */
+              break;
+            }
+
+          (*__flags) |= PF_NAMED_STRING;
+          ++__data;
+
           for (;;)
             {
-              c=*__data;
-              if (!c||!(c>='0'&&c<='9')) break;
-              *(*__token+len++)=c;
-              __data++;
+              c = *__data;
+              if (!c || !(c >= '0' && c <= '9'))
+                {
+                  break;
+                }
+
+              *(*__token + len++) = c;
+              ++__data;
             }
-          if (len==0) *__errno|=PE_INVALID_NAMED_STRING;
+
+          if (len==0)
+            {
+              (*__errno) |= REGEXP_INVALID_NAMED_STRING;
+            }
           break;
-        } else
-      if (c=='\\')
+        }
+      else
         {
-          // Escape character
-          if (__data[1]=='n') *(*__token+len++)='\n'; else
-          if (__data[1]=='r') *(*__token+len++)='\r'; else
-          if (__data[1]=='t') *(*__token+len++)='\t'; else
-            *(*__token+len++)=__data[1];
-          __data++;
-        } else *(*__token+len++)=c;
-      __data++;
+          if (c=='\\')
+            {
+              /* Escaped character */
+              if (__data[1] == 'n')
+                {
+                  *(*__token + len++) = '\n';
+                }
+              else if (__data[1] == 'r')
+                {
+                  *(*__token + len++) = '\r';
+                }
+              else if (__data[1] == 't')
+                {
+                  *(*__token + len++) = '\t';
+                }
+              else
+                {
+                  *(*__token + len++) = __data[1];
+                }
+              ++__data;
+            }
+          else
+            {
+              *(*__token+len++)=c;
+            }
+        }
+      ++__data;
     }
-  *(*__token+len++)=0;
-  return __data;
+
+  *(*__token + len++) = 0;
+
+  return (char*)__data;
 }
 
-int
-regexp_free                        (regexp_t *__self)
-{
-  if (!__self||!__self->handle) return -1;
-  free (__self->handle);
-  return 0;
-}
-
+/**
+ * Get code of modifier, specified by char
+ *
+ * @param __ch - specifier of modifier
+ * @param __modifiers - array of known modifiers
+ * @return modifier's code if found, -1 otherwise
+ */
 static int
-get_regexp_modifer_code            (char ch, regexp_modifer_t *__modifers)
+get_modifier_code (char __ch, const regexp_modifier_t *__modifiers)
 {
-  int i=0;
-  while (__modifers[i].ch)
+  int i = 0;
+
+  while (__modifiers[i].ch)
     {
-      if (__modifers[i].ch==ch) return __modifers[i].code;
+      if (__modifiers[i].ch == __ch)
+        {
+          return __modifiers[i].code;
+        }
       i++;
     }
+
   return -1;
 }
 
-int
-parse_regexp                       (const char *__s, char **__regexp, int *__options, int *__customOptions)
+/**
+ * Parse regular expression, combined with options
+ *
+ * @param __s - string where source regular expression is written
+ * @param __regexp - pointer to buffer where regexp will be stored
+ * @param __modifiers - pointer to variable, where regexp's
+ * modifiers will be stored
+ * @return zero on success, non-zero otherwise
+ */
+static int
+parse_regexp (const char *__s, char **__regexp, int *__modifiers)
 {
-  int len=0, code;
+  size_t len = 0;
+  int code;
   char c;
-  int regexpOpened=0;
-  int regexpClosed=0;
+  BOOL regexp_opened = FALSE, regexp_closed = FALSE;
 
-  *__options=0;
-  *__customOptions=0;
+  (*__modifiers) = 0;
 
-  // Getting da regexp
+  /* Get regexp */
   for (;;)
     {
-      c=*__s;
-      if (!c) break;
-      if (c=='/')
+      c = *__s;
+
+      if (!c)
         {
-          if (!regexpOpened)
+          /* String is over */
+          break;
+        }
+
+      if (c == '/')
+        {
+          if (!regexp_opened)
             {
-              if (len!=0) return -1; // Trying to open regexp from non-zero character
-              regexpOpened=1;
+              if (len != 0)
+                {
+                  /* Trying to open regexp from non-zero character */
+                  return -1;
+                }
+              regexp_opened = TRUE;
             } else
             {
-              // Caught the closing of regexp
-              regexpClosed=1; // regexp is seccessfully closed
-              __s++; // Go to the first modifer and stop getting regexp
+              /* Caught the closing of regexp */
+
+              /* regexp is successfully closed */
+              regexp_closed = TRUE;
+
+              /* Go to the first modifer and stop getting regexp */
+              __s++;
               break;
             }
-        } else *(*__regexp+len++)=c;
+        }
+      else
+        {
+          *(*__regexp + len++) = c;
+        }
+
       __s++;
     }
-  if (!regexpClosed) return -1; // Abnormal closing of regexp
 
-  // Getting da modifers
+  if (!regexp_closed)
+    {
+      /* Abnormal closing of regexp */
+      return -1;
+    }
+
+  /* Get modifiers */
   for (;;)
     {
-      c=*__s;
-      if (!c) break;
-      // Check for standart modifers
-      code=get_regexp_modifer_code (c, modifers);
-      if (code>0) *__options|=code; else
+      c = *__s;
+
+      if (!c)
         {
-          code=get_regexp_modifer_code (c, customModifers);
-          if (code<=0) return -1;
-          *__customOptions|=code;
+          /* String is over */
+          break;
         }
+
+      code = get_modifier_code (c, modifiers);
+
+      if (code > 0)
+        {
+          *__modifiers |= code;
+        }
+      else
+        {
+          /* Invalid modifier */
+          return -1;
+        }
+
       __s++;
     }
+
   *(*__regexp+len)=0;
+
   return 0;
 }
 
-regexp_t
-prepare_regexp                     (const char *__regexp, char *__error_message, int *__error_offset)
+/**
+ * Get vector of occurrences
+ *
+ * @param __re - descriptor of regular expression
+ * @param __str - string to operate with
+ * @param __ovector - pointer to buffer, where occurrences will be stored
+ * @param __ovector_size - maximal size of output vector
+ * @return count of occurrences
+ */
+static int
+regexp_get_vector (const regexp_t *__re, const char *__str,
+                   int *__ovector, int __ovector_size)
 {
-  regexp_t result;
-  int errorOffset, options;
-  const char *errmsg;
-  char *parsedRegexp=malloc (strlen (__regexp));
-  result.handle=0;
-  if (!parse_regexp (__regexp, &parsedRegexp, &options, &result.userFlags))
+  int result = 0;
+
+  if (!__re || !__str || !__ovector)
     {
-      pcre *re=pcre_compile (parsedRegexp, options, &errmsg, &errorOffset, NULL);
-      if (!re)
-        {
-          result.flags=options;
-          if (__error_message) strcpy (__error_message, errmsg);
-          if (__error_offset) *__error_offset=errorOffset;
-        }
-      result.handle=re;
+      return 0;
     }
-  free (parsedRegexp);
+
+  result = pcre_exec (__re->handle, NULL, __str, strlen (__str), 0, 0,
+                      __ovector, __ovector_size);
+
   return result;
 }
 
-int
-regexp_get_vector                  (regexp_t *__re, const char *__str, int *__ovector, int __ovector_size)
-{
-  if (!__re) return 0;
-  return pcre_exec (__re->handle, NULL, __str, strlen(__str), 0, 0, __ovector, __ovector_size);
-}
-
-int
-match_regexp                       (regexp_t *__re, const char *__str)
-{
-  const unsigned ovector_size = REGEXP_MAX_VECTOR_SIZE;
-  int ovector[ovector_size];
-  if (regexp_get_vector (__re, __str, ovector, ovector_size)<=0)
-    return -1;
-  return 0;
-}
-
-int
-preg_match                         (const char *__regexp, const char *__str)
-{
-  int dummy;
-  regexp_t re;
-  re=prepare_regexp (__regexp, 0, 0);
-  if (!re.handle) return -1;
-  dummy=match_regexp (&re, __str);
-  regexp_free (&re);
-  return (!dummy)?(1):(0); // match_regexp returns `0` when string matches to regexp
-}
-
+/**
+ * Iterator for regexp_replace()
+ *
+ * @param __re - compiled regular expression
+ * @param __s - source string
+ * @param __mask - mask of replacement
+ * @param __l - left offset of replaced sub-string
+ * @param __r - right offset of replaced sub-string
+ * @return replaced string
+ * @sideeffect allocate memory for return value
+ */
 static char*
-regexp_replace_iterator            (regexp_t *__re, const char *__mask, const char *__s, int *__l, int *__r)
+regexp_replace_iterator (const regexp_t *__re,
+                         const char *__s, const char *__mask,
+                         size_t *__l, size_t *__r)
 {
-  int i,j,len,substring_count=0,vectorCount;
+  int i, vector_count;
+
   char *token, *shift, *append;
-  char *out=0;
-  char **substrings=0;
-  int curAllocSize=0, curLen=0;
-  const unsigned ovector_size=REGEXP_MAX_VECTOR_SIZE;
-  int ovector[ovector_size];
-  int flags, errno, tokenLen;
-  *__l=*__r=0;
-  // Get the vector
-  if ((vectorCount=regexp_get_vector (__re, __s, ovector, ovector_size))<=0) return 0;
-  token=malloc (REGEXP_MAX_SUBSTRING_LEN);
-  for (i=0; i<vectorCount; i++)
+  char *out = NULL;
+  char **substrings = NULL;
+
+  size_t len, cur_size = 0;
+
+  int ovector_size = (strlen (__s) + 1) * 2;
+  int *ovector = malloc (sizeof (int) * ovector_size);
+  int flags, errno;
+
+  (*__l) = (*__r) = 0;
+
+  /* Get the vector of matches */
+  vector_count = regexp_get_vector (__re, __s, ovector, ovector_size);
+  if (vector_count <= 0)
     {
-      j=ovector[i*2]; len=0;
-      // Get the numbered substring
-      while (j<ovector[i*2+1])
-        {
-          token[len++]=__s[j];
-          j++;
-        }
-      token[len++]=0;
-      strarr_append (&substrings, token, &substring_count);
+      /* No matched sub-strings */
+      return 0;
     }
-  shift=(char*)__mask;
-  out=malloc (REGEXP_START_ALLOCATION_LEN);
-  curAllocSize=REGEXP_START_ALLOCATION_LEN;
-  strcpy (out, "");
-  while ((shift=preg_replace_parser_iterator (shift, &token, &flags, &errno)))
+
+  /* Get named sub-strings */
+  substrings = malloc (vector_count * sizeof (char*));
+  for (i = 0; i < vector_count; i++)
     {
-      if (errno==ERR_OK)
+      len = ovector[i * 2 + 1] - ovector[i * 2];
+      substrings[i] = malloc (len + 1);
+      strsubstr (__s, ovector[i * 2], len, substrings[i]);
+    }
+
+  shift = (char*)__mask;
+
+  len = strlen (__mask);
+  cur_size = len + 1;
+  MALLOC_ZERO (out, cur_size);
+
+  /* Token can't be longer than mask string */
+  token = malloc (len + 1);
+
+  while ((shift = replace_parser_iterator (shift, &token, &flags, &errno)))
+    {
+      if (errno == REGEXP_OK)
         {
-          if (flags&PF_NAMED_STRING)
+          if (flags & PF_NAMED_STRING)
             {
-              int index=atoi (token);
-              if (index>=substring_count)
-                append=""; else
-                append=substrings[index];
-            } else append=token;
-          tokenLen=strlen (append);
-          if (curLen+tokenLen>=curAllocSize) out=realloc_string (out, REGEXP_ALLOCATION_DELTA);
+              /* Numbered string */
+              int index = atoi (token);
+              if (index >= vector_count)
+                {
+                  /* If index is out of range, append empty string */
+                  append = "";
+                }
+              else
+                {
+                  append = substrings[index];
+                }
+            }
+          else
+            {
+              /* Just append token */
+              append = token;
+            }
+
+          len = strlen (append);
+          cur_size += len;
+          out = realloc (out, cur_size);
+
           strcat (out, append);
-          curLen+=tokenLen;
-        } else goto __error_;
+        }
+      else
+        {
+          SAFE_FREE (out);
+          break;
+        }
     }
+
   free (token);
-  strarr_free (substrings, substring_count);
-  *__l=ovector[0]; *__r=ovector[1];
+
+  (*__l) = ovector[0];
+  (*__r) = ovector[1];
+
+  for (i = 0; i < vector_count; ++i)
+    {
+      free (substrings[i]);
+    }
+
+  free (substrings);
+  free (ovector);
+
   return out;
-__error_:
-  free (token);
-  strarr_free (substrings, substring_count);
-  return 0;
 }
 
-char*
-regexp_replace                     (regexp_t *__re, const char *__mask, const char *__s)
+/********
+ * User's backend
+ */
+
+/**
+ * Compile regular expression
+ *
+ * @param __regexp - regular expression to compile
+ * @return descriptor of compiled regular expression
+ * @sideeffect allocate memory for return value. Use regexp_free() to free.
+ */
+regexp_t*
+regexp_compile (const char *__regexp)
 {
-  char *shift=(char*)__s;
-  char *dummy, *prefix, *buf=0;
-  int l,r,prefixLen,len;
+  regexp_t *result = NULL;
+  int modifiers;
+  char *parsed_regexp = malloc (strlen (__regexp) + 1);
+
+  if (!parse_regexp (__regexp, &parsed_regexp, &modifiers))
+    {
+      void *re;
+
+      const char *err;
+      int pos;
+
+      /* Clear non-pcre-based modifiers */
+      int pcre_options = modifiers & ~REGEXP_REPLACE_GLOBAL;
+
+      re = pcre_compile (parsed_regexp, pcre_options, &err, &pos, NULL);
+
+      /* Error in regexp */
+      if (!re)
+        {
+          free (parsed_regexp);
+          return NULL;
+        }
+
+      /* Create descriptor */
+      MALLOC_ZERO (result, sizeof (struct regexp));
+      result->handle = re;
+      result->modifiers = modifiers;
+    }
+
+  free (parsed_regexp);
+
+  return result;
+}
+
+/**
+ * Free compiled regular expression descriptor
+ *
+ * @param __regexp - regexp to free
+ */
+void
+regexp_free (regexp_t *__regexp)
+{
+  if (!__regexp || !__regexp->handle)
+    {
+      return;
+    }
+
+  free (__regexp->handle);
+  free (__regexp);
+}
+
+/**
+ * Check is string matches to compiled regular expression
+ *
+ * @param __re - compiled regular expression to use
+ * @param __str - string to check
+ * @return non-zero if string matches to regular expression, zero otherwise
+ */
+BOOL
+regexp_match (const regexp_t *__re, const char *__str)
+{
+  /* Assume maximal count of elements in vector to each element of string */
+  /* and the whole string. */
+  /* Multiplying by 2 is needed because vector will store beginning */
+  /* and ending of occurrence */
+  int ovector_size = (strlen (__str) + 1) * 2;
+
+  int *ovector = malloc (sizeof (int) * ovector_size);
+  int res;
+
+  res = regexp_get_vector (__re, __str, ovector, ovector_size);
+
+  free (ovector);
+
+  return res > 0;
+}
+
+/**
+ * Make sub-string replacing by regular compiled expression matching
+ *
+ * @param __re - compiled regular expression
+ * @param __s - source string
+ * @param __mask - mask of replacement
+ * @return replaced string
+ * @sideeffect allocate memory for return value
+ */
+char*
+regexp_replace (const regexp_t *__re, const char *__s, const char *__mask)
+{
+  char *shift = (char*)__s;
+  char *dummy, *prefix = NULL, *buf = NULL;
+  size_t l, r, len, buf_len = 0, prefix_len = 0;
 
   for (;;)
     {
-      dummy=regexp_replace_iterator (__re, __mask, shift, &l, &r);
-      len=0;
-      if (dummy) len=strlen (dummy);
-      //len=(dummy)?(strlen (dummy)):(0);
-      prefixLen=l;
-      if (prefixLen>0)
+      dummy = regexp_replace_iterator (__re, shift, __mask, &l, &r);
+      len = 0;
+
+      if (dummy)
         {
-          prefix=malloc (prefixLen+1);
-          strsubstr (shift, 0, prefixLen, prefix);
-        } else prefix="";
-      if (prefixLen+len)
+          len = strlen (dummy);
+        }
+
+      if (l > 0)
         {
-          buf=realloc_string (buf, prefixLen+len);
-          strcat (buf, prefix);  // append to buffer new prefix
-          if (dummy)
+          /* There is non-empty prefix */
+
+          if (prefix_len < l)
             {
-              strcat (buf, dummy); // append replaced string
-              free (dummy);        // Free replaced buffer
+              prefix_len = l;
+              prefix = realloc (prefix, prefix_len + 1);
+            }
+
+          strsubstr (shift, 0, l, prefix);
+        }
+      else
+        {
+          if (!prefix)
+            {
+              prefix = strdup ("");
+              prefix_len = 0;
+            }
+          else
+            {
+              prefix[0] = 0;
             }
         }
-      if (prefixLen>0) free (prefix);
-      if (!dummy) break;
-      shift+=r;
-      if (!r) break;
-      if (!__re->userFlags&REGEXP_REPLACE_GLOBAL) break;
+
+      if (l + len > 0)
+        {
+          BOOL zerolize = 0;
+          /* It there is something to append */
+          buf_len += l + len;
+
+          if (!buf)
+            {
+              zerolize = TRUE;
+            }
+
+          buf = realloc (buf, buf_len + 1);
+
+          if (zerolize)
+            {
+              buf[0] = 0;
+            }
+
+          /* Append new prefix to buffer */
+          strcat (buf, prefix);
+
+          if (dummy)
+            {
+              /* Append replaced string and free it */
+              strcat (buf, dummy);
+              free (dummy);
+            }
+        }
+
+      shift += r;
+
+      if (!dummy || !r ||
+          !TEST_FLAG (__re->modifiers, REGEXP_REPLACE_GLOBAL))
+        {
+          /* FINITO */
+          break;
+        }
     }
-  buf=realloc_string (buf, strlen (shift));
-  strcat (buf, shift);
+
+  SAFE_FREE (prefix);
+
+  /* Append suffix */
+  buf_len += strlen (shift);
+
+  if (buf)
+    {
+      buf = realloc (buf, buf_len + 1);
+      strcat (buf, shift);
+    }
+  else
+    {
+      buf = malloc (buf_len + 1);
+      strcpy (buf, shift);
+    }
+
   return buf;
 }
 
-void
-preg_replace                       (const char *__regexp, const char *__mask, char *__str)
+/**
+ * Check is string matches to regular expression
+ *
+ * @param __regexp - regular expression to use
+ * @param __string - string to check
+ * @return non-zero if string matches to regular expression, zero otherwise
+ */
+BOOL
+preg_match (const char *__regexp, const char *__str)
 {
+  int dummy;
+  regexp_t *re;
+
+  /* Compile regexp */
+  re = regexp_compile (__regexp);
+  if (!re)
+    {
+      return FALSE;
+    }
+
+  dummy = regexp_match (re, __str);
+
+  /* Free memory */
+  regexp_free (re);
+
+  return dummy;
+}
+
+/**
+ * Make sub-string replacing by regular expression matching
+ *
+ * @param __re - compiled regular expression
+ * @param __s - source string
+ * @param __mask - mask of replacement
+ * @return replaced string on success, NULL otherwise
+ * @sideeffect allocate memory for return value
+ */
+char*
+preg_replace (const char *__regexp, const char *__s, const char *__mask)
+{
+  regexp_t *re;
   char *result;
-  regexp_t re;
-  re=prepare_regexp (__regexp, 0, 0);
-  if (!re.handle) return;
-  result=regexp_replace (&re, __mask, __str);
-  strcpy (__str, result);
-  regexp_free (&re);
-  free (result);
+
+  re = regexp_compile (__regexp);
+
+  if (!re)
+    {
+      return NULL;
+    }
+
+  result = regexp_replace (re, __s, __mask);
+
+  regexp_free (re);
+
+  return result;
+}
+
+/**
+ * Escape regexp special characters in string
+ *
+ * @param __str - string to be escaped
+ * @return pointer to escaped string
+ * @sideeffect allocate memory for return value.
+ */
+char*
+regexp_escape (const char *__str)
+{
+  char *regexp;
+  size_t regexp_len;
+  const char *special = "^$+[]()/.";
+  char *in = (char*)__str, *out;
+
+  /* Calculate how much memory we should allocate for regexp */
+
+  /* 2 because of starting and finishing slashes */
+  regexp_len = 2;
+  while (*in != '\0')
+    {
+      if (strchr (special, *in))
+        {
+          ++regexp_len;
+        }
+      ++regexp_len;
+      ++in;
+    }
+
+  /* Build regexp string */
+  regexp = malloc (regexp_len + 1);
+
+  in  = (char*)__str;
+  out = regexp;
+
+  *out = '/';
+
+  while (*in != '\0')
+    {
+      if (strchr (special, *in))
+        {
+          *out++ = '\\';
+        }
+      *out++ = *in++;
+    }
+
+  *out = '/';
+  *out = '\0';
+
+  return regexp;
 }

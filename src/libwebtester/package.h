@@ -1,14 +1,13 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  package.h
- * =============================================================================
+ * Package definition
  *
- *  Package definitions
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _package_h_
 #define _package_h_

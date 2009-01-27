@@ -1,16 +1,14 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * ================================================================================
- *  stat.h - part of the WebTester Server Server
- * ================================================================================
+ * Statistics stuff
  *
- *  Statistics stuff.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Written (by Nazgul) under General Public License.
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#include "autoinc.h"
 #include "stat.h"
 #include "ipc.h"
 
@@ -20,10 +18,12 @@
 #include <libwebtester/hook.h>
 #include <libwebtester/assarr.h>
 
-////////
-// type defenitnions
+/****
+ * type defenitnions
+ */
 
-typedef struct {
+typedef struct
+{
   ipc_client_t *ipc_client;
 
   BOOL registered;
@@ -32,32 +32,32 @@ typedef struct {
   assarr_t *vars;
 } stat_client_t;
 
-////
-//
-
 static stat_client_t clients[IPC_MAX_CLIENT_COUNT];
 static assarr_t *vars = NULL;
 static assarr_t *desc = NULL;
 
-static BOOL initialized=FALSE;
+static BOOL initialized = FALSE;
 
-////////
-//
-
+/**
+ * Dump assaciative array to string buffer
+ *
+ * @param __self - array to be dumped
+ * @param __buf - buffer to dump to
+ */
 static void
-dump_arr_to_buf                    (assarr_t *__self, char *__buf)
+dump_arr_to_buf (const assarr_t *__self, char *__buf)
 {
   flex_value_t *val;
   char *key;
   char dumped[65536], dummy[1024];
-  
+
   strcpy (__buf, "");
 
   ASSARR_FOREACH_DO (__self, key, val);
     flexval_serialize (val, dumped);
     strcat (__buf, key);
     strcat (__buf, ";");
-    sprintf (dummy, "%ld", (long)strlen (dumped));
+    sprintf (dummy, "%ld", (long) strlen (dumped));
     strcat (__buf, dummy);
     strcat (__buf, ";");
     strcat (__buf, dumped);
@@ -65,79 +65,119 @@ dump_arr_to_buf                    (assarr_t *__self, char *__buf)
   ASSARR_FOREACH_DONE;
 }
 
+/**
+ * Deleter of flexval
+ *
+ * @param __self - flexval to be deleted
+ */
 static void
-var_deleter                        (void *__self)
+var_deleter (void *__self)
 {
   if (!__self) return;
   flexval_free (__self);
   free (__self);
 }
 
+/**
+ * Review registered clients
+ */
 static void
-review_clients                     (void)
+review_clients (void)
 {
   int i;
 
-  for (i=0; i<IPC_MAX_CLIENT_COUNT; i++)
+  for (i = 0; i < IPC_MAX_CLIENT_COUNT; i++)
     {
-      // Mistmatch between stored and real client's UID
+      /* Mistmatch between stored and real client's UID */
       if (strcmp (clients[i].ipc_client->uid, clients[i].uid))
         {
-          // Unset unwanted data
+          /* Unset unwanted data */
           if (clients[i].vars)
-            assarr_unset_all (clients[i].vars, var_deleter);
-          clients[i].registered=FALSE;
+            {
+              assarr_unset_all (clients[i].vars, var_deleter);
+            }
 
-          // Update data
+          clients[i].registered = FALSE;
+
+          /* Update data */
           strcpy (clients[i].ipc_client->uid, clients[i].uid);
         }
     }
 }
 
+/**
+ * Build changes in state
+ *
+ * @param __self - client to build changes for
+ * @param __vars_diff - renewed variables
+ */
 static void
-build_stat_changes                 (stat_client_t *__self, assarr_t *__vars_diff)
+build_stat_changes (stat_client_t *__self, assarr_t *__vars_diff)
 {
-  if (!__self) return;
-
   flex_value_t *val, *cval;
   char *key;
 
+  if (!__self)
+    {
+      return;
+    }
+
   ASSARR_FOREACH_DO (vars, key, val);
-    cval=assarr_get_value (__self->vars, key);
+    cval = assarr_get_value (__self->vars, key);
     if (!cval || flexval_cmp (val, cval))
-      assarr_set_value (__vars_diff, key, val);
+      {
+        assarr_set_value (__vars_diff, key, val);
+      }
   ASSARR_FOREACH_DONE;
 }
 
+/**
+ * Send new status to client
+ *
+ * @param __self - client to send changes to
+ * @param __vars - changed variables
+ */
 static void
-send_stat_changes                  (stat_client_t *__self, assarr_t *__vars)
+send_stat_changes (stat_client_t *__self, assarr_t *__vars)
 {
   char stat[65536], vars[65536];
 
-  if (__self->ipc_client->access<7) // But why??
-    return;
-  
+  if (__self->ipc_client->access < 7) /* But why?? */
+    {
+      return;
+    }
+
   dump_arr_to_buf (__vars, vars);
-  sprintf (stat, "vars;%ld;%s;", (long)strlen (vars), vars);
+  sprintf (stat, "vars;%ld;%s;", (long) strlen (vars), vars);
 
   if (strcmp (vars, ""))
-    sock_answer (__self->ipc_client->sock, "+OK %s\n", stat);
+    {
+      sock_answer (__self->ipc_client->sock, "+OK %s\n", stat);
+    }
 }
 
+/**
+ * Update cache of client's status
+ *
+ * @param __self - client to update cache for
+ * @param __vars - vars to be cached
+ */
 static void
-update_client_stat_cache           (stat_client_t *__self, assarr_t *__vars)
+update_client_stat_cache (stat_client_t *__self, assarr_t *__vars)
 {
   flex_value_t *val, *cval;
   char *key;
 
   if (!__self->vars)
-    __self->vars=assarr_create ();
+    {
+      __self->vars = assarr_create ();
+    }
 
   ASSARR_FOREACH_DO (__vars, key, val);
-    cval=assarr_get_value (__self->vars, key);
+    cval = assarr_get_value (__self->vars, key);
     if (!cval)
       {
-        cval=malloc (sizeof (flex_value_t));
+        cval = malloc (sizeof (flex_value_t));
         flexval_create (cval);
         assarr_set_value (__self->vars, key, cval);
       }
@@ -145,21 +185,29 @@ update_client_stat_cache           (stat_client_t *__self, assarr_t *__vars)
   ASSARR_FOREACH_DONE;
 }
 
+/**
+ * Callback for stat is changed
+ *
+ * @return zero on success, non-zero otherwise
+ */
 static int
-stat_changed_callback              (void)
+stat_changed_callback (void)
 {
   int i;
 
-  assarr_t *vars_diff=NULL;
+  assarr_t *vars_diff = NULL;
 
   review_clients ();
 
-  for (i=0; i<IPC_MAX_CLIENT_COUNT; i++)
+  for (i = 0; i < IPC_MAX_CLIENT_COUNT; i++)
     {
       if (clients[i].registered)
         {
           if (!vars_diff)
-            vars_diff=assarr_create ();
+            {
+              vars_diff = assarr_create ();
+            }
+
           assarr_unset_all (vars_diff, 0);
           build_stat_changes (&clients[i], vars_diff);
           send_stat_changes (&clients[i], vars_diff);
@@ -168,33 +216,56 @@ stat_changed_callback              (void)
     }
 
   if (vars_diff)
-    assarr_destroy (vars_diff, 0);
+    {
+      assarr_destroy (vars_diff, 0);
+    }
 
   return 0;
 }
 
+/**
+ * Get status variable
+ *
+ * @param __self - name of variable to get
+ * @return variable's value
+ */
 static flex_value_t*
-get_var                            (char *__self)
+get_var (const char *__self)
 {
-  flex_value_t *fv=assarr_get_value (vars, __self);
+  flex_value_t *fv = assarr_get_value (vars, __self);
+
   if (fv)
-    return fv;
-  fv=malloc (sizeof (flex_value_t));
+    {
+      return fv;
+    }
+
+  fv = malloc (sizeof (flex_value_t));
   flexval_create (fv);
   assarr_set_value (vars, __self, fv);
+
   return fv;
 }
 
+/**
+ * Dunp stat information to buffer
+ *
+ * @param __buf - buffer to store variables to
+ */
 static void
-dump_stat_to_buf                   (char *__buf)
+dump_stat_to_buf (char *__buf)
 {
   char svars[65536];
   dump_arr_to_buf (vars, svars);
-  sprintf (__buf, "vars;%ld;%s;", (long)strlen (svars), svars);
+  sprintf (__buf, "vars;%ld;%s;", (long) strlen (svars), svars);
 }
 
+/**
+ * Send unpacked stat to client
+ *
+ * @param __self - client to send stat to
+ */
 static void
-send_unpacked_stat                 (stat_client_t *__self)
+send_unpacked_stat (stat_client_t *__self)
 {
   char *key, buf[4096], *dummy;
   flex_value_t *val;
@@ -203,205 +274,291 @@ send_unpacked_stat                 (stat_client_t *__self)
 
   ASSARR_FOREACH_DO (vars, key, val)
     flexval_serialize (val, buf);
-    dummy=assarr_get_value (desc, key);
-    sock_answer (__self->ipc_client->sock, "%s %s\n", (dummy)?(dummy):(key), buf);
+    dummy = assarr_get_value (desc, key);
+    sock_answer (__self->ipc_client->sock, "%s %s\n",
+                 (dummy) ? (dummy) : (key), buf);
   ASSARR_FOREACH_DONE
 }
 
-static void     // Send full stat to client
-send_stat_to_client                (stat_client_t *__self, BOOL __packed)
+/**
+ * Send stat to client
+ *
+ * @param __self - client to send stat to
+ * @param __packed - send packed stat?
+ */
+static void
+send_stat_to_client (stat_client_t *__self, BOOL __packed)
 {
   if (__packed)
     {
       char stat[65536];
 
-      if (__self->ipc_client->access<7) // But why??
-        return;
-  
+      if (__self->ipc_client->access < 7) /* But why?? */
+        {
+          return;
+        }
+
       dump_stat_to_buf (stat);
       sock_answer (__self->ipc_client->sock, "+OK %s\n", stat);
-  } else {
-    send_unpacked_stat (__self);
-  }
+    }
+  else
+    {
+      send_unpacked_stat (__self);
+    }
 }
 
-////
-//
-
+/**
+ * Get client client by IPC info
+ *
+ * @param __info - information to get client
+ * @return client descriptor
+ */
 static stat_client_t*
-get_client_by_ipc_info             (ipc_client_t *__info)
+get_client_by_ipc_info (ipc_client_t *__info)
 {
   review_clients ();
   return &clients[__info->id];
 }
 
-static int      // Handler of IPC command `stat`
-ipc_stat                           (int __argc, char **__argv)
+/**
+ * Handler of IPC command `stat`
+ *
+ * @param __argc - count of arguments
+ * @param __argv - arguments' values
+ * @return zero on success, non-zero otherwise
+ */
+static int
+ipc_stat (int __argc, char **__argv)
 {
-  stat_client_t *client=get_client_by_ipc_info (ipc_get_current_client ());
+  stat_client_t *client = get_client_by_ipc_info (ipc_get_current_client ());
 
   IPC_ADMIN_REQUIRED
 
-  if (__argc==2)
+  if (__argc == 2)
     {
       if (!strcmp (__argv[1], "help"))
         {
-          IPC_PROC_ANSWER ("+OK Usage: stat [register|unregister]\n  `stat` prints the statistics\n`stat register` regsiters you as client to receive all "
-            "changes of statistic\n"
-            "`stat unregister` makes opposite action\n");
-        } else
-      if (!strcmp (__argv[1], "register"))
+          IPC_PROC_ANSWER ("+OK Usage: stat [register|unregister]\n  `stat` "
+                           "prints the statistics\n`stat register` "
+                           "regsiters you as client to receive all "
+                           "changes of statistic\n"
+                           "`stat unregister` makes opposite action\n");
+        }
+      else
+        if (!strcmp (__argv[1], "register"))
         {
           if (!client->registered)
             {
-              client->registered=TRUE;
+              client->registered = TRUE;
               IPC_PROC_ANSWER ("+OK\n");
-            } else
-              IPC_PROC_ANSWER ("-ERR Ypu have been already registered as STAT client\n");
-        } else
-      if (!strcmp (__argv[1], "unregister"))
+            }
+          else
+            {
+              IPC_PROC_ANSWER ("-ERR Ypu have been already "
+                               "registered as STAT client\n");
+            }
+        }
+      else
+        if (!strcmp (__argv[1], "unregister"))
         {
           if (client->registered)
             {
-              client->registered=FALSE;
+              client->registered = FALSE;
               IPC_PROC_ANSWER ("+OK\n");
-            } else
+            }
+          else
+            {
               IPC_PROC_ANSWER ("-ERR You isn't STAT client\n");
-        } else
-      if (!strcmp (__argv[1], "packed"))
+            }
+        }
+      else
         {
-          send_stat_to_client (client, TRUE);
-        } else
-          goto __usage_;
-    } else
-  if (__argc==1)
+          if (!strcmp (__argv[1], "packed"))
+            {
+              send_stat_to_client (client, TRUE);
+            }
+          else
+            {
+                goto __usage_;
+            }
+        }
+    }
+  else
     {
-      send_stat_to_client (client, FALSE);
-    } else
-      goto __usage_;
+      if (__argc == 1)
+        {
+          send_stat_to_client (client, FALSE);
+        }
+      else
+        {
+          goto __usage_;
+        }
+    }
 
   return 0;
+
 __usage_:
   IPC_PROC_ANSWER ("-ERR Type `stat help` for help\n");
   return 0;
 }
 
-////
-//
-
+/**
+ * Initialzie clients
+ */
 static void
-clients_init                       (void)
+clients_init (void)
 {
   int i;
-  if (!clients)
-    return ;
 
   memset (clients, 0, sizeof (clients));
-  for (i=0; i<IPC_MAX_CLIENT_COUNT; i++)
+  for (i = 0; i < IPC_MAX_CLIENT_COUNT; i++)
     {
-      clients[i].ipc_client=ipc_get_client_by_id (i);
+      clients[i].ipc_client = ipc_get_client_by_id (i);
     }
 }
 
+/**
+ * Ininitialize clients
+ */
 static void
-clients_done                       (void)
+clients_done (void)
 {
   int i;
   memset (clients, 0, sizeof (clients));
-  for (i=0; i<IPC_MAX_CLIENT_COUNT; i++)
+  for (i = 0; i < IPC_MAX_CLIENT_COUNT; i++)
     {
       if (clients[i].vars)
-      assarr_destroy (clients[i].vars, var_deleter);
+        {
+          assarr_destroy (clients[i].vars, var_deleter);
+        }
     }
 }
 
-////////
-// User's backend
+/********
+ * User's backend
+ */
 
+/**
+ * Initialize stat stuff
+ *
+ * @return zero on success, non-zero otherwise
+ */
 int
-wt_stat_init                       (void)
+wt_stat_init (void)
 {
   if (!wt_ipc_supported ())
-    return -1;
+    {
+      return -1;
+    }
 
   clients_init ();
 
-  vars=assarr_create ();
-  desc=assarr_create ();
+  vars = assarr_create ();
+  desc = assarr_create ();
 
   ipc_proc_register ("stat", ipc_stat);
 
-//  hook_register ("Stat.Changed", stat_changed_callback, 0, HOOK_PRIORITY_NORMAL);
+  /* hook_register ("Stat.Changed", stat_changed_callback, 0,
+                 HOOK_PRIORITY_NORMAL); */
 
-  initialized=TRUE;
+  initialized = TRUE;
 
   return 0;
 }
 
+/**
+ * Uninitialize stat stuff
+ */
 void
-wt_stat_done                       (void)
+wt_stat_done (void)
 {
   if (!initialized)
-    return;
+    {
+      return;
+    }
 
-  initialized=FALSE;
+  initialized = FALSE;
   clients_done ();
 
   assarr_destroy (vars, var_deleter);
   assarr_destroy (desc, assarr_deleter_free_ref_data);
 
-//  hook_unregister ("Stat.Changed", stat_changed_callback, HOOK_PRIORITY_NORMAL);
+  /* hook_unregister ("Stat.Changed", stat_changed_callback,
+                   HOOK_PRIORITY_NORMAL); */
 }
 
-////
-//
-
+/**
+ * Set integer stat variable
+ *
+ * @param __var - variable name
+ * @param __val - variable value
+ */
 void
-wt_stat_set_int                    (char *__var, long __val)
+wt_stat_set_int (const char *__var, long __val)
 {
-  if (!initialized) return;
-  flex_value_t *fv=get_var (__var);
+  if (!initialized)
+    {
+      return;
+    }
+
+  flex_value_t *fv = get_var (__var);
   flexval_set_int (fv, __val);
   stat_changed_callback ();
 }
 
+/**
+ * Set float stat variable
+ *
+ * @param __var - variable name
+ * @param __val - variable value
+ */
 void
-wt_stat_set_float                  (char *__var, double __val)
+wt_stat_set_float (const char *__var, double __val)
 {
-  if (!initialized) return;
-  flex_value_t *fv=get_var (__var);
+  if (!initialized)
+    {
+      return;
+    }
+
+  flex_value_t *fv = get_var (__var);
   flexval_set_float (fv, __val);
   stat_changed_callback ();
 }
 
+/**
+ * Set string stat variable
+ *
+ * @param __var - variable name
+ * @param __val - variable value
+ */
 void
-wt_stat_set_string                 (char *__var, char *__val)
+wt_stat_set_string (const char *__var, const char *__val)
 {
-  if (!initialized) return;
-  flex_value_t *fv=get_var (__var);
+  if (!initialized)
+    {
+      return;
+    }
+
+  flex_value_t *fv = get_var (__var);
   flexval_set_string (fv, __val);
   stat_changed_callback ();
 }
 
+/**
+ * Set array stat variable
+ *
+ * @param __var - variable name
+ * @param __val - variable value
+ */
 void
-wt_stat_set_array                  (char *__var, flex_value_t **__val)
+wt_stat_set_array (const char *__var, flex_value_t **__val)
 {
-  if (!initialized) return;
-  flex_value_t *fv=get_var (__var);
+  if (!initialized)
+    {
+      return;
+    }
+
+  flex_value_t *fv = get_var (__var);
   flexval_set_array (fv, __val);
   stat_changed_callback ();
-}
-
-void
-wt_stat_set_desc                   (char *__var, char *__desc)
-{
-  if (!__var)
-    return;
-
-  assarr_unset_value (desc, __var, assarr_deleter_free_ref_data);
-
-  if (!__desc)
-    return;
-
-  assarr_set_value (desc, __var, strdup (__desc));
 }

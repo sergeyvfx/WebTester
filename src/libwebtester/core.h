@@ -1,17 +1,18 @@
-/*
+/**
+ * WebTester Server - server of on-line testing system
  *
- * =============================================================================
- *  core.h
- * =============================================================================
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
- *  Some core built-in stuff
- *
- *  Written (by Nazgul) under GPL
- *
-*/
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
 #ifndef _core_h_
 #define _core_h_
+
+#include <libwebtester/smartinclude.h>
+
+BEGIN_HEADER
 
 #define MSG_INFO     0x0001
 #define MSG_WARNING  0x0002
@@ -47,93 +48,127 @@
 
 #define CORE_PRINT_HOOK 1
 
+/* Initialize CORE */
 int
-core_init                          (void);
+core_init (void);
 
+/* Uninitialize CORE */
 void
-core_done                          (void);
+core_done (void);
 
+/* Get time when CORE was started */
 time_t
-core_get_starttime                 (void);
+core_get_starttime (void);
 
+/* Get uptime of CORE */
 time_t
-core_get_uptime                    (void);
+core_get_uptime (void);
 
+/* Initialize version string */
 void
-core_init_version_string           (void);
+core_init_version_string (void);
 
+/* Get version string */
 char*
-core_get_version_string            (void);
+core_get_version_string (void);
 
+/* CORE has been crashed :( */
 void
-core_oops                          (char *__text, ...);
+core_oops (char *__text, ...);
 
-////////////////////////////////////////
-// Input/output stuff
+/********
+ * Input/output stuff
+ */
 
+/* Set CORE silence */
 void
-core_set_silent                    (int __silent);
+core_set_silent (int __silent);
 
+/* Get CORE silence */
 int
-core_get_silent                    (void);
+core_get_silent (void);
 
+/* Print CORE message */
 void
-core_print                         (int __type, char *__text, ...);
+core_print (int __type, char *__text, ...);
 
-///////////////////////////////////
-// Error tracking stuff
-void
-core_set_last_error                (char *__text, ...);
-
-char*
-core_get_last_error                (void);
-
-////////////////////////////////////////
-//
-
-void
-core_register_path                 (char *__path);
-
-void
-core_register_paths_from_config    (void);
-
-char*
-core_first_registered_path         (void);
-
-char*
-core_last_registered_path          (void);
-
-char*
-core_next_registered_path          (void);
-
-char*
-core_prev_registered_path          (void);
-
-void
-core_unregister_paths              (void);
-
-dynastruc_t*
-core_registered_paths             (void);
-
-///////////////////////////////////////
-// CORE DEBUG stuff
-
-void
-core_enter_debug_mode              (void);
-
-int
-core_is_debug_mode                 (void);
-
-///////////////////////////////////
-//
-
-void
-core_kill_process                  (int __pid, int __signal);
-
+/* Get CORE IO buffer */
 char**
-core_output_buffer                 (int *__count);
+core_output_buffer (int *__count);
 
+/* Uninitialize CORE IO stuff */
 void
-core_io_done                       (void);
+core_io_done (void);
+
+/********
+ * Error tracking stuff
+ */
+
+/* Set last CORE error */
+void
+core_set_last_error (char *__text, ...);
+
+/* Get description of las error */
+char*
+core_get_last_error (void);
+
+/********
+ *
+ */
+
+/* Register path for search */
+void
+core_register_path (char *__path);
+
+/* Register paths from fonfig file */
+void
+core_register_paths_from_config (void);
+
+/* Get first registered path */
+char*
+core_first_registered_path (void);
+
+/* Get last registered path */
+char*
+core_last_registered_path (void);
+
+/* Get next registered path */
+char*
+core_next_registered_path (void);
+
+/* Get previous registered path */
+char*
+core_prev_registered_path (void);
+
+/* Get list of registered paths */
+dynastruc_t*
+core_registered_paths (void);
+
+/* Unregister registered pathes */
+void
+core_unregister_paths (void);
+
+/********
+ * CORE DEBUG stuff
+ */
+
+/* Enter CORE to DEBUG mode */
+void
+core_enter_debug_mode (void);
+
+/* Check is CORE in debuf mode */
+int
+core_is_debug_mode (void);
+
+/********
+ *
+ */
+
+/* Kill process */
+void
+core_kill_process (int __pid, int __signal);
+
+
+END_HEADER
 
 #endif

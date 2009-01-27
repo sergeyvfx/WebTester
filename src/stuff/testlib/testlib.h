@@ -1,14 +1,16 @@
-/*
- * ================================================================================
- *  testlib.h - part of the TestLib
- * ================================================================================
+/**
+ * WebTester Server - server of on-line testing system
  *
- *  Written (by Nazgul) under General Public License.
+ * Main implementation file of TestLib
  *
-*/
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
+ *
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ */
 
-#ifndef _wt_testlib_h_
-#define _wt_testlib_h_
+#ifndef _WT_TESTLIB_H_
+#define _WT_TESTLIB_H_
 
 #include <stdio.h>
 #include <string.h>
@@ -18,102 +20,119 @@
 #define _PE 0x0002
 #define _CR 0x0004
 
-////////////////////////////////////////
-// Some useful defenitions
+/****
+ * Some useful defenitions
+ */
 
 #define Quit(__errno, __text) \
   testlib_quit (__errno, __text);
 
-////////////////////////////////////////
-// Parsing and readin
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-int
-testlib_read_integer               (FILE *__stream);
+  /****
+   * Parsing and readin
+   */
 
-long
-testlib_read_longint               (FILE *__stream);
+  /* Read integer value from stream */
+  int
+  testlib_read_integer (FILE *__stream);
 
-double
-testlib_read_float                 (FILE *__stream);
+  /* Read long integer value from stream */
+  long
+  testlib_read_longint (FILE *__stream);
 
-int
-testlib_read_char                  (FILE *__stream);
+  /* Read double value from stream */
+  double
+  testlib_read_float (FILE *__stream);
 
-int
-testlib_cur_char                   (FILE *__stream);
+  /* Read char from stream and go to next */
+  int
+  testlib_read_char (FILE *__stream);
 
-void
-testlib_read_string                (FILE *__stream, char *__buf, int __maxlen);
+  /* Return current character in stream */
+  int
+  testlib_cur_char (FILE *__stream);
 
-int
-testlib_seekeof                    (FILE *__stream);
+  /* Read string from stream */
+  void
+  testlib_read_string (FILE *__stream, char *__buf, int __maxlen);
 
-int
-testlib_eof                        (FILE *__stream);
+  /* Seek end of file in stream */
+  int
+  testlib_seekeof (FILE *__stream);
 
-int
-testlib_eoln                       (FILE *__stream);
+  /* Test end of stream */
+  int
+  testlib_eof (FILE *__stream);
 
-int
-testlib_seekeoln                   (FILE *__stream);
+  /* Test end of line in stream */
+  int
+  testlib_eoln (FILE *__stream);
 
-void
-testlib_next_line                  (FILE *__stream);
+  /* Seek end of line in stream */
+  int
+  testlib_seekeoln (FILE *__stream);
 
-void
-testlib_skip                       (FILE *__stream, char *__charset);
+  /* Skip characters and move to next line */
+  void
+  testlib_next_line (FILE *__stream);
 
-////
-//
-  
-void
-testlib_set_output_stream          (FILE *__stream);
+  /* Skip characterd from charset. Do not generate errors */
+  void
+  testlib_skip (FILE *__stream, const char *__charset);
 
-void
-testlib_silent                     (int __val);
+  /* Set output stream */
+  void
+  testlib_set_output_stream (FILE *__stream);
 
-////////////////////////////////////////
-// Deep-side stuff
+  /* Set testlib silence */
+  void
+  testlib_silent (int __val);
 
-void
-testlib_quit                       (int __errno, char *__desc);
+  /* Quit from testlib */
+  void
+  testlib_quit (int __errno, const char *__desc);
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifndef TESTLIB_SO
-#  ifndef _wt_testlibpp_h_
+#  ifndef _WT_TESTLIB_H_
 
-FILE *inf=0, *ouf=0, *ans=0;
+FILE *inf = 0, *ouf = 0, *ans = 0;
 
 void
-Check                              (void);
+Check (void);
 
 int
-main                               (int __argc, char **__argv)
+main (int __argc, char **__argv)
 {
-  if (__argc<4)
+  if (__argc < 4)
     {
       char usage[4096];
-      sprintf (usage, "Usage: %s <input file> <output file> <answer file>", __argv[0]);
+      sprintf (usage, "Usage: %s <input file> <output file> "
+                      "<answer file>",
+               __argv[0]);
       Quit (-1, usage);
     }
 
-  if (__argc>4 && !strcmp (__argv[4], "-s"))
-    testlib_silent (1);
-    
-  inf=fopen (__argv[1], "r");
-  ouf=fopen (__argv[2], "r");
-  ans=fopen (__argv[3], "r");
+  if (__argc > 4 && !strcmp (__argv[4], "-s"))
+    {
+      testlib_silent (1);
+    }
+
+  inf = fopen (__argv[1], "r");
+  ouf = fopen (__argv[2], "r");
+  ans = fopen (__argv[3], "r");
 
   if (!ouf)
-    Quit (_PE, "File not found");
-
+    {
+      Quit (_PE, "File not found");
+    }
 
   testlib_set_output_stream (ouf);
 
@@ -123,6 +142,7 @@ main                               (int __argc, char **__argv)
 
   return 0;
 }
+
 #  endif
 #endif
 
