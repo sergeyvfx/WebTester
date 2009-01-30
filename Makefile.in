@@ -55,7 +55,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/src/webtester/plugins/pipe/Makefile.in \
 	$(top_srcdir)/src/webtester/plugins/rundll/Makefile.in \
 	$(top_srcdir)/src/webtester/plugins/webinterface/Makefile.in \
-	AUTHORS COPYING ChangeLog INSTALL NEWS TODO config.guess \
+	AUTHORS COPYING ChangeLog INSTALL NEWS config.guess \
 	config.rpath config.sub depcomp install-sh ltmain.sh missing \
 	mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
