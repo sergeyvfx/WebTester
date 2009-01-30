@@ -34,12 +34,11 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = @build@
-host_triplet = @host@
+subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/webtester.pc.in $(top_srcdir)/configure \
-	$(top_srcdir)/intl/Makefile.in $(top_srcdir)/mk/rules.mk.in \
+	$(top_srcdir)/mk/rules.mk.in $(top_srcdir)/src/Makefile.in \
 	$(top_srcdir)/src/frontend/Makefile.in \
 	$(top_srcdir)/src/librun/Makefile.in \
 	$(top_srcdir)/src/librun/kill/Makefile.in \
@@ -59,17 +58,15 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	AUTHORS COPYING ChangeLog INSTALL NEWS TODO config.guess \
 	config.rpath config.sub depcomp install-sh ltmain.sh missing \
 	mkinstalldirs
-subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/intltool.m4 \
-	$(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = webtester.pc mk/rules.mk intl/Makefile \
+CONFIG_CLEAN_FILES = webtester.pc mk/rules.mk src/Makefile \
 	src/libwebtester/Makefile src/librun/Makefile \
 	src/librun/lrvm/Makefile src/librun/kill/Makefile \
 	src/stuff/testlib/Makefile src/stuff/testlib/testlib.pc \
@@ -113,39 +110,31 @@ DIST_ARCHIVES = $(distdir).tar.bz2
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ACLOCAL_AMFLAGS = -I m4
-ALL_LINGUAS = @ALL_LINGUAS@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
-AR = @AR@
 AUDLDFLAGS = @AUDLDFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-CATALOGS = @CATALOGS@
-CATOBJEXT = @CATOBJEXT@
+BUILD_GUI = @BUILD_GUI@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = 
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
-CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DATADIRNAME = @DATADIRNAME@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
 GLIB_LIBS = @GLIB_LIBS@
@@ -153,8 +142,6 @@ GLIB_PREFIX = @GLIB_PREFIX@
 GLIB_REQ = @GLIB_REQ@
 GLIB_VERSION = @GLIB_VERSION@
 GMODULE_AVAIL = @GMODULE_AVAIL@
-GMOFILES = @GMOFILES@
-GMSGFMT = @GMSGFMT@
 GREP = @GREP@
 GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
 GTHREAD_LIBS = @GTHREAD_LIBS@
@@ -168,51 +155,16 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INSTOBJEXT = @INSTOBJEXT@
-INTLLIBS = @INTLLIBS@
-INTLTOOL_CAVES_RULE = @INTLTOOL_CAVES_RULE@
-INTLTOOL_DESKTOP_RULE = @INTLTOOL_DESKTOP_RULE@
-INTLTOOL_DIRECTORY_RULE = @INTLTOOL_DIRECTORY_RULE@
-INTLTOOL_EXTRACT = @INTLTOOL_EXTRACT@
-INTLTOOL_ICONV = @INTLTOOL_ICONV@
-INTLTOOL_KBD_RULE = @INTLTOOL_KBD_RULE@
-INTLTOOL_KEYS_RULE = @INTLTOOL_KEYS_RULE@
-INTLTOOL_MERGE = @INTLTOOL_MERGE@
-INTLTOOL_MSGFMT = @INTLTOOL_MSGFMT@
-INTLTOOL_MSGMERGE = @INTLTOOL_MSGMERGE@
-INTLTOOL_OAF_RULE = @INTLTOOL_OAF_RULE@
-INTLTOOL_PERL = @INTLTOOL_PERL@
-INTLTOOL_PONG_RULE = @INTLTOOL_PONG_RULE@
-INTLTOOL_PROP_RULE = @INTLTOOL_PROP_RULE@
-INTLTOOL_SCHEMAS_RULE = @INTLTOOL_SCHEMAS_RULE@
-INTLTOOL_SERVER_RULE = @INTLTOOL_SERVER_RULE@
-INTLTOOL_SERVICE_RULE = @INTLTOOL_SERVICE_RULE@
-INTLTOOL_SHEET_RULE = @INTLTOOL_SHEET_RULE@
-INTLTOOL_SOUNDLIST_RULE = @INTLTOOL_SOUNDLIST_RULE@
-INTLTOOL_THEME_RULE = @INTLTOOL_THEME_RULE@
-INTLTOOL_UI_RULE = @INTLTOOL_UI_RULE@
-INTLTOOL_UPDATE = @INTLTOOL_UPDATE@
-INTLTOOL_XAM_RULE = @INTLTOOL_XAM_RULE@
-INTLTOOL_XGETTEXT = @INTLTOOL_XGETTEXT@
-INTLTOOL_XML_NOMERGE_RULE = @INTLTOOL_XML_NOMERGE_RULE@
-INTLTOOL_XML_RULE = @INTLTOOL_XML_RULE@
 KERNEL_CFLAGS = @KERNEL_CFLAGS@
 LDFLAGS = 
-LEX = @LEX@
-LEXLIB = @LEXLIB@
-LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBLDFLAGS = @LIBLDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBTOOL = @LIBTOOL@
-LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MKINSTALLDIRS = @MKINSTALLDIRS@
-MSGFMT = @MSGFMT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -228,12 +180,7 @@ PCRE_VERSION = @PCRE_VERSION@
 PICFLAGS = @PICFLAGS@
 PICLDFLAGS = @PICLDFLAGS@
 PLUGIN_LIBTOOL_FLAGS = @PLUGIN_LIBTOOL_FLAGS@
-POFILES = @POFILES@
-POSUB = @POSUB@
-PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
-PO_IN_DATADIR_TRUE = @PO_IN_DATADIR_TRUE@
 PREFIX = @PREFIX@
-RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHARED_SUFFIX = @SHARED_SUFFIX@
 SHELL = @SHELL@
@@ -244,12 +191,9 @@ SOUP_LIBS = @SOUP_LIBS@
 SOUP_PREFIX = @SOUP_PREFIX@
 SOUP_VERSION = @SOUP_VERSION@
 STRIP = @STRIP@
-USE_NLS = @USE_NLS@
 VERSION = @VERSION@
-XGETTEXT = @XGETTEXT@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -260,21 +204,13 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
-build = @build@
 build_alias = @build_alias@
-build_cpu = @build_cpu@
-build_os = @build_os@
-build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-host = @host@
 host_alias = @host_alias@
-host_cpu = @host_cpu@
-host_os = @host_os@
-host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -360,7 +296,7 @@ webtester.pc: $(top_builddir)/config.status $(srcdir)/webtester.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 mk/rules.mk: $(top_builddir)/config.status $(top_srcdir)/mk/rules.mk.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
+src/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/libwebtester/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/libwebtester/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -394,15 +330,6 @@ src/webtester/plugins/rundll/Makefile: $(top_builddir)/config.status $(top_srcdi
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/frontend/Makefile: $(top_builddir)/config.status $(top_srcdir)/src/frontend/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-
-mostlyclean-libtool:
-	-rm -f *.lo
-
-clean-libtool:
-	-rm -rf .libs _libs
-
-distclean-libtool:
-	-rm -f libtool
 uninstall-info-am:
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)
@@ -557,7 +484,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/intl $(distdir)/m4 $(distdir)/mk $(distdir)/po $(distdir)/src/frontend $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/nullplugin $(distdir)/src/webtester/plugins/pipe $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
+	$(mkdir_p) $(distdir)/. $(distdir)/mk $(distdir)/src $(distdir)/src/frontend $(distdir)/src/librun $(distdir)/src/librun/kill $(distdir)/src/librun/lrvm $(distdir)/src/libwebtester $(distdir)/src/stuff/testlib $(distdir)/src/stuff/testlib++ $(distdir)/src/webtester $(distdir)/src/webtester/modules/informatics $(distdir)/src/webtester/modules/nullmodule $(distdir)/src/webtester/plugins/nullplugin $(distdir)/src/webtester/plugins/pipe $(distdir)/src/webtester/plugins/rundll $(distdir)/src/webtester/plugins/webinterface
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -730,13 +657,12 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags
+distclean-am: clean-am distclean-generic distclean-hdr distclean-tags
 
 dvi: dvi-recursive
 
@@ -766,7 +692,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-generic mostlyclean-libtool
+mostlyclean-am: mostlyclean-generic
 
 pdf: pdf-recursive
 
@@ -781,18 +707,17 @@ uninstall-am: uninstall-info-am uninstall-pkgconfigDATA
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
-	check-am clean clean-generic clean-libtool clean-recursive \
-	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
-	dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-recursive distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-pkgconfigDATA install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-generic mostlyclean-libtool \
+	check-am clean clean-generic clean-recursive ctags \
+	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-shar \
+	dist-tarZ dist-zip distcheck distclean distclean-generic \
+	distclean-hdr distclean-recursive distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-pkgconfigDATA \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-generic \
 	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
 	uninstall uninstall-am uninstall-info-am \
 	uninstall-pkgconfigDATA

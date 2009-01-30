@@ -1,0 +1,12 @@
+.SILENT:
+include ../mk/rules.mk
+include ../mk/init.mk
+
+SUBDIRS = libwebtester librun stuff webtester
+
+ifeq (@BUILD_GUI@,yes)
+	SUBDIRS += frontend
+endif
+
+include ../mk/objective.mk
+

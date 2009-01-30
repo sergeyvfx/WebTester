@@ -9,16 +9,15 @@ AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_CPP
-AM_PROG_LEX
-AM_PROG_LIBTOOL
-AC_PROG_INTLTOOL([0.31])
+AC_PROG_CXX
 
-AC_ARG_ENABLE(homedir,       AC_HELP_STRING([--enable-homedir], [Set the home directory of WebTester (default=/home/webtester)]),homedir="$enableval",homedir="/home/webtester")
-AC_ARG_ENABLE(pidfile,       AC_HELP_STRING([--enable-pidfile], [Set the file name to save PID of WebTester (default=/home/webtester/var/run/webtester.pid)]),pidfile="$enableval",pidfile="/home/webtester/var/run/webtester.pid")
-AC_ARG_ENABLE(super_pidfile, AC_HELP_STRING([--enable-supervisor-pidfile], [Set the file name to save PID of WebTester sUpervisor (default=/home/webtester/var/run/supervisor.pid)]),super_pidfile="$enableval",super_pidfile="/home/webtester/var/run/supervisor.pid")
-AC_ARG_ENABLE(logfile,       AC_HELP_STRING([--enable-logfile], [Set the file name to save log of WebTester (default=/home/webtester/var/log/webtester.log)]),logfile="$enableval",logfile="/home/webtester/var/log/webtester.log")
-AC_ARG_ENABLE(kernel,        AC_HELP_STRING([--enable-kernel],  [Set the release version of kernel to built with]),KERNEL_RELEASE="$enableval",KERNEL_RELEASE=`uname -r`)
-AC_ARG_ENABLE(user_debug,    AC_HELP_STRING([--enable-debug],   [Compile debug parts of source]), USER_DEBUG="yes",USER_DEBUG="no")
+AC_ARG_ENABLE(homedir,        AC_HELP_STRING([--enable-homedir], [Set the home directory of WebTester (default=/home/webtester)]),homedir="$enableval",homedir="/home/webtester")
+AC_ARG_ENABLE(pidfile,        AC_HELP_STRING([--enable-pidfile], [Set the file name to save PID of WebTester (default=/home/webtester/var/run/webtester.pid)]),pidfile="$enableval",pidfile="/home/webtester/var/run/webtester.pid")
+AC_ARG_ENABLE(super_pidfile,  AC_HELP_STRING([--enable-supervisor_pidfile], [Set the file name to save PID of WebTester sUpervisor (default=/home/webtester/var/run/supervisor.pid)]),super_pidfile="$enableval",super_pidfile="/home/webtester/var/run/supervisor.pid")
+AC_ARG_ENABLE(logfile,        AC_HELP_STRING([--enable-logfile], [Set the file name to save log of WebTester (default=/home/webtester/var/log/webtester.log)]),logfile="$enableval",logfile="/home/webtester/var/log/webtester.log")
+AC_ARG_ENABLE(kernel,         AC_HELP_STRING([--enable-kernel],  [Set the release version of kernel to built with]),KERNEL_RELEASE="$enableval",KERNEL_RELEASE=`uname -r`)
+AC_ARG_ENABLE(debug,          AC_HELP_STRING([--enable-debug],   [Compile debug parts of source]),USER_DEBUG="yes",USER_DEBUG="no")
+AC_ARG_ENABLE(gui,            AC_HELP_STRING([--enable-gui],     [Compile WebTester Server GUI interface (default=no)]),build_gui="yes",build_gui="no")
 
 dnl make sure we keep ACLOCAL_FLAGS around for maintainer builds to work
 AC_SUBST(ACLOCAL_AMFLAGS, "$ACLOCAL_FLAGS -I m4")
@@ -30,7 +29,6 @@ dnl ===================
 GETTEXT_PACKAGE=webtester
 AC_SUBST(GETTEXT_PACKAGE)
 ALL_LINGUAS="en_GB"
-AM_GLIB_GNU_GETTEXT
 
 
 dnl ===================
@@ -52,14 +50,14 @@ dnl ========================
 dnl Ok, first we find out what flags we need to use.
 AC_MSG_CHECKING([for what extension and flags to use for plugin compilation])
 case "$target" in
-	*)
-		AC_MSG_RESULT([libdl-compatible: -fPIC -DPIC -shared, .so])
-		PICFLAGS="-fPIC -DPIC"
-		PICLDFLAGS="-fPIC -DPIC -shared"
-		LIBLDFLAGS="-fPIC -DPIC -shared"
-		AUDLDFLAGS="-Wl,-export-dynamic $RPATH_VAL"
-		SHARED_SUFFIX=".so"
-		;;
+  *)
+    AC_MSG_RESULT([libdl-compatible: -fPIC -DPIC -shared, .so])
+    PICFLAGS="-fPIC -DPIC"
+    PICLDFLAGS="-fPIC -DPIC -shared"
+    LIBLDFLAGS="-fPIC -DPIC -shared"
+    AUDLDFLAGS="-Wl,-export-dynamic $RPATH_VAL"
+    SHARED_SUFFIX=".so"
+    ;;
 esac
 AC_SUBST(PICFLAGS)
 AC_SUBST(PICLDFLAGS)
@@ -67,69 +65,71 @@ AC_SUBST(LIBLDFLAGS)
 AC_SUBST(AUDLDFLAGS)
 AC_SUBST(SHARED_SUFFIX)
 AC_DEFINE_UNQUOTED(SHARED_SUFFIX, "${SHARED_SUFFIX}",
-	[Define the shared module suffix extension on your platform.])
+  [Define the shared module suffix extension on your platform.])
 
 dnl Check for glib
 AC_MSG_CHECKING(if glib >= ${GLIB_REQ} exists)
 if pkg-config --exists glib-2.0 ; then
-    GLIB_CFLAGS=`pkg-config --cflags glib-2.0`
-    GLIB_LIBS=`pkg-config --libs glib-2.0`
-    GLIB_PREFIX=`pkg-config --variable=prefix glib-2.0`
-    GLIB_VERSION=`pkg-config --modversion glib-2.0`
-    AC_SUBST(GLIB_VERSION)
-    AC_SUBST(GLIB_PREFIX)
-    AC_SUBST(GLIB_CFLAGS)
-    AC_SUBST(GLIB_LIBS)
+  GLIB_CFLAGS=`pkg-config --cflags glib-2.0`
+  GLIB_LIBS=`pkg-config --libs glib-2.0`
+  GLIB_PREFIX=`pkg-config --variable=prefix glib-2.0`
+  GLIB_VERSION=`pkg-config --modversion glib-2.0`
+  AC_SUBST(GLIB_VERSION)
+  AC_SUBST(GLIB_PREFIX)
+  AC_SUBST(GLIB_CFLAGS)
+  AC_SUBST(GLIB_LIBS)
 
-    if pkg-config --exists glib-2.0 '>=' ${GLIB_REQ} ; then
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_ERROR("only ${GLIB_VERSION} found")
-    fi
+  if pkg-config --exists glib-2.0 '>=' ${GLIB_REQ} ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_ERROR("only ${GLIB_VERSION} found")
+  fi
 else
-    AC_MSG_ERROR(no)
+  AC_MSG_ERROR(no)
 fi
 
 dnl Check for gthread
 AC_MSG_CHECKING(if gthread >= ${GTHREAD_REQ} exists)
 if pkg-config --exists gthread-2.0 ; then
-    GLIB_CFLAGS=`pkg-config --cflags gthread-2.0`
-    GLIB_LIBS=`pkg-config --libs gthread-2.0`
-    GLIB_PREFIX=`pkg-config --variable=prefix gthread-2.0`
-    GLIB_VERSION=`pkg-config --modversion gthread-2.0`
-    AC_SUBST(GTHREAD_VERSION)
-    AC_SUBST(GTHREAD_PREFIX)
-    AC_SUBST(GTHREAD_CFLAGS)
-    AC_SUBST(GTHREAD_LIBS)
+  GLIB_CFLAGS=`pkg-config --cflags gthread-2.0`
+  GLIB_LIBS=`pkg-config --libs gthread-2.0`
+  GLIB_PREFIX=`pkg-config --variable=prefix gthread-2.0`
+  GLIB_VERSION=`pkg-config --modversion gthread-2.0`
+  AC_SUBST(GTHREAD_VERSION)
+  AC_SUBST(GTHREAD_PREFIX)
+  AC_SUBST(GTHREAD_CFLAGS)
+  AC_SUBST(GTHREAD_LIBS)
 
-    if pkg-config --exists gthread-2.0 '>=' ${GTHREAD_REQ} ; then
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_ERROR("only ${GTHREAD_VERSION} found")
-    fi
+  if pkg-config --exists gthread-2.0 '>=' ${GTHREAD_REQ} ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_ERROR("only ${GTHREAD_VERSION} found")
+  fi
 else
-    AC_MSG_ERROR(no)
+  AC_MSG_ERROR(no)
 fi
 
 dnl Check for gmodule
 AC_MSG_CHECKING(if gmodule >= ${GMODULE_REQ} exists)
 if pkg-config --exists gmodule-2.0 ; then
-    if pkg-config --exists gmodule-2.0 '>=' ${GMODULE_REQ} ; then
-        AC_MSG_RESULT(yes)
-        GMODULE_AVAIL="yes"
-    else
-        AC_MSG_ERROR("only `pkg-config --modversion gmodule-2.0` found")
-        GMODULE_AVAIL="no"
-    fi
-else
-    AC_MSG_ERROR(no)
+  if pkg-config --exists gmodule-2.0 '>=' ${GMODULE_REQ} ; then
+    AC_MSG_RESULT(yes)
+    GMODULE_AVAIL="yes"
+  else
+    AC_MSG_ERROR("only `pkg-config --modversion gmodule-2.0` found")
     GMODULE_AVAIL="no"
+  fi
+else
+  AC_MSG_ERROR(no)
+  GMODULE_AVAIL="no"
 fi
 AC_SUBST(GMODULE_AVAIL)
 
 dnl Check for gtk
-AC_MSG_CHECKING(if gtk+-2.0 >= ${GTK_REQ} exists)
-if pkg-config --exists gtk+-2.0 ; then
+
+if test "x$build_gui" = "xyes"; then
+  AC_MSG_CHECKING(if gtk+-2.0 >= ${GTK_REQ} exists)
+  if pkg-config --exists gtk+-2.0 ; then
     GTK_CFLAGS=`pkg-config --cflags gtk+-2.0`
     GTK_LIBS=`pkg-config --libs gtk+-2.0`
     GTK_PREFIX=`pkg-config --variable=prefix gtk+-2.0`
@@ -140,13 +140,19 @@ if pkg-config --exists gtk+-2.0 ; then
     AC_SUBST(GTK_LIBS)
 
     if pkg-config --exists gtk+-2.0 '>=' ${GTK_REQ} ; then
-        AC_MSG_RESULT(yes)
+      AC_MSG_RESULT(yes)
     else
-        AC_MSG_ERROR("only ${GTK_VERSION} found")
+      AC_MSG_RESULT(no)
+      echo "gtk+-2.0 version only ${GTK_VERSION} found"
+      build_gui="no"
     fi
-else
+  else
     AC_MSG_ERROR(no)
+    build_gui="no"
+  fi
 fi
+BUILD_GUI="${build_gui}"
+AC_SUBST(BUILD_GUI)
 
 dnl Check for libsoup
 AC_MSG_CHECKING(if libsoup >= ${SOUP_REQ} exists)
@@ -172,22 +178,22 @@ fi
 dnl Check for libpcre
 AC_MSG_CHECKING(if libpcre >= ${PCRE_REQ} exists)
 if pkg-config --exists libpcre ; then
-    PCRE_CFLAGS=`pkg-config --cflags libpcre`
-    PCRE_LIBS=`pkg-config --libs libpcre`
-    PCRE_PREFIX=`pkg-config --variable=prefix libpcre`
-    PCRE_VERSION=`pkg-config --modversion libpcre`
-    AC_SUBST(PCRE_VERSION)
-    AC_SUBST(PCRE_PREFIX)
-    AC_SUBST(PCRE_CFLAGS)
-    AC_SUBST(PCRE_LIBS)
+  PCRE_CFLAGS=`pkg-config --cflags libpcre`
+  PCRE_LIBS=`pkg-config --libs libpcre`
+  PCRE_PREFIX=`pkg-config --variable=prefix libpcre`
+  PCRE_VERSION=`pkg-config --modversion libpcre`
+  AC_SUBST(PCRE_VERSION)
+  AC_SUBST(PCRE_PREFIX)
+  AC_SUBST(PCRE_CFLAGS)
+  AC_SUBST(PCRE_LIBS)
 
-    if pkg-config --exists libpcre '>=' ${PCRE_REQ} ; then
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_ERROR("only ${PCRE_VERSION} found")
-    fi
+  if pkg-config --exists libpcre '>=' ${PCRE_REQ} ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_ERROR("only ${PCRE_VERSION} found")
+  fi
 else
-    AC_MSG_ERROR(no)
+  AC_MSG_ERROR(no)
 fi
 
 dnl Check for smbclient
@@ -296,8 +302,7 @@ AC_OUTPUT([
 Makefile
 webtester.pc
 mk/rules.mk
-intl/Makefile
-po/Makefile.in
+src/Makefile
 src/libwebtester/Makefile
 src/librun/Makefile
 src/librun/lrvm/Makefile
@@ -327,11 +332,12 @@ Configuration for $PACKAGE $VERSION :
   LDFLAGS ......................... : ${PICLDFLAGS} ${LDFLAGS}
   Linker .......................... : $CC $LDFLAGS ${LIBLDFLAGS} $LIBS
   GLIB version .................... : ${GLIB_VERSION} in ${GLIB_PREFIX}
-  Home directort .................. : ${homedir}
+  Home directory .................. : ${homedir}
   PID file ........................ : ${pidfile}
   Supervisor PID file ............. : ${super_pidfile}
   Log file ........................ : ${logfile}
   Building for kernel release ..... : ${KERNEL_RELEASE}
+  Build WebTester Frontend ........ : ${build_gui}
 
   Now type 'make' to build $PACKAGE $VERSION,
   and then type 'make install' for installation.

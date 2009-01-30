@@ -1,3 +1,7 @@
+2009-01-31  Sergey Sharybin <g.ulairi@gmail.com>
+	Switched to GIT versioning system. Fture changelogs see
+in git commit log.
+
 2008-05-11  Sergey Sharybin <sharybin@nm.ru>
 
 	* libwebtester/ipc.h : fixed incorrect cheking freeing of command
