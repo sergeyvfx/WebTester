@@ -107,6 +107,8 @@ $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc        webtester webtester 0775
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/obj    webtester webtester 0775
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/lib    webtester webtester 0775
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/units  webtester webtester 0775
+$PREFIX/stuff/mkdistdir.sh /webtester/var/kylix      webtester webtester 0775
+$PREFIX/stuff/mkdistdir.sh /webtester/var/kylix/lib  webtester webtester 0775
 
 $PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.pas  /var/fpc/units/testlib.pas   webtester webtester 0664
 $PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.ppu  /var/fpc/units/testlib.ppu   webtester webtester 0664
