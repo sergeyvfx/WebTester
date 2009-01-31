@@ -58,4 +58,4 @@ $PREFIX/stuff/delete_group.sh webtester
 $PREFIX/stuff/delete_group.sh webtester-nobody
 
 unlink /etc/init.d/webtester 
-
+update-rc.d -f webtester remove

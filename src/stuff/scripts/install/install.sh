@@ -35,6 +35,10 @@ banner;
 
 #### MAIN STUFF ####
 
+if test -f /etc/init.d/webtester; then
+  /etc/init.d/webtester stop
+fi
+
 # Step 1: Create required groups and users
 $PREFIX/stuff/echo.sh "Creating required groups and users..."
 $PREFIX/stuff/create_group.sh webtester
