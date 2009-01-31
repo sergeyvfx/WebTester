@@ -147,7 +147,7 @@ if test "x$build_gui" = "xyes"; then
       build_gui="no"
     fi
   else
-    AC_MSG_ERROR(no)
+    AC_MSG_RESULT(no)
     build_gui="no"
   fi
 fi
