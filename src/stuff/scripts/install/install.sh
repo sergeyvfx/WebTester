@@ -131,6 +131,29 @@ $PREFIX/stuff/cpfile.sh /src/stuff/scripts/check_all/tests.info        /usr/scri
 $PREFIX/stuff/mkdistdir.sh /webtester/usr/scripts/init.d   webtester webtester 0775
 $PREFIX/stuff/cpfile.sh /src/stuff/scripts/init.d/webtester            /usr/scripts/init.d/webtester  webtester webtester 0775
 
+
+update_rcd="no"
+
+while true; do
+  echo -n "Start WebTester Server at system startup? [y/n]: "
+  read choise
+
+  if (test "x${choise}" = "xy") then
+    update_rcd="yes"
+    break
+  fi
+
+  if (test "x${choise}" = "xn") then
+    update_rcd="no"
+    break
+  fi
+done
+
+if test "x$update_rcd" = "xyes"; then
+  update-rc.d -f webtester remove
+  update-rc.d webtester start 99 2 3 4 5 . stop 01 0 1 6 .
+fi
+
 $PREFIX/stuff/echo.sh "Copying checkers..."
 $PREFIX/stuff/mkdistdir.sh /webtester/usr/checkers   webtester webtester 0775
 $PREFIX/stuff/cpfile.sh /src/stuff/checkers/c_bystring_cmp.cxx     /usr/checkers/c_bystring_cmp.cxx   webtester webtester 0644
