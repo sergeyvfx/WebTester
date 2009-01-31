@@ -1,14 +1,13 @@
-{*
-
- * ================================================================================
- *  testlib.pas - part of the TestLib
- * ================================================================================
+{**
+ * WebTester Server - server of on-line testing system
  *
- *  Pascal implementation for testlib.
+ * Pascal implementation for testlib.
  *
- *  Written (by Nazgul) under GPL.
+ * Copyright 2008 Sergey I. Sharybin <g,ulairi@gmail.com>
  *
-*}
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ *}
 
 unit testlib;
 
@@ -83,7 +82,9 @@ var
 
 implementation
 
+{$IfDef FPC}
 uses crt;
+{$EndIf}
 
 {**** TTestlibFile ****}
 
@@ -281,9 +282,11 @@ begin
   end;
 
   { Set text color }
+{$IfDef FPC}
   if code<>_OK
     then TextColor (LightRed)
     else TextColor (LightGreen);
+{$EndIf}
 
   { Write error message }
   case code of
@@ -293,19 +296,23 @@ begin
     _CR: write ('CR');
   end;
 
+{$IfDef FPC}
   TextColor (LightGray);
+{$EndIf}
 
   if desc<>'' then
     writeln ('  ', desc) else
     writeln;
 
   { For some sound messaging }
+{$IfDef FPC}
   if (code<>_OK) and (not silent) then
   begin
     sound (1000);
     delay (200);
     nosound;
   end;
+{$EndIf}
 
   { Terminate executing of checker }
   halt (code);

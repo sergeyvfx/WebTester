@@ -102,7 +102,7 @@ chown root:root $DIST_DIR/webtester/webtester
 chmod 06775 $DIST_DIR/webtester/webtester
 
 # Step 5: Compile pascal testlib
-fpc $SRC_TOPDIR/src/stuff/testlib.pas/testlib.pas > /dev/null
+$PREFIX/stuff/echo.sh "Installing pascal testlib..."
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc        webtester webtester 0775
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/obj    webtester webtester 0775
 $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/lib    webtester webtester 0775
@@ -111,6 +111,8 @@ $PREFIX/stuff/mkdistdir.sh /webtester/var/fpc/units  webtester webtester 0775
 $PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.pas  /var/fpc/units/testlib.pas   webtester webtester 0664
 $PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.ppu  /var/fpc/units/testlib.ppu   webtester webtester 0664
 $PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.o    /var/fpc/units/testlib.o     webtester webtester 0664
+
+$PREFIX/stuff/cpfile.sh /src/stuff/testlib.pas/testlib.dcu  /var/kylix/lib/testlib.dcu   webtester webtester 0664
 
 $PREFIX/stuff/echo.sh "Copying scripts..."
 $PREFIX/stuff/cpfile.sh /src/stuff/scripts/lrvm_killall.sh   /sbin/lrvm_killall.sh  webtester webtester 0750
@@ -135,7 +137,7 @@ $PREFIX/stuff/cpfile.sh /src/stuff/checkers/c_string_cmp.cxx       /usr/checkers
 $PREFIX/stuff/cpfile.sh /src/stuff/checkers/!list                  /usr/checkers/!list                webtester webtester 0644
 $PREFIX/stuff/cpfile.sh /src/stuff/checkers/Makefile.inst          /usr/checkers/Makefile             webtester webtester 0644
 
-$PREFIX/stuff/echo.sh "Compiling checkers..."
+$PREFIX/stuff/echo.sh "Copying checkers..."
 cd $DIST_DIR/webtester/usr/checkers
 make
 cd $curdir
