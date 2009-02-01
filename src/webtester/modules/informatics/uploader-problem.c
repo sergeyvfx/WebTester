@@ -125,6 +125,34 @@ send_ipc_request (assarr_t *__params)
  */
 
 /**
+ * Check should archives be uploaded from SAMBA server
+ *
+ * @return non-zero if archives should be uploaded from SAMBA, zero otherwise
+ */
+static BOOL
+upload_from_samba (void)
+{
+  static int result = -1;
+
+  if (result == -1)
+    {
+      char server[1024];
+      INF_PCHAR_KEY (server, "ProblemUploader/SMB-Server");
+
+      if (strcmp (server, ""))
+        {
+          result = TRUE;
+        }
+      else
+        {
+          result = FALSE;
+        }
+    }
+
+  return result;
+}
+
+/**
  * Initialize SAMBA stuff
  */
 static void
@@ -177,14 +205,14 @@ crate_temporary_dir (const char *__id, char *__full)
 }
 
 /**
- * Upload archive from remote share to local path
+ * Upload archive from remote share to local path using SAMBA
  *
  * @param __fn - name of archive to upload
  * @param __local_path - local path to store archive
  * @return TRUE in success, FALSE otherwise
  */
 static BOOL
-upload_archive (char *__fn, char *__local_path)
+upload_archive_through_samba (const char *__fn, const char *__local_path)
 {
   static char url_prefix[4096] = {0};
   char server_fn[4096], local_fn[4096];
@@ -217,7 +245,7 @@ upload_archive (char *__fn, char *__local_path)
       return FALSE;
     }
 
-  stream = fopen (local_fn, "w");
+  stream = fopen (local_fn, "wb");
   if (!stream)
     {
       samba_fclose (fd);
@@ -242,6 +270,85 @@ upload_archive (char *__fn, char *__local_path)
   samba_unlink (server_fn);
 
   return TRUE;
+}
+
+/**
+ * Upload archive from remote share to local path using localfs
+ *
+ * @param __fn - name of archive to upload
+ * @param __local_path - local path to store archive
+ * @return TRUE in success, FALSE otherwise
+ */
+static BOOL
+upload_archive_through_localfs (const char *__fn, const char *__local_path)
+{
+  static char problems_root[4096] = {0};
+  char server_fn[4096], local_fn[4096];
+  FILE *istream, *ostream;
+  char buf[BUFFER_LENGTH];
+  long len;
+
+  if (!problems_root[0])
+    {
+      INF_PCHAR_KEY (problems_root, "ProblemUploader/ServerProblemsRoot");
+    }
+
+  sprintf (server_fn, "%s/%s", problems_root, __fn);
+  sprintf (local_fn, "%s/%s", __local_path, __fn);
+
+  /* Open file descriptor */
+  istream = fopen (server_fn, "rb");
+
+  if (!istream)
+    {
+      return FALSE;
+    }
+
+  ostream = fopen (local_fn, "wb");
+  if (!ostream)
+    {
+      fclose (istream);
+      return FALSE;
+    }
+
+  /* Copy-pasting data from remote to local file */
+  do
+    {
+      len = fread (buf, 1, sizeof (buf), istream);
+      if (len > 0)
+        {
+          fwrite (buf, sizeof (char), len, ostream);
+        }
+    }
+  while (len > 0);
+
+  /* Close file descriptor */
+  fclose (istream);
+  fclose (ostream);
+
+  unlink (server_fn);
+
+  return TRUE;
+}
+
+/**
+ * Upload archive from remote share to local path
+ *
+ * @param __fn - name of archive to upload
+ * @param __local_path - local path to store archive
+ * @return TRUE in success, FALSE otherwise
+ */
+static BOOL
+upload_archive (const char *__fn, const char *__local_path)
+{
+  if (upload_from_samba ())
+    {
+      return upload_archive_through_samba (__fn, __local_path);
+    }
+  else
+    {
+      return upload_archive_through_localfs (__fn, __local_path);
+    }
 }
 
 /**
@@ -771,8 +878,10 @@ Informatics_UploadProblem (void *__unused, void *__call_unused)
 
   if (g_mutex_trylock (mutex))
     {
-      if (!samba_initialized ())
+      if (upload_from_samba () && !samba_initialized ())
         {
+          /* If uploading should be from SAMBA and */
+          /* SAMBA is not initialized */
           return 0;
         }
 
