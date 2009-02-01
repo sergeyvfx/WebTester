@@ -23,3 +23,5 @@ aclocal.m4
 intltool-extract
 intltool-merge
 intltool-update
+WT-VERSION-FILE
+configure.in

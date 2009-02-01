@@ -1,8 +1,14 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
-#name of package
-PKG_NAME="webtester-5.0.3"
+# Generate version string
+
+./WT-VERSION-GEN
+
+. WT-VERSION-FILE
+
+# Name of package
+PKG_NAME="webtester-${WT_VERSION}"
 
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.

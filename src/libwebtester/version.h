@@ -12,6 +12,6 @@
 #ifndef _version_h_
 #define _version_h_
 
-#define CORE_VERSION "5.0.3"
+#define CORE_VERSION "5.0.2.10.g451f.dirty"
 
 #endif
