@@ -6,6 +6,9 @@
 /* Package name for gettext */
 #undef GETTEXT_PACKAGE
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
 
@@ -39,20 +42,11 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* "" */
-#undef HELP_DIR
-
 /* Define for home directory */
 #undef HOME_DIRECTORY
 
 /* definition of HOST */
 #undef HOST
-
-/* definition of kernel release */
-#undef KERNEL_RELEASE
-
-/* definition of kernel source dir */
-#undef KERNEL_SOURCE
 
 /* Define for log file */
 #undef LOG_FILE

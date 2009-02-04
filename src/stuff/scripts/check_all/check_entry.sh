@@ -1,6 +1,14 @@
 #!/bin/sh
 
 #
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+#
 # Part of the check_all.sh script
 #
 # Written (by Nazgul) under GPL. 03.10.07

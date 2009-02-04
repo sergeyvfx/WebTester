@@ -5,6 +5,8 @@
 #
 # Written (by Nazgul) under GPL. 02.09.2007
 #
+# Copyright (C) Sergey I. Sharybin <g.ulairi@gmail.com>
+#
 
 export PREFIX=`dirname $0`
 

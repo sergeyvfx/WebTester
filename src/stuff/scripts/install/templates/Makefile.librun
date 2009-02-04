@@ -1,0 +1,30 @@
+.SILENT:
+
+CC = gcc
+
+CFLAGS = -I. -I.. -I../../../include
+DEFINES = -DNO_CONFIG
+GLIB_CFLAGS =  `pkg-config --cflags glib-2.0`
+GLIB_LIBS =  `pkg-config --libs glib-2.0`
+LDFLAGS = -Wl,-export-dynamic
+
+SOURCES = \
+	ipc.c \
+	ipc_builtin.c \
+	hv.c \
+	hv_pool.c \
+	run.c \
+	unique.c
+
+OBJECTS = ${SOURCES:.c=.o}
+
+librun.so: $(OBJECTS)
+	echo "$(CC) -shared -o $@ $(OBJECTS) $(LDFLAGS) $(GLIB_LIBS)"
+	$(CC) -shared -o $@ $(OBJECTS) $(LDFLAGS) $(GLIB_LIBS)
+
+.c.o:
+	echo "$(CC) $(CFLAGS) $(GLIB_CFLAGS) $(DEFINES) -c $< -o $@"
+	$(CC) $(CFLAGS) $(GLIB_CFLAGS) $(DEFINES) -c $< -o $@
+
+clean:
+	rm -f *.o librun.so

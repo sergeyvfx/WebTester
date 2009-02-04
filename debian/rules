@@ -1,0 +1,107 @@
+#!/usr/bin/make -f
+
+ARCH ?=$(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+.SILENT:
+
+configure: configure-stamp
+configure-stamp:
+	./!autogen.sh
+	dh_testdir
+	touch configure-stamp
+
+build: build-stamp
+
+build-stamp: configure-stamp
+	dh_testdir
+	$(MAKE)
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	./!clean.sh
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	echo "Preparing WebTester Core package"
+	$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-core install-pkg
+	echo -e "\n"
+
+	echo "Preparing WebTester Server Frontend package"
+	mkdir $(CURDIR)/debian/webtester-gui/home
+	$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-gui install-gui-pkg
+	echo -e "\n"
+
+	@data=`cat $(CURDIR)/debian/webtester-core/home/webtester/conf/webtester.conf`; \
+	  for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 Proxy \
+	           UseSSL SSL-CA-File SMB-Workgroup SMB-Login SMB-Password SMB-Server \
+	           SMB-Share ServerProblemsRoot; \
+	        do \
+	          data=`echo "$${data}" | sed -r "s/(\"?$${i}\"?\\s+)\".*\"/\1\"@@$${i}@@\"/"` ; \
+	        done; \
+	        echo "$${data}" | \
+	          sed -r 's/\/home\/webtester/@@DIST_DIR@@/' > \
+	            $(CURDIR)/debian/webtester-core/home/webtester/conf/webtester.conf
+	
+	@data=`cat $(CURDIR)/debian/webtester-core/home/webtester/conf/users.conf`; \
+	  data=`echo "$${data}" | sed -r "s/(\"password-hash\"\\s+)\".*\"/\1\"@@password-hash@@\"/"` ; \
+	  echo "$${data}" > $(CURDIR)/debian/webtester-core/home/webtester/conf/users.conf
+
+	@for package in webtester-core webtester-gui; do \
+	  mkdir debian/$$package/DEBIAN > /dev/null 2>&1; \
+	  for i in postinst postrm preinst prerm; do \
+	    test ! -r debian/$$package.$$i || \
+	      sh -cx "install -m0755 debian/$$package.$$i debian/$$package/DEBIAN/$$i" \
+	        || exit 1; \
+	  done; \
+	  for i in templates conffiles; do \
+	    test ! -r debian/$$package.$$i || \
+	      sh -cx "install -m0644 debian/$$package.$$i debian/$$package/DEBIAN/$$i" \
+	        || exit 1; \
+	  done; \
+	done
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+#	dh_install
+#	dh_installmenu
+#	dh_installdebconf
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_python
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+#	dh_perl
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

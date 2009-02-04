@@ -1,0 +1,43 @@
+#!/bin/sh
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+INSTALL_DIR="/home/webtester"
+
+case "$1" in
+    remove)
+      cwd=`pwd`
+      /etc/init.d/webtester stop
+      rm /etc/init.d/webtester
+      rm -rf "${INSTALL_DIR}/var/data/Informatics/chroot"
+      rmdir "${INSTALL_DIR}/var/data/Informatics"
+      rm -rf "${INSTALL_DIR}/var/log"
+      rm -rf "${INSTALL_DIR}/var/run"
+      rm -rf "${INSTALL_DIR}/lib/librun.so"
+
+      cd "${INSTALL_DIR}/usr/src/librun"
+      make clean
+      cd ${cwd}
+    ;;
+
+    upgrade|deconfigure)
+    ;;
+
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
+
+

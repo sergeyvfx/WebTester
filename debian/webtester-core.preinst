@@ -1,0 +1,27 @@
+#!/bin/sh
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+case "$1" in
+    install|upgrade)
+      # We should stop previous version of WebTester
+      test -f /etc/init.d/webtester && \
+        /etc/init.d/webtester stop
+    ;;
+
+    abort-upgrade)
+    ;;
+
+    *)
+        echo "preinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

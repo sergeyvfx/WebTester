@@ -1,0 +1,98 @@
+Template: webtester/INET_Addr
+Type: string
+Default: 127.0.0.1
+Description: IP address of host, where web-interface is installed
+ IP address of host, where web-interface is installed and awaiable
+ through HTTP or HTTPS connection.
+ .
+ The port can be specifiad after colon.
+
+Template: webtester/INET_Gateway
+Type: string
+Default: /gate/tester
+Description: WebTester inet gateway
+ URL to tester directory inside web-interface.
+ .
+ Note: You must specify directory inside domain, without any
+ protocols and hostnames.
+
+Template: webtester/INET_Login
+Type: string
+Default: login
+Description: Login to web-interface
+ Login to IPC interface of web-interface.
+
+Template: webtester/INET_Pass1
+Type: password
+Description: First password to web-interface
+ First password to IPC interface of web-interface.
+
+Template: webtester/INET_Pass2
+Type: password
+Description: Second password to WebTester web-interface
+ Second password to IPC interface of web-interface.
+
+Template: webtester/INET_Proxy
+Type: string
+Default:
+Description: Proxy to use for connection to web-interface
+ Proxy to use for connection to web-interface in host:port format
+ .
+ Keep blank if proxy in unneccessary.
+
+Template: webtester/UseSSL
+Type: boolean
+Default: false
+Description: Use SSL for connection to web-interface
+ You may use sequre connection to web-inteface using SSL.
+ If you want this and server with web-interface supports
+ sequre connections say `yes`.
+
+Template: webtester/SSL-CA-File
+Type: string
+Description: Certeficate to use for connection to WebTester web-interface
+ If sequre connection is enabled, you may choose certeficate file to use.
+ .
+ Keep this fielfd blank if you want to use server's certeficate
+ (this is default and most common option).
+
+Template: webtester/SMB-Server
+Type: string
+Description: Name of Samba-server where problems' archives are uploading
+ If web-interface saves archives with tests for problem in remote
+ machine, you may use a Samba protocol to download this archives.
+ .
+ If archives are storing in local machine or you want to use some other
+ ways of downloading (i.e. mounting of remote file system)
+ keep this field blank.
+
+Template: webtester/SMB-Login
+Type: string
+Description: Login to Samba-server where problems' archives are uploading
+
+Template: webtester/SMB-Password
+Type: password
+Description: Password to Samba-server where problems' archives are uploading
+
+Template: webtester/SMB-Workgroup
+Type: string
+Description: Workgroup of Samba-server where problems' archives are uploading
+
+Template: webtester/SMB-Share
+Type: string
+Description: Share name in Samba-server where problems' archives are uploading
+
+Template: webtester/ServerProblemsRoot
+Type: string
+Description: Directory where archives are saving
+ If you're ysing Samba to download archives with tests,
+ this option should point to directory inside Samba share
+ where archives are saving.
+ .
+ Otherwise, you should specify full local path to place,
+ where archives are saving.
+
+Template: webtester/update-rc.d
+Type: boolean
+Default: false
+Description: Start WebTester when system starts

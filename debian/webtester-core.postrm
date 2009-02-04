@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+case "$1" in
+    purge|remove)
+    update-rc.d -f webtester remove > /dev/null 2>&1
+    userdel webtester > /dev/null 2>&1
+    userdel webtester-nobody > /dev/null 2>&1
+    groupdel webtester > /dev/null 2>&1
+    groupdel webtester-nobody > /dev/null 2>&1
+
+    data=`cat /etc/sudoers | grep -v "^webtester"`;
+    echo "${data}" > /etc/sudoers
+    ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

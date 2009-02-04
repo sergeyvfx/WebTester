@@ -1,4 +1,13 @@
 #!/bin/bash
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
 ### BEGIN INIT INFO
 # Provides:          WebTester Server
 # Required-Start:    $local_fs $remote_fs
@@ -11,19 +20,17 @@
 #                    placed in /etc/init.d.
 ### END INIT INFO
 
-# Author: Sergey Sharybin <g.ulairi@gmail.com>
-#
-
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
+PREFIX="/home/webtester"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="WebTester Server"
 NAME=webtester
 PIDNAME="supervisor"
-DAEMON=/home/webtester/$NAME
+DAEMON=${PREFIX}/$NAME
 DAEMON_ARGS="--fork --silent"
-PIDFILE=/home/webtester/var/run/$PIDNAME.pid
+PIDFILE=${PREFIX}/var/run/$PIDNAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -111,6 +118,38 @@ do_reload() {
   return 0
 }
 
+#
+# Compilation of LibRUN
+#
+# This function is neccessary because LibRUN should be
+# compiled for current version of kernel, and if you
+# change kernel you should recompile LibRUN.
+# It is the most easy way to do this.
+#
+compile_librun() {
+  cwd=`pwd`
+  log="${PREFIX}/var/log/webtester.setup.log"
+
+  echo "* Started compilation of librun." > ${log}
+
+  cd "${PREFIX}/usr/src/librun"
+  echo "make clean" >> ${log} && make clean && \
+    echo "make" >> ${log} && make >> ${log} 2>&1 && \
+    echo "* Compilation successfully completed." >> ${log} && \
+    chmod 644 "${PREFIX}/usr/src/librun/librun.so";
+
+  res=$?
+
+  cd ${cwd}
+
+  return ${res}
+}
+
+install_librun() {
+  echo "* Installing new librun" >> "${PREFIX}/var/log/webtester.setup.log"
+  cp -f ${PREFIX}/usr/src/librun/librun.so ${PREFIX}/lib
+}
+
 case "$1" in
   start)
   [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
@@ -161,8 +200,42 @@ case "$1" in
     ;;
   esac
   ;;
+  setup)
+    stopped=false
+
+    mkdir /home/webtester/var/log > /dev/null 2>&1 && \
+      chown webtester:webtester /home/webtester/var/log > /dev/null 2>&1
+
+    log_daemon_msg "Compiling needed libraries"
+    echo -n " librun"
+    compile_librun
+
+    case "$?" in
+      0)
+        log_end_msg 0
+
+        if test -f $PIDFILE; then
+          echo "* Stopping webtester" >> "${PREFIX}/var/log/webtester.setup.log"
+          do_stop
+          stopped=true
+        fi
+
+        install_librun
+
+        if $stopped; then
+          echo "* Staring webtester" >> "${PREFIX}/var/log/webtester.setup.log"
+          do_start
+        fi
+      ;;
+      *)
+        log_end_msg 1
+        echo "See the file ${PREFIX}/var/log/webtester.setup.log for details."
+      ;;
+    esac
+
+  ;;
   *)
-  echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+  echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload|setup}" >&2
   exit 3
   ;;
 esac

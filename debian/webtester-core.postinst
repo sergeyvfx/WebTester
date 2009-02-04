@@ -1,0 +1,230 @@
+#!/bin/sh
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+INSTALL_DIR="/home/webtester"
+
+#
+# Create users needed for WebTester server
+#
+create_users()
+{
+  groupadd webtester > /dev/null 2>&1
+  groupadd webtester-nobody > /dev/null 2>&1
+  useradd webtester -c "WebTester server admin" \
+    -d /home/webtester -g webtester \
+    -s /usr/sbin/nologin > /dev/null 2>&1
+  useradd webtester-nobody -c "WebTester nobody user" \
+    -g webtester-nobody -s /usr/sbin/nologin > /dev/null 2>&1
+  passwd -l webtester > /dev/null 2>&1
+  passwd -l webtester-nobody > /dev/null 2>&1
+}
+
+#
+# The most of filed should be ownered by webtester:webtester
+# but there is no such user before package installation
+# so we need to change owner of files after installation
+#
+change_owner()
+{
+  # Be careful
+  chown -R webtester:webtester ${INSTALL_DIR}
+
+  # This files should be ownered by root
+  chown root:root ${INSTALL_DIR}/bin/lrvm
+  chown root:root ${INSTALL_DIR}/sbin/lrvm_kill
+  chown root:root ${INSTALL_DIR}/webtester
+
+  # Directory where WebIterface stores archives
+  chown webtester:www-data ${INSTALL_DIR}/var/storage/problems
+}
+
+#
+# Add entry in a sudoers file
+# This entry is need for LRVM process termination
+#
+process_sudo()
+{
+  echo "webtester ALL=NOPASSWD:${INSTALL_DIR}/sbin/lrvm_killall.sh" >> \
+    /etc/sudoers
+}
+
+#
+# Install files, needed for correct solution working
+# after chroot'ing
+#
+install_chroot_data()
+{
+  path="${INSTALL_DIR}/var/data/Informatics/chroot/lib"
+
+  mkdir -p ${path}
+  chown -R webtester:webtester ${path}/../../
+
+  cp -P `ls -1 /lib | grep -E "^((libc)|(libm)|(ld)|(libdl)|(libgcc_s)|\
+(libpthread)|(libncurses))[\\.|\\-]" | \
+    awk ' { printf "/lib/%s ",$1 } '` ${path};
+
+  cp -P `ls -1 /usr/lib | grep -E "^((libstdc\\+\\+))[\\.|\\-]" \
+      | awk ' { printf "/usr/lib/%s ",$1 } '` ${path};
+}
+
+#
+# Install init.d script for webtester
+#
+install_initd()
+{
+  cp ${INSTALL_DIR}/usr/scripts/init.d/webtester /etc/init.d/webtester
+}
+
+input()
+{
+  db_fset "webtester/$1" seen false
+  db_input high "webtester/$1" || true
+}
+
+#
+# Set value of variable in config file
+#
+# Arguments:
+#  1 - config file buffer
+#  2 - variable name
+#  3 - variable value
+#
+set_config_var()
+{
+  data=$1
+  pattern="@@$2@@"
+  value="$3"
+  data=${data//${pattern}/${value}}
+  echo "${data}"
+}
+
+reset_config_files()
+{
+  data=`cat ${INSTALL_DIR}/conf/webtester.conf`;
+  for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 Proxy \
+           UseSSL SSL-CA-File SMB-Workgroup SMB-Login SMB-Password SMB-Server \
+           SMB-Share ServerProblemsRoot;
+        do
+          data=`echo "${data}" | \
+            sed -r "s/(\"?${i}\"?\\s+)\".*\"/\1\"@@${i}@@\"/"` ;
+        done;
+  echo "${data}"> ${INSTALL_DIR}/conf/webtester.conf
+}
+
+wizard()
+{
+  . /usr/share/debconf/confmodule
+
+  db_capb backup
+
+  db_version 2.0
+  db_title "WebTester configuration wizard"
+
+  # Begin asking questions
+  for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 \
+           INET_Proxy UseSSL; do
+    input "${i}"
+  done
+
+  db_go || if [[ "$?" -eq "30" ]]; then return 1; fi
+
+  db_get webtester/UseSSL
+  if [ "${RET}" = true ]; then
+    # If SSL is enabled, we should ask for certificate
+    UseSSL="TRUE"
+    input "SSL-CA-File"
+    db_go || if [[ "$?" -eq "30" ]]; then return 1; fi
+  else
+    UseSSL="FALSE"
+    db_set webtester/SSL-CA-File ""
+  fi
+
+  input "SMB-Server"
+  db_go || if [[ "$?" -eq "30" ]]; then return 1; fi
+
+  db_get webtester/SMB-Server
+  if [ "x$RET" != "x" ]; then
+    SMB_Server="$RET"
+
+    for i in SMB-Login SMB-Password SMB-Workgroup SMB-Share; do
+      input "${i}"
+    done
+  else
+    db_set webtester/SMB-Login ""
+    db_set webtester/SMB-Password ""
+    db_set webtester/SMB-Workgroup ""
+    db_set webtester/SMB-Share ""
+  fi
+
+  input ServerProblemsRoot
+  input update-rc.d
+  db_go || if [[ "$?" -eq "30" ]]; then return 1; fi
+
+  db_get webtester/update-rc.d
+  update-rc.d -f webtester remove > /dev/null 2>&1
+  if [ "${RET}" = true ]; then
+    update-rc.d webtester start 99 2 3 4 5 . stop 01 0 1 6 .  > /dev/null 2>&1;
+  fi
+
+  #
+  # Replace values in configuration file
+  #
+
+  reset_config_files
+
+  data=`cat "${INSTALL_DIR}/conf/webtester.conf"`
+
+  data=`set_config_var "${data}" "DIST_DIR" "${INSTALL_DIR}"`
+  data=`set_config_var "${data}" "UseSSL"   "${UseSSL}"`
+
+  for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 \
+           INET_Proxy SSL-CA-File SMB-Server SMB-Login SMB-Password \
+           SMB-Workgroup SMB-Share ServerProblemsRoot; do
+    db_get "webtester/${i}"
+    data=`set_config_var "${data}" "${i}" "$RET"`
+  done
+
+  echo "${data}" > "${INSTALL_DIR}/conf/webtester.conf"
+
+  return 0
+}
+
+#
+# Main configuration stuff
+#
+config()
+{
+  create_users
+  change_owner
+  [ `cat /etc/sudoers | grep -c '^webtester '` = 0 ] && process_sudo
+  install_chroot_data
+  install_initd
+
+  wizard "$1"
+
+  /etc/init.d/webtester setup
+}
+
+case "$1" in
+    configure)
+      config "$1"
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
+

@@ -9,7 +9,7 @@ echo -n "Coping directory \`$1\`... "
 if ( `cp -R $SRC_TOPDIR$1 $DIST_DIR/webtester$2 > /dev/null 2>&1` ); then
   echo "ok.";
   if ( `test -d "$DIST_DIR/webtester$2"` ); then
-    chown -R $3:$4 "$DIST_DIR/webtester$2";
+    ${DIST_INST} && chown -R $3:$4 "$DIST_DIR/webtester$2";
     chmod $5 "$DIST_DIR/webtester$2";
   fi;
 else

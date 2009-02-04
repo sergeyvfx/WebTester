@@ -1,2 +1,2 @@
-DIST_DIR /home
-SRC_TOPDIR ./../../../..
+DIST_DIR /home/nazgul/src/webtester/debian/webtester-gui/home
+SRC_TOPDIR src/stuff/scripts/install/../../../..

@@ -5,10 +5,10 @@
 SRC_TOPDIR=`$PREFIX/stuff/opt_get.sh SRC_TOPDIR`
 DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
 
-echo -n "INstalling binary \`$2\`... "
+echo -n "Installing binary \`$2\`... "
 if ( `cp $SRC_TOPDIR$1/$2 $DIST_DIR/webtester/sbin/$2 > /dev/null 2>&1` ); then
   echo "ok.";
-  chown $3:$4 "$DIST_DIR/webtester/sbin/$2";
+  ${DIST_INST} && chown $3:$4 "$DIST_DIR/webtester/sbin/$2";
   chmod $5 "$DIST_DIR/webtester/sbin/$2";
   if ( `test ! "x$6" = "xfalse"` ); then
     ln -s "$DIST_DIR/webtester/sbin/$2" /usr/bin/$2 > /dev/null 2>&1;

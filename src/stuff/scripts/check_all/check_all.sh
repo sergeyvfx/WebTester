@@ -1,6 +1,14 @@
 #!/bin/sh
 
 #
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+#
 # Script to run solution at all tests and print out result
 #
 # Written (by Nazgul) under GPL. 03.10.2007

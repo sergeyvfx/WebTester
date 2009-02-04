@@ -25,3 +25,7 @@ intltool-merge
 intltool-update
 WT-VERSION-FILE
 configure.in
+debian/webtester-gui
+debian/webtester-core
+debian/files
+debian/*.log

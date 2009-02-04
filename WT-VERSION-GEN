@@ -31,8 +31,9 @@ update_libwt_version()
 {
   VN=$1
   libwt_version_file="src/libwebtester/version.h"
-  cat ${libwt_version_file} | \
-    sed -r "s/#define CORE_VERSION \".*\"/#define CORE_VERSION \"$VN\"/" > \
+  vf=`cat ${libwt_version_file}`
+  echo "${vf}"  | \
+    sed -r "s/#define CORE_VERSION \".*\"/#define CORE_VERSION \"$VN\"/"  > \
       ${libwt_version_file}
 }
 
