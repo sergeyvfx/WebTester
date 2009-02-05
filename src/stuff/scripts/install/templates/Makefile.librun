@@ -8,6 +8,9 @@ GLIB_CFLAGS =  `pkg-config --cflags glib-2.0`
 GLIB_LIBS =  `pkg-config --libs glib-2.0`
 LDFLAGS = -Wl,-export-dynamic
 
+KERNEL_VERSION = `uname -r`
+KERNEL_FLAGS = -I/lib/modules/$(KERNEL_VERSION)/source/include
+
 SOURCES = \
 	ipc.c \
 	ipc_builtin.c \
@@ -24,7 +27,7 @@ librun.so: $(OBJECTS)
 
 .c.o:
 	echo "$(CC) $(CFLAGS) $(GLIB_CFLAGS) $(DEFINES) -c $< -o $@"
-	$(CC) $(CFLAGS) $(GLIB_CFLAGS) $(DEFINES) -c $< -o $@
+	$(CC) $(CFLAGS) $(GLIB_CFLAGS) $(DEFINES) $(KERNEL_FLAGS) -c $< -o $@
 
 clean:
 	rm -f *.o librun.so

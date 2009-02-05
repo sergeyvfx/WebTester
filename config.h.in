@@ -48,6 +48,12 @@
 /* definition of HOST */
 #undef HOST
 
+/* definition of kernel release */
+#undef KERNEL_RELEASE
+
+/* definition of kernel source dir */
+#undef KERNEL_SOURCE
+
 /* Define for log file */
 #undef LOG_FILE
 

@@ -177,7 +177,7 @@ ${CPFILE} /src/stuff/testlib/testlib.h     /include/testlib.h    \
 ${CPFILE} /src/stuff/testlib++/testlib++.h /include/testlib++.h  \
   webtester webtester 0664
 
-${CPFILE} /src/libwebtester/*.h            /include/libwebtester \
+${CPFILE} /src/libwebtester/*.h            /include/libwebtester/ \
   webtester webtester 0664
 
 ${ECHO} "Installing plugins..."

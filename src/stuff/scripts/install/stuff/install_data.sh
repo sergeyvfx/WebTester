@@ -7,7 +7,7 @@ $PREFIX/stuff/mkdistdir.sh /webtester/var/data  webtester webtester 0775
 echo -n "  Installing data for module Informatics..."
 
 ($DIST_INST && (
-  $PREFIX/stuff/mkdistdir.sh /webtester/var/data/Informatics
+  $PREFIX/stuff/mkdistdir.sh /webtester/var/data/Informatics \
     webtester webtester 0775 > /dev/null;
   $PREFIX/stuff/mkdistdir.sh /webtester/var/data/Informatics/chroot \
     webtester webtester 0775 > /dev/null;
