@@ -17,6 +17,7 @@
 #include <libwebtester/hive.h>
 #include <libwebtester/regexp.h>
 #include <libwebtester/network-smb.h>
+#include <libwebtester/strlib.h>
 
 #include <libwebtester/mutex.h>
 
@@ -628,6 +629,45 @@ checkerize (const char *__checker, const char *__tmp_path, char *__err_desc)
  */
 
 /**
+ * Validate names of files with tests
+ *
+ * @param __path - path where tests will be validated
+ */
+static void
+validate_tests_names (const char *__path)
+{
+  dynastruc_t *listing;
+  char *name;
+  char new_name[1024];
+  char full_src[4096], full_dst[4096];
+
+  /* Get listing of directory */
+  listing = dir_listing (__path);
+
+  DYNA_FOREACH (listing, name);
+    if (preg_match ("/^[0-9]*\\.(tst|ans)$/i", name))
+      {
+        strlowr (name, new_name);
+
+        if (strcmp (name, new_name))
+          {
+            INF_DEBUG_LOG ("Renaming test file %s to %s", name, new_name);
+
+            snprintf (full_src, BUF_SIZE (full_src),
+                     "%s/%s", __path, name);
+            snprintf (full_dst, BUF_SIZE (full_dst),
+                     "%s/%s", __path, new_name);
+
+            rename (full_src, full_dst);
+          }
+      }
+  DYNA_DONE;
+
+  /* Free used memory */
+  dyna_destroy (listing, dyna_deleter_free_ref_data);
+}
+
+/**
  * Move files from temporary storage to data dir
  *
  * @param __id - id of new problem
@@ -659,6 +699,8 @@ move_to_dataroot (const char *__id, const char *__tmp_dir, BOOL __rm_all_data)
   fmkdir (data_dir, 00770);
 
   fcopydir (__tmp_dir, full_dst);
+
+  validate_tests_names (full_dst);
 
   return TRUE;
 }

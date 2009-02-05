@@ -104,6 +104,8 @@ BEGIN_HEADER
 #define TEST_FLAG(__flags, __f)  ((__flags)&(__f))
 #define CLEAR_FLAG(__flags, __f) ((__flags)&=~(__f))
 
+#define BUF_SIZE(a)  sizeof (a)
+
 END_HEADER
 
 #endif
