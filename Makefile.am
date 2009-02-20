@@ -32,3 +32,7 @@ install-pkg:
 install-gui-pkg:
 	src/stuff/scripts/install/install.sh PACKAGE --dist-dir \
 	  $$DESTDIR/home --gui-only
+
+install-libwt-pkg:
+	src/stuff/scripts/install/install.sh PACKAGE --dist-dir \
+	  $$DESTDIR/home --libwt-only

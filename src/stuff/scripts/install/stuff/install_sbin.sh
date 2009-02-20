@@ -11,7 +11,8 @@ if ( `cp $SRC_TOPDIR$1/$2 $DIST_DIR/webtester/sbin/$2 > /dev/null 2>&1` ); then
   ${DIST_INST} && chown $3:$4 "$DIST_DIR/webtester/sbin/$2";
   chmod $5 "$DIST_DIR/webtester/sbin/$2";
   if ( `test ! "x$6" = "xfalse"` ); then
-    ln -s "$DIST_DIR/webtester/sbin/$2" /usr/bin/$2 > /dev/null 2>&1;
+    ${DIST_INST} ln -s "$DIST_DIR/webtester/sbin/$2" \
+      /usr/bin/$2 > /dev/null 2>&1;
   fi
 else
   echo "failed!";

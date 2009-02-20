@@ -10,7 +10,8 @@ if ( `cp $SRC_TOPDIR$1/$2 $DIST_DIR/webtester/lib/$2 > /dev/null 2>&1` ); then
   echo "ok.";
   ${DIST_INST} && chown $3:$4 "$DIST_DIR/webtester/lib/$2";
   chmod $5 "$DIST_DIR/webtester/lib/$2";
-  ln -s "$DIST_DIR/webtester/lib/$2" /usr/lib/$2 > /dev/null 2>&1;
+  ${DST_INST} && ln -s "$DIST_DIR/webtester/lib/$2" \
+    /usr/lib/$2 > /dev/null 2>&1;
 else
   echo "failed!";
   exit -1;

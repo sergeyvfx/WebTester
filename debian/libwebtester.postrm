@@ -10,20 +10,11 @@
 
 case "$1" in
     purge|remove)
-    update-rc.d -f webtester remove > /dev/null 2>&1
-    userdel webtester > /dev/null 2>&1
-    userdel webtester-nobody > /dev/null 2>&1
-    groupdel webtester > /dev/null 2>&1
-    groupdel webtester-nobody > /dev/null 2>&1
-
-    libs="webtester run testlib testlib++"
+    libs="webtester"
 
     for f in ${libs}; do
       rm -f "/usr/lib/lib${f}.so" > /dev/null 2>&1
     done
-
-    data=`cat /etc/sudoers | grep -v "^webtester"`;
-    echo "${data}" > /etc/sudoers
     ;;
 
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)

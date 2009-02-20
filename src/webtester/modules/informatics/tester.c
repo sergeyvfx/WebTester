@@ -363,7 +363,7 @@ build_compiler_command (wt_task_t *__self, const char *__cur_testing_dir,
 /**
  * Run compiler with profiling
  *
- * @param __self - task to be compiled
+ * @paxram __self - task to be compiled
  * @param __cmd - command to execute
  * @param __cur_testing_dir - current testing directory
  * @param __cur_data_dir - directory with current data
@@ -651,6 +651,19 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   /* Dummy pchar value */
   char dummy[1024];
 
+  int compiler_chroot = COMPILER_SAFE_INT_KEY (TASK_COMPILER_ID (*__self),
+                                              "ChRoot", -1);
+
+  /* Get command for solution executing */
+  char *run_solution_cmd = COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
+                                                    "RunSolutionCmd", NULL);
+
+  if (strcmp (run_solution_cmd, ""))
+    {
+      run_solution_cmd = realloc (run_solution_cmd, 65535);
+      replace_defaults (run_solution_cmd, __cur_testing_dir, __cur_data_dir);
+    }
+
   /*
    * TODO: Need to strip dupicated spaces in source string with tests
    */
@@ -677,9 +690,23 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
 
   TASK_LOG (*__self, "----\n");
 
+  /* Get executable file name */
   INF_PCHAR_KEY (execfn, "FileToExec");
   strcat (execfn, COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
                                            "OutputExtension", ""));
+  if (run_solution_cmd)
+    {
+      REPLACE_VAR (run_solution_cmd, "executable", execfn);
+    }
+  else
+    {
+      run_solution_cmd = strdup (execfn);
+    }
+
+  if (compiler_chroot >= 0)
+    {
+      use_chroot = compiler_chroot;
+    }
 
   /* Copying all libs/binaries needed for correct running of solution */
   if (use_chroot)
@@ -697,8 +724,14 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   INF_SAFE_FLOAT_KEY (rss_corr, dummy, 0);
 
   /* Apply corrections */
-  time_limit += time_corr * 1024;
-  memory_limit += rss_corr * USEC_COUNT;
+  time_limit += time_corr * USEC_COUNT;
+  memory_limit += rss_corr;
+
+  if (fabs (time_corr) > 1e-8 || fabs (rss_corr) > 1e-8)
+    {
+      INF_DEBUG_LOG ("Using per-compiler corrections: RSS: %lf, time: %lf\n",
+                     rss_corr, time_corr);
+    }
 
   /* Cycle by tests */
   INF_DEBUG_LOG ("Task %ld. Begin cycle by tests\n", __self->sid);
@@ -728,8 +761,8 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
       /* Execute solution */
       SAFE_FREE_PROC (proc);
       INF_DEBUG_LOG ("Task %ld. Executing solution (cmd: %s)\n",
-                     __self->sid, execfn);
-      proc = run_create_process (execfn, __cur_testing_dir,
+                     __self->sid, run_solution_cmd);
+      proc = run_create_process (run_solution_cmd, __cur_testing_dir,
                                  memory_limit, time_limit);
 
       /* Set security info */
@@ -934,9 +967,14 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
 __done_:
   SAFE_FREE_PROC (proc);
 
+  SAFE_FREE (run_solution_cmd);
+
   assarr_set_value (__params, "TESTS", strdup (tests_res_pchar));
 
-  remove_chroot_data (__cur_testing_dir);
+  if (use_chroot)
+    {
+      remove_chroot_data (__cur_testing_dir);
+    }
 
   LOOP_DONE_CHECK_ACTIVE;
 

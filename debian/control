@@ -6,16 +6,22 @@ Build-Depends: debhelper (>= 7)
 Standards-Version: 3.7.3
 Homepage: http://school9.perm.ru/gate
 
+Package: libwebtester
+Architecture: any
+Depends: libc6, libgcc1, libglib2.0-0 (>= 2.6.0), libpcre3 (>= 6.7),
+ libsmbclient, libsoup2.2-8 (>= 2.2.3), libxml2 (>= 2.6.0)
+Description: On-line testing system server
+ It is server of on-line testing system WebTester - core binaries and libraries
+
 Package: webtester-core
 Architecture: any
-Depends: sudo, libc6, libgcc1, libglib2.0-0 (>= 2.6.0), libpcre3 (>= 6.7),
- libsmbclient, libsoup2.2-8 (>= 2.2.3), libstdc++6, libxml2 (>= 2.6.0)
+Depends: sudo, libstdc++6, libwebtester
 Description: On-line testing system server
  It is server of on-line testing system WebTester - core binaries and libraries
 
 Package: webtester-gui
 Architecture: any
-Depends: webtester-core, libatk1.0-0, libc6, libcairo2,
+Depends: libwebtester, libatk1.0-0, libc6, libcairo2,
  libglib2.0-0 (>= 2.6.0), libgtk2.0-0 (>= 2.6.0),
  libpango1.0-0
 Description: On-line testing system server frontend

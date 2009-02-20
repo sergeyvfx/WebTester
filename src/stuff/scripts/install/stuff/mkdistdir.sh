@@ -6,7 +6,7 @@ DIST_DIR=`$PREFIX/stuff/opt_get.sh DIST_DIR`
 
 if ( `test ! -e "$DIST_DIR$1"` ); then
   echo -n "Creating dist directory \`$1\`... "
-  if ( mkdir "$DIST_DIR$1" ); then
+  if ( mkdir -p "$DIST_DIR$1" ); then
     echo "ok.";
     ${DIST_INST} && chown "$2:$3" "$DIST_DIR$1";
     chmod $4 "$DIST_DIR$1";

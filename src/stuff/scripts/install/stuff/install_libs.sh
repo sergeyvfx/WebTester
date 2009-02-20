@@ -1,6 +1,6 @@
 #!/bin/sh
 
-$PREFIX/stuff/install_lib.sh /src/libwebtester    \
+${DIST_INST} && $PREFIX/stuff/install_lib.sh /src/libwebtester    \
   libwebtester.so   webtester webtester 0775
 
 ${DIST_INST} && $PREFIX/stuff/install_lib.sh \

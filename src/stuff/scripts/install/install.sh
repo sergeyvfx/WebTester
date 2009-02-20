@@ -18,6 +18,7 @@ curdir=`pwd`
 DIST_INST=true
 DIST_DIR=""
 GUI_ONLY=false
+LIBWT_ONLY=false
 
 while test "$#" -ne 0; do
   case "$1" in
@@ -27,6 +28,10 @@ while test "$#" -ne 0; do
 
     --gui-only)
       GUI_ONLY=true
+      ;;
+
+    --libwt-only)
+      LIBWT_ONLY=true
       ;;
 
     --dist-dir)
@@ -73,6 +78,18 @@ function install_gui()
     $PREFIX/stuff/echo.sh "Installing binaries..."
     $PREFIX/stuff/install_bin.sh /src/frontend gwebtester \
       webtester webtester 0775   false
+    exit 0;
+  }
+
+function install_libwt()
+  {
+    $PREFIX/stuff/echo.sh "Create dist directory tree..."
+    $PREFIX/stuff/mkdistdir.sh /webtester        webtester webtester 0775
+    $PREFIX/stuff/mkdistdir.sh /webtester/lib    webtester webtester 0775
+
+    $PREFIX/stuff/echo.sh "Installing libraries..."
+    $PREFIX/stuff/install_lib.sh /src/libwebtester libwebtester.so \
+      webtester webtester 0775
     exit 0;
   }
 
@@ -128,7 +145,8 @@ fi
   ${CREATE_SMB_USER} webtester assword;
 ))
 
-$GUI_ONLY && install_gui && exit 0
+${GUI_ONLY} && install_gui && exit 0
+${LIBWT_ONLY} && install_libwt && exit 0
 
 # Step 2: Create dist directory tree
 ${ECHO} "Create dist directory tree..."

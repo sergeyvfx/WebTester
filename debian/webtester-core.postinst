@@ -11,30 +11,23 @@
 INSTALL_DIR="/home/webtester"
 
 #
-# Create users needed for WebTester server
-#
-create_users()
-{
-  groupadd webtester > /dev/null 2>&1
-  groupadd webtester-nobody > /dev/null 2>&1
-  useradd webtester -c "WebTester server admin" \
-    -d /home/webtester -g webtester \
-    -s /usr/sbin/nologin > /dev/null 2>&1
-  useradd webtester-nobody -c "WebTester nobody user" \
-    -g webtester-nobody -s /usr/sbin/nologin > /dev/null 2>&1
-  passwd -l webtester > /dev/null 2>&1
-  passwd -l webtester-nobody > /dev/null 2>&1
-}
-
-#
 # The most of filed should be ownered by webtester:webtester
 # but there is no such user before package installation
 # so we need to change owner of files after installation
 #
 change_owner()
 {
-  # Be careful
-  chown -R webtester:webtester ${INSTALL_DIR}
+  rec_items="bin conf include lib sbin usr var/fpc tmp"
+  items="var var/data var/kylix var/kylix/lib var/kylix/lib/testlib.dcu \
+var/run var/storage"
+
+  for f in ${rec_items}; do
+    chown -R webtester:webtester "${INSTALL_DIR}/${f}"
+  done
+
+  for f in ${items}; do
+    chown webtester:webtester "${INSTALL_DIR}/${f}"
+  done
 
   # This files should be ownered by root
   chown root:root ${INSTALL_DIR}/bin/lrvm
@@ -197,15 +190,27 @@ wizard()
 }
 
 #
+# Make all needed sumbolic links
+#
+make_links()
+{
+  libs="run testlib testlib++"
+
+  for f in ${libs}; do
+    ln -s "${INSTALL_DIR}/lib/lib${f}.so" "/usr/lib/lib${f}.so" > /dev/null 2>&1
+  done
+}
+
+#
 # Main configuration stuff
 #
 config()
 {
-  create_users
   change_owner
   [ `cat /etc/sudoers | grep -c '^webtester '` = 0 ] && process_sudo
   install_chroot_data
   install_initd
+  make_links
 
   wizard "$1"
 

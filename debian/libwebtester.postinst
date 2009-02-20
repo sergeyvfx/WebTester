@@ -1,0 +1,79 @@
+#!/bin/sh
+
+#
+# This file is a part of WebTester project
+#
+# Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
+#
+# Thids file can be distributed under the terms of the GNU GPL
+#
+
+INSTALL_DIR="/home/webtester"
+
+#
+# Create users needed for WebTester server
+#
+create_users()
+{
+  groupadd webtester > /dev/null 2>&1
+  groupadd webtester-nobody > /dev/null 2>&1
+  useradd webtester -c "WebTester server admin" \
+    -d /home/webtester -g webtester \
+    -s /usr/sbin/nologin > /dev/null 2>&1
+  useradd webtester-nobody -c "WebTester nobody user" \
+    -g webtester-nobody -s /usr/sbin/nologin > /dev/null 2>&1
+  passwd -l webtester > /dev/null 2>&1
+  passwd -l webtester-nobody > /dev/null 2>&1
+}
+
+#
+# The most of filed should be ownered by webtester:webtester
+# but there is no such user before package installation
+# so we need to change owner of files after installation
+#
+change_owner()
+{
+  # Be careful
+  chown webtester:webtester ${INSTALL_DIR}
+  chown webtester:webtester ${INSTALL_DIR}/lib
+  chown webtester:webtester ${INSTALL_DIR}/lib/libwebtester.so
+}
+
+#
+# Make all needed sumbolic links
+#
+make_links()
+{
+  libs="webtester"
+
+  for f in ${libs}; do
+    ln -s "${INSTALL_DIR}/lib/lib${f}.so" "/usr/lib/lib${f}.so" > /dev/null 2>&1
+  done
+}
+
+#
+# Main configuration stuff
+#
+config()
+{
+  create_users
+  change_owner
+  make_links
+}
+
+case "$1" in
+    configure)
+      config "$1"
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
+

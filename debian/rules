@@ -30,6 +30,10 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
+	echo "Preparing WebTester Lib package"
+	$(MAKE) DESTDIR=$(CURDIR)/debian/libwebtester install-libwt-pkg
+	echo -e "\n"
+
 	echo "Preparing WebTester Core package"
 	$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-core install-pkg
 	echo -e "\n"
