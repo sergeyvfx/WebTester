@@ -78,6 +78,10 @@ function install_gui()
     $PREFIX/stuff/echo.sh "Installing binaries..."
     $PREFIX/stuff/install_bin.sh /src/frontend gwebtester \
       webtester webtester 0775   false
+
+    ${ECHO} "Installing pixmaps..."
+    $PREFIX/stuff/install_pixmaps.sh
+
     exit 0;
   }
 
@@ -210,7 +214,7 @@ ${ECHO} "Compiling and installing webtester launcher..."
 gcc -o webtester -I$SRC_TOPDIR -I$SRC_TOPDIR/src $PREFIX/templates/_webtester.c 
 mv ./webtester $DIST_DIR/webtester/webtester
 chown root:root $DIST_DIR/webtester/webtester
-chmod 06775 $DIST_DIR/webtester/webtester
+chmod 6775 $DIST_DIR/webtester/webtester
 
 #
 # Step 5: Install pascal testlib
@@ -230,6 +234,11 @@ ${CPFILE} /src/stuff/testlib.pas/testlib.ppu  /var/fpc/units/testlib.ppu   \
 ${CPFILE} /src/stuff/testlib.pas/testlib.o    /var/fpc/units/testlib.o     \
   webtester webtester 0664
 ${CPFILE} /src/stuff/testlib.pas/testlib.dcu  /var/kylix/lib/testlib.dcu   \
+  webtester webtester 0664
+
+${ECHO} "Installing files for Java..."
+${MKDISTDIR} /webtester/var/java      webtester webtester 0775
+${CPFILE} /src/stuff/Bootstrap/dist/Bootstrap.jar  /var/java/Bootstrap.jar   \
   webtester webtester 0664
 
 ${ECHO} "Copying scripts..."
@@ -275,14 +284,15 @@ ${CPFILE} /src/stuff/helpers/genpass.c     /usr/helpers/genpass.c    \
 ${CPFILE} /src/stuff/helpers/ipcpassenc.c  \
   /usr/helpers/ipcpassenc.c webtester webtester 0644
 
+cp $SRC_TOPDIR/src/libwebtester/libwebtester.so $DIST_DIR/webtester/usr/helpers
 cd $DIST_DIR/webtester/usr/helpers
 gcc -o genpass genpass.c
-gcc -I$DIST_DIR/webtester/include -L$DIST_DIR/webtester/lib \
-  -lwebtester -o ipcpassenc ipcpassenc.c
+gcc -I$DIST_DIR/webtester/include -L. -lwebtester -o ipcpassenc ipcpassenc.c
 cd $curdir
+rm $DIST_DIR/webtester/usr/helpers/libwebtester.so
 
-${ECHO} "Installing pixmaps..."
-$PREFIX/stuff/install_pixmaps.sh
+${DIST_INST} && ${ECHO} "Installing pixmaps..."
+${DIST_INST} && $PREFIX/stuff/install_pixmaps.sh
 
 ${ECHO} "Installing data..."
 $PREFIX/stuff/install_data.sh

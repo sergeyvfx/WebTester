@@ -658,9 +658,16 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   char *run_solution_cmd = COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
                                                     "RunSolutionCmd", NULL);
 
-  if (strcmp (run_solution_cmd, ""))
+  if (run_solution_cmd && strcmp (run_solution_cmd, ""))
     {
+      /* We'll make some changes in this string, so we should */
+      /* close this string to make original stored in hive tree */
+      /* for correct freeing */
+      run_solution_cmd = strdup (run_solution_cmd);
+
+      /* String may be enlarged when parameters will be substitued  */
       run_solution_cmd = realloc (run_solution_cmd, 65535);
+
       replace_defaults (run_solution_cmd, __cur_testing_dir, __cur_data_dir);
     }
 

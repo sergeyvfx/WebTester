@@ -3,6 +3,7 @@ webtester (5.0.3-dev-1) unstable; urgency=low
   * Initial release in debian package.
   * Testlib compiled for Kylix.
   * Improvements in install and uninstall scripts.
+  * Added support of Java solution checking.
 
- -- Sergey I. Sharybin <g.ulairi@gmail.com>  Sun, 01 Feb 2009 16:58:50 +0500
+ -- Sergey I. Sharybin <g.ulairi@gmail.com>  Sun, 21 Feb 2009 17:41:34 +0600
 

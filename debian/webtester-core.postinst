@@ -17,7 +17,8 @@ INSTALL_DIR="/home/webtester"
 #
 change_owner()
 {
-  rec_items="bin conf include lib sbin usr var/fpc tmp"
+  rec_items="bin conf include lib sbin usr var/fpc tmp var/java \
+AUTHORS BUGS COPYING ChangeLog"
   items="var var/data var/kylix var/kylix/lib var/kylix/lib/testlib.dcu \
 var/run var/storage"
 
@@ -33,6 +34,10 @@ var/run var/storage"
   chown root:root ${INSTALL_DIR}/bin/lrvm
   chown root:root ${INSTALL_DIR}/sbin/lrvm_kill
   chown root:root ${INSTALL_DIR}/webtester
+
+  chmod 6775 ${INSTALL_DIR}/webtester
+  chmod 6775 ${INSTALL_DIR}/bin/lrvm
+  chmod 6775 ${INSTALL_DIR}/sbin/lrvm_kill
 
   # Directory where WebIterface stores archives
   chown webtester:www-data ${INSTALL_DIR}/var/storage/problems

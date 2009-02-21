@@ -401,7 +401,7 @@ chugid (long __ruid, long __rgid, long __uid, long __gid)
 
   if (setgroups (0, NULL) < 0)
     {
-      lrvm_ipc_send_command ("exec_error", "\"Unnable to call setgroups()\"");
+      lrvm_ipc_send_command ("exec_error", "\"Unable to call setgroups()\"");
       lrvm_ipc_done ();
       term ();
     }

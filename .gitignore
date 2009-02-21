@@ -30,3 +30,4 @@ debian/webtester-gui
 debian/webtester-core
 debian/files
 debian/*.log
+*.class
