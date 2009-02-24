@@ -134,6 +134,7 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -174,6 +175,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -191,6 +193,7 @@ PICLDFLAGS = @PICLDFLAGS@
 PLUGIN_LIBTOOL_FLAGS = @PLUGIN_LIBTOOL_FLAGS@
 PREFIX = @PREFIX@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHARED_SUFFIX = @SHARED_SUFFIX@
 SHELL = @SHELL@
@@ -766,6 +769,10 @@ install-pkg:
 install-gui-pkg:
 	src/stuff/scripts/install/install.sh PACKAGE --dist-dir \
 	  $$DESTDIR/home --gui-only
+
+install-libwt-pkg:
+	src/stuff/scripts/install/install.sh PACKAGE --dist-dir \
+	  $$DESTDIR/home --libwt-only
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

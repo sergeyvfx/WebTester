@@ -137,7 +137,9 @@ compile_librun() {
     echo "make HOME_DIRECTORY=\"${PREFIX}\"" >> ${log} && \
     make HOME_DIRECTORY=\"${PREFIX}\" >> ${log} 2>&1 && \
     echo "* Compilation successfully completed." >> ${log} && \
-    chmod 644 "${PREFIX}/usr/src/librun/librun.so";
+    chmod 0775 "${PREFIX}/usr/src/librun/librun.so" && \
+    chown webtester:webtester "${PREFIX}/usr/src/librun/librun.so" && \
+    chown webtester:webtester "${PREFIX}"/usr/src/librun/*.o;
 
   res=$?
 
