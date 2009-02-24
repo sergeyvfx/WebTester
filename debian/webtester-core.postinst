@@ -127,7 +127,7 @@ wizard()
 
   # Begin asking questions
   for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 \
-           INET_Proxy UseSSL; do
+           Proxy UseSSL; do
     input "${i}"
   done
 
@@ -183,7 +183,7 @@ wizard()
   data=`set_config_var "${data}" "UseSSL"   "${UseSSL}"`
 
   for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 \
-           INET_Proxy SSL-CA-File SMB-Server SMB-Login SMB-Password \
+           Proxy SSL-CA-File SMB-Server SMB-Login SMB-Password \
            SMB-Workgroup SMB-Share ServerProblemsRoot; do
     db_get "webtester/${i}"
     data=`set_config_var "${data}" "${i}" "$RET"`

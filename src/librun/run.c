@@ -525,7 +525,8 @@ kill_child_process (run_process_info_t *__self)
           strcat (add, lrvm_config_file);
         }
 
-      sys_launch ("lrvm_kill -uid %ld -gid %ld -pid %u -signal %d%s",
+      sys_launch ("%s/sbin/lrvm_kill -uid %ld -gid %ld -pid %u -signal %d%s",
+                  HOME_DIRECTORY,
                   __self->uid, __self->gid, __self->task_pid, SIG_TERM, add);
     }
 

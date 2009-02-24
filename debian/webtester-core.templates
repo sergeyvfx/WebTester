@@ -32,7 +32,7 @@ Type: password
 Description: Second password to WebTester web-interface
  Second password to IPC interface of web-interface.
 
-Template: webtester/INET_Proxy
+Template: webtester/Proxy
 Type: string
 Default:
 Description: Proxy to use for connection to web-interface

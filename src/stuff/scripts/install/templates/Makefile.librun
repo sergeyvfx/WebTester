@@ -3,7 +3,7 @@
 CC = gcc
 
 CFLAGS = -I. -I.. -I../../../include
-DEFINES = -DNO_CONFIG
+DEFINES = -DNO_CONFIG -DHOME_DIRECTORY="\"$(HOME_DIRECTORY)\""
 GLIB_CFLAGS =  `pkg-config --cflags glib-2.0`
 GLIB_LIBS =  `pkg-config --libs glib-2.0`
 LDFLAGS = -Wl,-export-dynamic

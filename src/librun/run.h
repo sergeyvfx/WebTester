@@ -110,7 +110,7 @@ BEGIN_HEADER
  */
 
 /* Full executable filename of LRVM */
-#define LRVM_FULL_CMD           "lrvm"
+#define LRVM_FULL_CMD           HOME_DIRECTORY "/bin/lrvm"
 
 /* Timeout to tell PID and child's PID */
 #define LRVM_ANS_TIMEOUT        2.0     /* secs */

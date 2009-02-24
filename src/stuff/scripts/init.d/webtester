@@ -134,7 +134,8 @@ compile_librun() {
 
   cd "${PREFIX}/usr/src/librun"
   echo "make clean" >> ${log} && make clean && \
-    echo "make" >> ${log} && make >> ${log} 2>&1 && \
+    echo "make HOME_DIRECTORY=\"${PREFIX}\"" >> ${log} && \
+    make HOME_DIRECTORY=\"${PREFIX}\" >> ${log} 2>&1 && \
     echo "* Compilation successfully completed." >> ${log} && \
     chmod 644 "${PREFIX}/usr/src/librun/librun.so";
 
