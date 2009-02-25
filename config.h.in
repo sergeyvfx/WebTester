@@ -54,6 +54,12 @@
 /* definition of kernel source dir */
 #undef KERNEL_SOURCE
 
+/* Major version of libsoup */
+#undef LIBSOUP_22
+
+/* Major version of libsoup */
+#undef LIBSOUP_24
+
 /* Define for log file */
 #undef LOG_FILE
 

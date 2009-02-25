@@ -16,6 +16,7 @@
 #include <libwebtester/flexval.h>
 
 #include <malloc.h>
+#include <stdlib.h>
 
 #include <webtester/belts.h>
 #include <webtester/stat.h>

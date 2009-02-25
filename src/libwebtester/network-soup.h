@@ -25,6 +25,10 @@ BEGIN_HEADER
  * Macroses
  */
 
+#ifdef LIBSOUP_22
+#  define SoupURI SoupUri
+#endif
+
 #define HTTP_RESPONSE_BODY(msg)    http_message_get_response_body (msg)
 #define HTTP_RESPONSE_LENGTH(msg)  http_message_get_response_length (msg)
 

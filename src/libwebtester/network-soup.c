@@ -14,6 +14,14 @@
 #include "network-soup.h"
 #include "macrodef.h"
 
+#ifdef LIBSOUP_22
+#  define _BODY(msg)    msg->response.body
+#  define _LENGTH(msg)  msg->response.length
+#else
+#  define _BODY(msg)    msg->response_body->data
+#  define _LENGTH(msg)  msg->response_body->length
+#endif
+
 /**
  * Initialize HTTP stuff
  *
@@ -75,7 +83,7 @@ http_session_t*
 http_session_new_extended (int __async, const char *__proxy,
                            const char *__ca_file)
 {
-  SoupUri *proxy = NULL;
+  SoupURI *proxy = NULL;
   char *ca_file = 0;
   SoupSession *session;
 
@@ -157,13 +165,11 @@ http_session_send_message (http_session_t *__session,
 #endif
 
   res = soup_session_send_message (__session, __message);
-  if (__message->response.length > 0)
+  if (_LENGTH (__message) > 0)
     {
-      char *sbody = __message->response.body;
-      __message->response.body = malloc (__message->response.length + 1);
-      memset (__message->response.body, 0, __message->response.length + 1);
-      strncpy (__message->response.body, sbody, __message->response.length);
-      free (sbody);
+      char *body = realloc ((char*)_BODY (__message), _LENGTH (__message) + 1);
+      _BODY (__message) = body;
+      body[_LENGTH (__message)] = 0;
     }
 
   return res;
@@ -215,7 +221,7 @@ http_message_free (http_message_t *__self)
 const char*
 http_message_get_response_body (const http_message_t *__self)
 {
-  return __self->response.body;
+  return _BODY (__self);
 }
 
 /**
@@ -227,7 +233,7 @@ http_message_get_response_body (const http_message_t *__self)
 int
 http_message_get_response_length (const http_message_t *__self)
 {
-  return __self->response.length;
+  return _LENGTH (__self);
 }
 
 /**

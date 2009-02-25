@@ -28,6 +28,8 @@
 
 #include <memory.h>
 #include <unistd.h>
+#include <malloc.h>
+#include <stdlib.h>
 
 #include <glib.h>
 

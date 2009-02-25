@@ -21,3 +21,6 @@ done
 for f in $files_to_delete; do
   rm -f "$f"
 done
+
+which git > /dev/null && \
+  git checkout src/libwebtester/version.h > /dev/null 2>&1

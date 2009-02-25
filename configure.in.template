@@ -41,7 +41,8 @@ dnl ===================
 GLIB_REQ=2.6.0
 GMODULE_REQ=2.0.0
 GTHREAD_REQ=2.0.0
-SOUP_REQ=2.2.3
+SOUP22_REQ=2.2.3
+SOUP24_REQ=2.4.1
 PCRE_REQ=6.7
 GTK_REQ=2.6.0
 
@@ -158,25 +159,51 @@ BUILD_GUI="${build_gui}"
 AC_SUBST(BUILD_GUI)
 
 dnl Check for libsoup
-AC_MSG_CHECKING(if libsoup >= ${SOUP_REQ} exists)
-if pkg-config --exists libsoup-2.2 ; then
-    SOUP_CFLAGS=`pkg-config --cflags libsoup-2.2`
-    SOUP_LIBS=`pkg-config --libs libsoup-2.2`
-    SOUP_PREFIX=`pkg-config --variable=prefix libsoup-2.2`
-    SOUP_VERSION=`pkg-config --modversion libsoup-2.2`
-    AC_SUBST(SOUP_VERSION)
-    AC_SUBST(SOUP_PREFIX)
-    AC_SUBST(SOUP_CFLAGS)
-    AC_SUBST(SOUP_LIBS)
+AC_MSG_CHECKING(if libsoup-2.4 >= ${SOUP24_REQ} exists)
+if pkg-config --exists libsoup-2.4 ; then
+    SOUP_CFLAGS=`pkg-config --cflags libsoup-2.4`
+    SOUP_LIBS=`pkg-config --libs libsoup-2.4`
+    SOUP_PREFIX=`pkg-config --variable=prefix libsoup-2.4`
+    SOUP_VERSION=`pkg-config --modversion libsoup-2.4`
 
-    if pkg-config --exists libsoup-2.2 '>=' ${SOUP_REQ} ; then
+    if pkg-config --exists libsoup-2.4 '>=' ${SOUP24_REQ} ; then
         AC_MSG_RESULT(yes)
+        AC_DEFINE_UNQUOTED(LIBSOUP_24,"1",[Major version of libsoup])
     else
-        AC_MSG_ERROR("only ${SOUP_VERSION} found")
+        AC_MSG_RESULT("only ${SOUP_VERSION} found")
     fi
 else
-    AC_MSG_ERROR(no)
+    AC_MSG_RESULT(no)
 fi
+
+if test "x$SOUP_CFLAGS" = "x"; then
+  AC_MSG_CHECKING(if libsoup-2.2 >= ${SOUP22_REQ} exists)
+  if pkg-config --exists libsoup-2.2 ; then
+      SOUP_CFLAGS=`pkg-config --cflags libsoup-2.2`
+      SOUP_LIBS=`pkg-config --libs libsoup-2.2`
+      SOUP_PREFIX=`pkg-config --variable=prefix libsoup-2.2`
+      SOUP_VERSION=`pkg-config --modversion libsoup-2.2`
+
+      if pkg-config --exists libsoup-2.2 '>=' ${SOUP22_REQ} ; then
+          AC_MSG_RESULT(yes)
+          AC_DEFINE_UNQUOTED(LIBSOUP_22,"1",[Major version of libsoup])
+      else
+          AC_MSG_RESULT("only ${SOUP_VERSION} found")
+      fi
+  else
+      AC_MSG_RESULT(no)
+  fi
+fi
+
+if test "x$SOUP_CFLAGS" = "x"; then
+  echo "Unable to find sutable libsoup library"
+  exit 1
+fi
+
+AC_SUBST(SOUP_VERSION)
+AC_SUBST(SOUP_PREFIX)
+AC_SUBST(SOUP_CFLAGS)
+AC_SUBST(SOUP_LIBS)
 
 dnl Check for libpcre
 AC_MSG_CHECKING(if libpcre >= ${PCRE_REQ} exists)
