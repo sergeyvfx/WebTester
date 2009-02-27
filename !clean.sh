@@ -23,4 +23,5 @@ for f in $files_to_delete; do
 done
 
 which git > /dev/null && \
-  git checkout src/libwebtester/version.h > /dev/null 2>&1
+  (git checkout src/libwebtester/version.h \
+          src/stuff/scripts/install/stuff/!config > /dev/null 2>&1;)

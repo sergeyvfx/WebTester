@@ -38,10 +38,12 @@ install: build
 	$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-core install-pkg
 	echo -e "\n"
 
-	echo "Preparing WebTester Server Frontend package"
-	mkdir $(CURDIR)/debian/webtester-gui/home
-	$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-gui install-gui-pkg
-	echo -e "\n"
+	if ( `test -f $(CURDIR)/src/frontend/gwebtester` ); then \
+		echo "Preparing WebTester Server Frontend package"; \
+		mkdir $(CURDIR)/debian/webtester-gui/home; \
+		$(MAKE) DESTDIR=$(CURDIR)/debian/webtester-gui install-gui-pkg; \
+		echo -e "\n"; \
+	fi;
 
 	@data=`cat $(CURDIR)/debian/webtester-core/home/webtester/conf/webtester.conf`; \
 	  for i in INET_Addr INET_Gateway INET_Login INET_Pass1 INET_Pass2 Proxy \
@@ -53,17 +55,18 @@ install: build
 	        echo "$${data}" | \
 	          sed -r 's/\/home\/webtester/@@DIST_DIR@@/' > \
 	            $(CURDIR)/debian/webtester-core/home/webtester/conf/webtester.conf
-	
+
 	@data=`cat $(CURDIR)/debian/webtester-core/home/webtester/conf/users.conf`; \
 	  data=`echo "$${data}" | sed -r "s/(\"password-hash\"\\s+)\".*\"/\1\"@@password-hash@@\"/"` ; \
 	  echo "$${data}" > $(CURDIR)/debian/webtester-core/home/webtester/conf/users.conf
 
-	@for package in webtester-core webtester-gui; do \
+	@for package in libwebtester webtester-core webtester-gui; do \
 	  mkdir debian/$$package/DEBIAN > /dev/null 2>&1; \
 	  for i in postinst postrm preinst prerm; do \
 	    test ! -r debian/$$package.$$i || \
-	      sh -cx "install -m0755 debian/$$package.$$i debian/$$package/DEBIAN/$$i" \
-	        || exit 1; \
+	      test ! -d debian/$$package/DEBIAN || \
+	      sh -cx "install -m0755 debian/$$package.$$i debian/$$package/DEBIAN/$$i" || \
+	        exit 1; \
 	  done; \
 	  for i in templates conffiles; do \
 	    test ! -r debian/$$package.$$i || \
@@ -74,7 +77,6 @@ install: build
 
 # Build architecture-independent files here.
 binary-indep: build install
-# We have nothing to do by default.
 
 # Build architecture-dependent files here.
 binary-arch: build install
@@ -101,11 +103,18 @@ binary-arch: build install
 	dh_fixperms
 #	dh_perl
 #	dh_makeshlibs
-	dh_installdeb
+#	dh_installdeb
 #	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
-	dh_builddeb
+	dh_builddeb --no-package=webtester-gui
+
+	if ( `test -f $(CURDIR)/src/frontend/gwebtester` ); then \
+	  dh_builddeb --package=webtester-gui; \
+	else \
+	  data=`cat $(CURDIR)/debian/files | grep -v webtester-gui`; \
+	  echo "$${data}" > $(CURDIR)/debian/files; \
+	fi
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure

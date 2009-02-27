@@ -17,18 +17,12 @@ INSTALL_DIR="/home/webtester"
 #
 change_owner()
 {
-  rec_items="bin conf include lib sbin usr var/fpc tmp var/java \
-AUTHORS BUGS COPYING ChangeLog"
-  items="var var/data var/kylix var/kylix/lib var/kylix/lib/testlib.dcu \
-var/run var/storage"
-
-  for f in ${rec_items}; do
-    chown -R webtester:webtester "${INSTALL_DIR}/${f}"
-  done
-
-  for f in ${items}; do
-    chown webtester:webtester "${INSTALL_DIR}/${f}"
-  done
+  #
+  # Need global recursively chown-ing because already
+  # installed files (i.e. problems' database) may be owned
+  # by invalid user or group
+  #
+  chown -R webtester:webtester "${INSTALL_DIR}"
 
   # This files should be ownered by root
   chown root:root ${INSTALL_DIR}/bin/lrvm
@@ -41,6 +35,12 @@ var/run var/storage"
 
   # Directory where WebIterface stores archives
   chown webtester:www-data ${INSTALL_DIR}/var/storage/problems
+  chmod 770 ${INSTALL_DIR}/var/storage/problems
+
+  # Need this because this directories may be remained from
+  # previous version of webtester or may be copied from another system
+  chmod 770 ${INSTALL_DIR}/var/data/Informatics/problems > /dev/null 2>&1
+  chmod 775 ${INSTALL_DIR}/var/data/Informatics/checkers > /dev/null 2>&1
 }
 
 #
