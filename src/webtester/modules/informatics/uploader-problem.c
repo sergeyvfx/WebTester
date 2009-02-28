@@ -771,7 +771,7 @@ upload_task (assarr_t *__params, char *__err, char *__err_desc)
   return TRUE;
 
 __fail_:
-  /* unlinkdir (uploading_tmp_dir); */
+  unlinkdir (uploading_tmp_dir);
   return FALSE;
 }
 
