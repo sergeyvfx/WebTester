@@ -235,6 +235,8 @@ ${CPFILE} /src/stuff/testlib.pas/testlib.o    /var/fpc/units/testlib.o     \
   webtester webtester 0664
 ${CPFILE} /src/stuff/testlib.pas/testlib.dcu  /var/kylix/lib/testlib.dcu   \
   webtester webtester 0664
+${CPFILE} /src/stuff/testlib.pas/testlib.pas  /var/kylix/lib/testlib.pas   \
+  webtester webtester 0664
 
 ${ECHO} "Installing files for Java..."
 ${MKDISTDIR} /webtester/var/java      webtester webtester 0775

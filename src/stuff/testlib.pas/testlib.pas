@@ -23,7 +23,7 @@ const
   EOFChar = #26;
 
   EOLNChars = [#10, #13, EOFChar];
-  blanks    = []; { Characters with ASCII code <= 32 are blanks by default }
+  blanks    = [#9, #32, #10, #13];
 
   NumCharsBefore = [#10, #13, ' '];
   NumCharsAfter = [#10, #13, ' '];
@@ -213,14 +213,13 @@ var
 begin
   skip (before);
   s:='';
-  
+
   while not (CurChar in after) and not eof do
   begin
     if (length (s)>=MaxStrLen-1) then Quit (_PE, 'Word is too long');
     s:=s+CurChar;
     NextChar;
   end;
-  skip (after);
 
   ReadWord:=s;
 end;
