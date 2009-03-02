@@ -1230,7 +1230,11 @@ run_process_info_by_unique (long __unique)
 void
 run_process_terminated (run_process_info_t *__self, int __sig)
 {
-  if (RUN_PROC_LOCKED (*__self)) return;
+  if (RUN_PROC_LOCKED (*__self))
+    {
+      return;
+    }
+
   __self->state = PS_TERMINATED;
   __self->term_sig = __sig;
 }
@@ -1244,7 +1248,11 @@ run_process_terminated (run_process_info_t *__self, int __sig)
 void
 run_process_stopped (run_process_info_t *__self, int __sig)
 {
-  if (RUN_PROC_LOCKED (*__self)) return;
+  if (RUN_PROC_LOCKED (*__self))
+    {
+      return;
+    }
+
   __self->state = PS_STOPPED;
   __self->stop_sig = __sig;
 }

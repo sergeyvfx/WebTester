@@ -28,7 +28,9 @@ BEGIN_HEADER
 #define RUN_PROC_STATE(__self)        ((__self).state)
 
 /* Exit code of the process */
-#define RUN_PROC_EXITCODE(__self)     ((__self).exit_code)
+#define RUN_PROC_EXITCODE(__self) \
+  ( ((__self).stop_sig) ? ((__self).stop_sig) : \
+    ((__self).term_sig) ? ((__self).term_sig) : (__self).exit_code)
 
 
 #define RUN_PROC_FINISHED(__self)     (RUN_PROC_STATE(__self)&PS_FINISHED)
