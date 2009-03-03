@@ -226,6 +226,7 @@ ${MKDISTDIR} /webtester/var/fpc/lib    webtester webtester 0775
 ${MKDISTDIR} /webtester/var/fpc/units  webtester webtester 0775
 ${MKDISTDIR} /webtester/var/kylix      webtester webtester 0775
 ${MKDISTDIR} /webtester/var/kylix/lib  webtester webtester 0775
+${MKDISTDIR} /webtester/var/kylix/bin  webtester webtester 0775
 
 ${CPFILE} /src/stuff/testlib.pas/testlib.pas  /var/fpc/units/testlib.pas   \
   webtester webtester 0664
@@ -237,6 +238,8 @@ ${CPFILE} /src/stuff/testlib.pas/testlib.dcu  /var/kylix/lib/testlib.dcu   \
   webtester webtester 0664
 ${CPFILE} /src/stuff/testlib.pas/testlib.pas  /var/kylix/lib/testlib.pas   \
   webtester webtester 0664
+${CPFILE} /src/stuff/scripts/dcc.sh  /var/kylix/bin/dcc.sh   \
+  webtester webtester 0774
 
 ${ECHO} "Installing files for Java..."
 ${MKDISTDIR} /webtester/var/java      webtester webtester 0775

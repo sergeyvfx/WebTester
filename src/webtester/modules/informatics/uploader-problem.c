@@ -741,6 +741,10 @@ upload_task (assarr_t *__params, char *__err, char *__err_desc)
 
   if (archive_attached)
     {
+      /* This directory may be not-empty because of */
+      /* incorrect finishing of previous WebTester instance */
+      unlinkdir (uploading_tmp_dir);
+
       if (!upload_archive (filename, uploading_tmp_dir))
         {
           strcpy (__err, "E_UPLOAD");
