@@ -261,6 +261,13 @@ testlib_read_string (FILE *__stream, char *__buf, int __maxlen)
           goback (__stream);
         }
     }
+  else
+    {
+      if (ch >= 0)
+        {
+          goback (__stream);
+        }
+    }
 
   __buf[len] = 0;
 }
@@ -353,7 +360,7 @@ testlib_eoln (FILE *__stream)
 
   int ch = fgetc (__stream);
   int res = ch == '\n' || ch == '\r' || ch == EOF;
-  /*  goback (__stream); */
+  goback (__stream);
   return res;
 }
 

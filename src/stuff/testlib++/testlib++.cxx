@@ -96,8 +96,16 @@ CTestlibFile::ReadString (void)
 {
   char buf[TESTLIB_MAX_STRLEN + 1];
   string a;
+
   testlib_read_string (this->GetStream (), buf, TESTLIB_MAX_STRLEN);
   a = buf;
+
+  while (!Eof () && !Eoln ())
+    {
+      testlib_read_string (this->GetStream (), buf, TESTLIB_MAX_STRLEN);
+      a += buf;
+    }
+
   return a;
 }
 
