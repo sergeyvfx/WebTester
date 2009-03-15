@@ -97,20 +97,20 @@ flastid_entry (char *__dir, char *__prefix, char *__suffix)
       for (i = 0; i < count; i++)
         {
           if (sscanf (eps[i]->d_name, dummy, &n))
-	    {
-	      if (n > id)
-		{
-		  id = n;
-		}
-	    }
+            {
+              if (n > id)
+                {
+                  id = n;
+                }
+            }
           free (eps[i]);
         }
       free (eps);
       sprintf (dummy, "%s/%s%ld%s", __dir, __prefix, id, __suffix);
       if (fexists (dummy))
-	{
-	  id++;
-	}
+        {
+          id++;
+        }
     }
   return id;
 }
@@ -314,9 +314,9 @@ fmkdir (const char *__dir, mode_t __mode)
   if (lastSlash>-1)
     {
       for (i = 0; i < lastSlash; i++)
-	{
-	  parent[i] = __dir[i];
-	}
+        {
+          parent[i] = __dir[i];
+        }
       parent[i] = 0;
       fmkdir (parent, __mode);
     }
@@ -359,9 +359,9 @@ unlinkdir (const char *__dir)
                   rmdir (dummy);
                 }
               else
-		{
-		  unlink (dummy);
-		}
+                {
+                  unlink (dummy);
+                }
             }
           free (eps[i]);
         }

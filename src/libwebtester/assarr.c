@@ -312,8 +312,6 @@ assarr_unset_all (assarr_t *__self, assarr_deleter __deleter)
   return 0;
 }
 
-// Pack assaciative array to string
-
 /**
  * Pack ass. array PCHAR data to string
  * !!! WARNING !!! Works ONLY with PCHAR data
@@ -327,15 +325,34 @@ assarr_pack (assarr_t *__self, char **__out)
   char buf[1024];
   char *key;
   void *value;
+  size_t len = 0, capacity = 1024;
+  size_t val_len, key_len, add_len;
+
+  *__out = malloc (capacity);
   strcpy (*__out, "");
+
   ASSARR_FOREACH_DO (__self, key, value);
+    key_len = strlen (key);
+    val_len = strlen ((char*) value);
+
+    sprintf (buf, "%u", val_len);
+
+    add_len = key_len + strlen (buf) + val_len + 3;
+
+    if (len + add_len > capacity - 1)
+      {
+        capacity += add_len;
+        *__out = realloc (*__out, capacity);
+      }
+
     strcat (*__out, key);
     strcat (*__out, ";");
-    sprintf (buf, "%ld", (long) strlen ((char*) value));
     strcat (*__out, buf);
     strcat (*__out, ";");
     strcat (*__out, (char*) value);
     strcat (*__out, ";");
+
+    len += add_len;
   ASSARR_FOREACH_DONE;
 }
 

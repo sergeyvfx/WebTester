@@ -162,8 +162,10 @@ static BOOL use_chroot = FALSE;
 
 static mutex_t suspended = 0;
 
+static DWORD max_output_store_size = 0;
+
 /* Null-terminated list of required input task's params */
-static char *required_params[] ={"SOURCE",
+static char *required_params[] = {"SOURCE",
   "COMPILERID",
   "BONUS",
   "INPUTFILE",
@@ -586,6 +588,41 @@ build_checker_cmd (wt_task_t *__self, const char *__cur_testing_dir,
  *
  */
 
+/**
+ * Check if storing of solution's output is needed
+ *
+ * @return non-zero if storing is needed, zero otherwise
+ */
+static BOOL
+need_store_output (void)
+{
+  static BOOL initialized = FALSE;
+  static BOOL result = FALSE;
+
+  if (!initialized)
+    {
+      int i;
+      flex_value_t *retprops = NULL;
+      char *pchar;
+
+      CONFIG_OPEN_KEY (retprops, "Server/Modules/Informatics/RetProps");
+
+      for (i = 0; i < FLEXVAL_ARRAY_LENGTH (retprops); i++)
+        {
+          pchar = flexval_get_array_string (retprops, i);
+          if (!strcmp (pchar, "SOLUTION_OUTPUT"))
+            {
+              result = TRUE;
+              break;
+            }
+        }
+
+      initialized = TRUE;
+    }
+
+  return result;
+}
+
 /*
  * Main stuff of testing
  *
@@ -681,6 +718,9 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   /* Per-compiler resource usage correction */
   double time_corr, rss_corr;
 
+  assarr_t *outputs = NULL;
+  char *output = NULL;
+
   for (i = 0; i < tests_count; i++)
     {
       tests[i] = atoi (tests_pchar_arr[i]);
@@ -738,6 +778,12 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
     {
       INF_DEBUG_LOG ("Using per-compiler corrections: RSS: %lf, time: %lf\n",
                      rss_corr, time_corr);
+    }
+
+  if (need_store_output () && max_output_store_size > 0)
+    {
+      outputs = assarr_create ();
+      output = malloc (max_output_store_size + 1);
     }
 
   /* Cycle by tests */
@@ -868,7 +914,7 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
                 }
 
 
-              /* Cecker finished by signal. */
+              /* Checker finished by signal. */
               if (RUN_PROC_TERMINATED (*proc))
                 {
                   TASK_LOG (*__self, "\n--------\n"
@@ -958,6 +1004,23 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
             }
         }
 
+      if (outputs)
+        {
+          FILE *stream = fopen (full_output, "r");
+
+          snprintf (dummy, BUF_SIZE (dummy), "%d", i);
+
+          if (stream)
+            {
+              size_t len = fread (output, 1, max_output_store_size, stream);
+              output[len] = 0;
+
+              assarr_set_value (outputs, dummy, strdup (output));
+
+              fclose (stream);
+            }
+        }
+
       /* Delete input file (to reduce storaging of garbage) and */
       /* correct handling of PE */
       unlink (full_input);
@@ -1001,6 +1064,18 @@ __done_:
           strcpy (__errors, "OK");
         }
     }
+
+  if (outputs != NULL)
+    {
+      char *pchar;
+
+      assarr_pack (outputs, &pchar);
+      assarr_set_value (__params, "SOLUTION_OUTPUT", pchar);
+
+      assarr_destroy (outputs, assarr_deleter_free_ref_data);
+    }
+
+  SAFE_FREE (output);
 }
 
 /**
@@ -1014,7 +1089,7 @@ set_output_params (wt_task_t *__task, assarr_t *__params)
 {
   int i;
   char *pchar;
-  flex_value_t *retprops = 0;
+  flex_value_t *retprops = NULL;
 
   /*
    * TODO: Need beautiful solution to solve this query
@@ -1366,6 +1441,8 @@ read_config (void)
   solution_exec_uid = uid_by_name (solution_exec_user);
   INF_SAFE_PCHAR_KEY (solution_exec_group, "SolutionExec-Group", "");
   solution_exec_gid = gid_by_name (solution_exec_group);
+
+  INF_SAFE_INT_KEY (max_output_store_size, "MaxOutputStoreSize", 0);
 }
 
 /**
