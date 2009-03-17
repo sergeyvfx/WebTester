@@ -290,3 +290,30 @@ cmd_context_execute_proc (cmd_context_t *__self, char **__argv, int __argc)
 
   return 0;
 }
+
+/**
+ * Unregister procedure from context
+ *
+ * @param __self - context to unregister procedure from
+ * @param __name - name of procedure to unregister
+ * @return zero on success, non-zero otherwise
+ */
+int
+cmd_context_proc_unregister (cmd_context_t *__self, const char *__name)
+{
+  dyna_item_t *item;
+
+  mutex_lock (__self->mutex);
+  dyna_search_reset (__self->proclist);
+  item = dyna_search (__self->proclist, (void*)__name, 0,
+                      cmd_proclist_comparator);
+
+  if (item)
+    {
+      dyna_delete (__self->proclist, item, cmd_proclist_destroyer);
+    }
+
+  mutex_unlock (__self->mutex);
+
+  return 0;
+}

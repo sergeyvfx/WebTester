@@ -108,6 +108,10 @@ ipc_client_freeze (ipc_client_t *__self, int __duration);
 int
 ipc_proc_register (const char *__procname, cmd_entry_point __entrypoint);
 
+/* Unregister procedure from IPC command context */
+int
+ipc_proc_unregister (const char *__procname);
+
 /* Handler of command `exit` */
 int
 ipc_proc_exit (int __argc, char **__argv);

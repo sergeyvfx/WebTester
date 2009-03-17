@@ -67,6 +67,10 @@ cmd_context_proc_register (cmd_context_t *__self, const char *__name,
 int
 cmd_context_execute_proc (cmd_context_t *__self, char **__argv, int __argc);
 
+/* Unregister procedure from context */
+int
+cmd_context_proc_unregister (cmd_context_t *__self, const char* __name);
+
 END_HEADER
 
 #endif

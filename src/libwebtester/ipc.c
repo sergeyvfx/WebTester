@@ -42,6 +42,10 @@ static int shutdowning = 0;
   if (ipc_cmd_context) \
     cmd_context_proc_register (ipc_cmd_context, __name, __entry_point) \
 
+#define IPC_PROC_UNREGISTER(__name) \
+  if (ipc_cmd_context) \
+    cmd_context_proc_unregister (ipc_cmd_context, __name) \
+
 
 /**
  * Init IP clients pool
@@ -474,6 +478,19 @@ int
 ipc_proc_register (const char *__procname, cmd_entry_point __entrypoint)
 {
   IPC_PROC_REGISTER (__procname, __entrypoint);
+  return 0;
+}
+
+/**
+ * Unregister procedure from IPC command context
+ *
+ * @param __procname - name of procedure to unregister
+ * @return zero on success, non-zero otherwise
+ */
+int
+ipc_proc_unregister (const char *__procname)
+{
+  IPC_PROC_UNREGISTER (__procname);
   return 0;
 }
 
