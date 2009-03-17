@@ -95,6 +95,10 @@ fabs (double __self);
 double
 sign (double __self);
 
+/* Parse range string */
+int
+parse_range (const char *__range, long *__from, long *__to);
+
 END_HEADER
 
 #endif

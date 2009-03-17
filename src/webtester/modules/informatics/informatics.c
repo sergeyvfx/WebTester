@@ -25,7 +25,9 @@
 static int
 activate (void *__unused, void *__call_unused)
 {
+  Informatics_ipc_init ();
   Informatics_init_testing ();
+
   return 0;
 }
 
@@ -38,6 +40,8 @@ static int
 deactivate (void *__unused, void *__call_unused)
 {
   Informatics_done_testing ();
+  Informatics_ipc_done ();
+
   return 0;
 }
 
@@ -87,6 +91,8 @@ Init (plugin_t *__plugin)
   RESET_LEZ (checker_upload_interval, INFORMATICS_CHECKER_UPLOAD_INTERVAL);
   scheduler_add (Informatics_UploadChecker, 0,
                  checker_upload_interval * USEC_COUNT);
+
+
   return 0;
 }
 

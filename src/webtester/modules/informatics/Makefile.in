@@ -16,7 +16,8 @@ SOURCES = \
 	compiler.c \
 	tester.c \
 	uploader-problem.c \
-	uploader-checker.c
+	uploader-checker.c \
+	ipc.c
 
 OBJECTS = ${SOURCES:.c=.o}
 

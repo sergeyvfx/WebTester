@@ -526,3 +526,73 @@ sign (double __self)
     }
   return -1;
 }
+
+/**
+ * Parse range string
+ *
+ * @param __range - range to parse
+ * @param __from - LO boundary of range
+ * @param __to - HI boundary of range
+ * @return zero on success, non-zero otherwise
+ */
+int
+parse_range (const char *__range, long *__from, long *__to)
+{
+  int i, n, len = 0, state = 0;
+  char token[16];
+  char ch;
+
+  i = 0;
+  n = strlen (__range);
+
+  while (i < n)
+    {
+      ch = __range[i];
+
+      if (ch >= '0' && ch <= '9')
+        {
+          if (len > 15)
+            {
+              /* Token is too long */
+              return -1;
+            }
+
+          token[len++] = ch;
+        }
+      else if (ch == '-')
+        {
+          if (len == 0)
+            {
+              /* No LO boundary */
+              return -1;
+            }
+
+          if (state == 1)
+            {
+              /* Duplicate dashes in range */
+              return -1;
+            }
+
+          token[len] = 0;
+          *__from = atol (token);
+          state = 1;
+          len = 0;
+        }
+      else
+        {
+          /* Invalid character */
+          return -1;
+        }
+
+      ++i;
+    }
+
+  if (len > 0)
+    {
+      token[len] = 0;
+      *__to = atol (token);
+      return 0;
+    }
+
+  return -1;
+}

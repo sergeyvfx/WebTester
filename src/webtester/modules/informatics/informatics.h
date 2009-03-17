@@ -97,6 +97,18 @@ Informatics_SuspendTesting (void);
 int
 Informatics_ResumeTesting (void);
 
+/****
+ * IPC stuff
+ */
+
+/* Initialize Informatics IPC stuff */
+int
+Informatics_ipc_init (void);
+
+/* Uninitialize Informatics IPC stuff */
+int
+Informatics_ipc_done (void);
+
 END_HEADER
 
 #endif

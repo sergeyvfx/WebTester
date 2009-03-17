@@ -1411,10 +1411,13 @@ read_config (void)
   INF_INT_KEY (checker_memory_limit, "Checker/Limits/RSS");
 
   INF_FLOAT_KEY (t, "Checker/Limits/Time");
-  checker_time_limit = t*USEC_COUNT;
+  checker_time_limit = t * USEC_COUNT;
 
   INF_INT_KEY (t, "MaxThreads");
-  if (t > 0) max_threads = t;
+  if (t > 0)
+    {
+      max_threads = t;
+    }
 
   INF_PCHAR_KEY (testing_dir, "TestingDir");
   INF_PCHAR_KEY (data_dir, "DataDir");

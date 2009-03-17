@@ -294,11 +294,19 @@ ipc_done (void)
 {
   shutdowning = 1;
   ipc_done_clients ();
+
   if (ipc_inet >= 0)
-    sock_destroy (ipc_inet);
+    {
+      sock_destroy (ipc_inet);
+    }
+
   ipc_inet = -1;
+
   if (ipc_cmd_context)
-    cmd_destroy_context (ipc_cmd_context);
+    {
+      cmd_destroy_context (ipc_cmd_context);
+      ipc_cmd_context = NULL;
+    }
   shutdowning = 0;
   return 0;
 }

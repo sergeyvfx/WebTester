@@ -265,16 +265,13 @@ __out:
 int
 fexists (const char *__fn)
 {
-  FILE *ptr;
-  /*
-   * TODO: Replace with stat()
-   */
-  ptr = fopen (__fn, "r");
-  if (!ptr)
+  struct stat st;
+
+  if (stat (__fn, &st))
     {
       return 0;
     }
-  fclose (ptr);
+
   return 1;
 }
 
