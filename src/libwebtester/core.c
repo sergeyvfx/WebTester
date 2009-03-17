@@ -97,15 +97,16 @@ core_init_version_string (void)
 {
   uname (&utsName);
   // Version string
-  sprintf (core_version_string, "%s v%s [%s][`%s` `%s %s` on %s][%s]",
-           CORE_PACKAGE_NAME,
-           CORE_VERSION,
-           buildType,
-           OSKind,
-           buildDate,
-           buildTime,
-           BUILD_HOST,
-           special);
+  snprintf (core_version_string, BUF_SIZE (core_version_string),
+            "%s v%s [%s][`%s` `%s %s` on %s][%s]",
+            CORE_PACKAGE_NAME,
+            CORE_VERSION,
+            buildType,
+            OSKind,
+            buildDate,
+            buildTime,
+            BUILD_HOST,
+            special);
 }
 
 /**

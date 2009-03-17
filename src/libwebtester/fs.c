@@ -51,7 +51,7 @@ get_full_path_entry (const char *__fn, int __type)
   while (cur)
     {
       data = dyna_data (cur);
-      sprintf (dummy, "%s/%s", data, __fn);
+      snprintf (dummy, BUF_SIZE (dummy), "%s/%s", data, __fn);
 
       stat (dummy, &st);
 
@@ -93,7 +93,7 @@ flastid_entry (char *__dir, char *__prefix, char *__suffix)
     {
       long i, n;
       char dummy [65535];
-      sprintf (dummy, "%s.%%ld.%s", __prefix, __suffix);
+      snprintf (dummy, BUF_SIZE (dummy), "%s.%%ld.%s", __prefix, __suffix);
       for (i = 0; i < count; i++)
         {
           if (sscanf (eps[i]->d_name, dummy, &n))
@@ -106,7 +106,8 @@ flastid_entry (char *__dir, char *__prefix, char *__suffix)
           free (eps[i]);
         }
       free (eps);
-      sprintf (dummy, "%s/%s%ld%s", __dir, __prefix, id, __suffix);
+      snprintf (dummy, BUF_SIZE (dummy), "%s/%s%ld%s", __dir,
+                __prefix, id, __suffix);
       if (fexists (dummy))
         {
           id++;
@@ -127,7 +128,8 @@ static void
 fdup_delete_iterator (char *__dir, char *__pref, long __id, char *__suff)
 {
   char dummy[4096];
-  sprintf (dummy, "%s/%s.%ld.%s", __dir, __pref, __id, __suff);
+  snprintf (dummy, BUF_SIZE (dummy), "%s/%s.%ld.%s", __dir,
+            __pref, __id, __suff);
   unlink (dummy);
 }
 
@@ -143,8 +145,10 @@ static void
 fdup_move_down_iterator (char *__dir, char *__pref, long __id, char *__suff)
 {
   char src[4096], dst[4096];
-  sprintf (src, "%s/%s.%ld.%s", __dir, __pref, __id, __suff);
-  sprintf (dst, "%s/%s.%ld.%s", __dir, __pref, __id - 1, __suff);
+
+  snprintf (src, BUF_SIZE (src), "%s/%s.%ld.%s", __dir, __pref, __id, __suff);
+  snprintf (dst, BUF_SIZE (dst), "%s/%s.%ld.%s", __dir, __pref,
+            __id - 1, __suff);
 
   rename (src, dst);
 }
@@ -348,7 +352,8 @@ unlinkdir (const char *__dir)
         {
           if (strcmp (eps[i]->d_name, ".") && strcmp (eps[i]->d_name, ".."))
             {
-              sprintf (dummy, "%s/%s", __dir, eps[i]->d_name);
+              snprintf (dummy, BUF_SIZE (dummy), "%s/%s",
+                        __dir, eps[i]->d_name);
               stat (dummy, &_stat);
               if (_stat.st_mode & S_IFDIR)
                 {
@@ -464,8 +469,9 @@ fcopydir (const char *__src, const char *__dst)
     {
       if (strcmp (eps[i]->d_name, ".") && strcmp (eps[i]->d_name, ".."))
         {
-          sprintf (full, "%s/%s", __src, eps[i]->d_name);
-          sprintf (full_dst, "%s/%s", __dst, eps[i]->d_name);
+          snprintf (full, BUF_SIZE (full), "%s/%s", __src, eps[i]->d_name);
+          snprintf (full_dst, BUF_SIZE (full_dst), "%s/%s",
+                    __dst, eps[i]->d_name);
           lstat (full, &s);
 
           if (S_ISLNK (s.st_mode))
@@ -528,7 +534,7 @@ fdup (const char *__fn, char *__out, const char *__add_ext, int __count)
       id++;
     }
 
-  sprintf (dummy, "%s/%s.%ld.%s", dir, fn, id, real_ext);
+  snprintf (dummy, BUF_SIZE (dummy), "%s/%s.%ld.%s", dir, fn, id, real_ext);
   copyfile (__fn, dummy);
 
   if (__out)

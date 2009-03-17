@@ -75,11 +75,11 @@ flexval_eval_from_string (flex_value_t *__self)
 static void
 flexval_eval_from_int (flex_value_t *__self)
 {
-  char flexval_buffer[65536];
+  char flexval_buffer[64];
   if (!__self) return;
   SAFE_FREE (__self->pchar);
   __self->real = (double) __self->integer;
-  sprintf (flexval_buffer, "%ld", __self->integer);
+  snprintf (flexval_buffer, BUF_SIZE (flexval_buffer), "%ld", __self->integer);
   __self->pchar = malloc (strlen (flexval_buffer) + 1);
   strcpy (__self->pchar, flexval_buffer);
   __self->type = FVT_INTEGER;
@@ -93,13 +93,13 @@ flexval_eval_from_int (flex_value_t *__self)
 static void
 flexval_eval_from_float (flex_value_t *__self)
 {
-  char flexval_buffer[65536];
+  char flexval_buffer[64];
   if (!__self) return;
   SAFE_FREE (__self->pchar);
   __self->integer = (long) __self->real;
 
   /* Big troules: need to write round() */
-  sprintf (flexval_buffer, "%.12lf", __self->real);
+  snprintf (flexval_buffer, BUF_SIZE (flexval_buffer), "%.12lf", __self->real);
 
   drop_triling_zeroes (flexval_buffer);
   __self->pchar = malloc (strlen (flexval_buffer) + 1);
@@ -286,7 +286,7 @@ flexval_unserialize_entry (const char *__data, int __base_line, char *__error)
               if (flags & FVP_FLAGS_ARRAY)
                 {
                   flex_value_t *tmp;
-                  sprintf (dummy, "[%s]", token);
+                  snprintf (dummy, BUF_SIZE (dummy), "[%s]", token);
                   tmp = flexval_unserialize_entry (dummy, prevline, error);
                   if (strcmp (error, ""))
                     {
@@ -371,7 +371,10 @@ flexval_unserialize_entry (const char *__data, int __base_line, char *__error)
   return ptr;
 
 __fail_:
-  if (__error) sprintf (__error, "%s at line %d", error, linenum);
+  if (__error)
+    {
+      sprintf (__error, "%s at line %d", error, linenum);
+    }
   return ptr;
 }
 
@@ -399,14 +402,14 @@ flexval_serialize_entry (flex_value_t *__self, char *__res)
     if (__self->type == FVT_INTEGER)
     {
       char dummy[1024];
-      sprintf (dummy, "%ld", flexval_get_int (__self));
+      snprintf (dummy, BUF_SIZE (dummy), "%ld", flexval_get_int (__self));
       strcat (__res, dummy);
     }
   else
     if (__self->type == FVT_FLOAT)
     {
       char dummy[1024];
-      sprintf (dummy, "%lf", flexval_get_float (__self));
+      snprintf (dummy, BUF_SIZE (dummy), "%lf", flexval_get_float (__self));
       strcat (__res, dummy);
     }
   else

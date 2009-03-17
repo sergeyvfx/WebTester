@@ -129,7 +129,8 @@ save_checker (assarr_t *__params)
   /* Make checkers' storage root */
   fmkdir (dir, 00775);
 
-  sprintf (fn, "%s/%s%s", dir, (char*) assarr_get_value (__params, "ID"), ext);
+  snprintf (fn, BUF_SIZE (fn), "%s/%s%s", dir,
+            (char*) assarr_get_value (__params, "ID"), ext);
 
   src = assarr_get_value (__params, "SRC");
   if (fwritebuf (fn, src))
@@ -160,11 +161,12 @@ build_compilation_cmd (assarr_t *__params, char *__out)
   char source[4096];
   char flags[4096] = "", flags_path[1024];
 
-  sprintf (source, "%s%s", id, ext);
+  snprintf (source, BUF_SIZE (source), "%s%s", id, ext);
 
   strcpy (__out, cmd);
 
-  sprintf (flags_path, "Checker/CompilerFlags/%s", compiler_id);
+  snprintf (flags_path, BUF_SIZE (flags_path),
+            "Checker/CompilerFlags/%s", compiler_id);
   INF_PCHAR_KEY (flags, flags_path);
 
   REPLACE_VAR (__out, "flags", flags);
@@ -250,7 +252,8 @@ compile (assarr_t *__params, char *__err)
 
   CHECK_ACTIVE ();
 
-  sprintf (fn, "%s/%s", dir, (char*) assarr_get_value (__params, "ID"));
+  snprintf (fn, BUF_SIZE (fn), "%s/%s", dir,
+            (char*) assarr_get_value (__params, "ID"));
 
   unlink (fn);
 
@@ -321,8 +324,8 @@ put_checker (assarr_t *__params, const char *__err, const char *__desc)
 
   urlencode (__desc, desc);
 
-  sprintf (url, "%s&id=%s&err=%s&desc=%s", url_prefix,
-           (char*) assarr_get_value (__params, "ID"), __err, desc);
+  snprintf (url, BUF_SIZE (url), "%s&id=%s&err=%s&desc=%s", url_prefix,
+            (char*) assarr_get_value (__params, "ID"), __err, desc);
 
   msg = wt_transport_send_message (url);
 

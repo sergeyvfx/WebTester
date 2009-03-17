@@ -200,7 +200,8 @@ crate_temporary_dir (const char *__id, char *__full)
 
   fmkdir (CORE_temporary_dir, 00775);
 
-  sprintf (informatics_tmp, "%s/Informatics", CORE_temporary_dir);
+  snprintf (informatics_tmp, BUF_SIZE (informatics_tmp),
+            "%s/Informatics", CORE_temporary_dir);
   sprintf (__full, "%s/uploading", informatics_tmp);
 
   fmkdir (informatics_tmp, 00775);
@@ -231,14 +232,15 @@ upload_archive_through_samba (const char *__fn, const char *__local_path)
       INF_PCHAR_KEY (share, "ProblemUploader/SMB-Share");
       INF_PCHAR_KEY (problems_root, "ProblemUploader/ServerProblemsRoot");
 
-      sprintf (url_prefix, "smb://%s/%s/%s", server, share, problems_root);
+      snprintf (url_prefix, BUF_SIZE (url_prefix),
+                "smb://%s/%s/%s", server, share, problems_root);
     }
 
   /* Initialize SAMBA stuff */
   local_samba_init ();
 
-  sprintf (server_fn, "%s/%s", url_prefix, __fn);
-  sprintf (local_fn, "%s/%s", __local_path, __fn);
+  snprintf (server_fn, BUF_SIZE (server_fn), "%s/%s", url_prefix, __fn);
+  snprintf (local_fn, BUF_SIZE (local_fn), "%s/%s", __local_path, __fn);
 
   /* Open file descriptor */
   fd = samba_fopen (server_fn, O_RDONLY, 0);
@@ -296,8 +298,8 @@ upload_archive_through_localfs (const char *__fn, const char *__local_path)
       INF_PCHAR_KEY (problems_root, "ProblemUploader/ServerProblemsRoot");
     }
 
-  sprintf (server_fn, "%s/%s", problems_root, __fn);
-  sprintf (local_fn, "%s/%s", __local_path, __fn);
+  snprintf (server_fn, BUF_SIZE (server_fn), "%s/%s", problems_root, __fn);
+  snprintf (local_fn, BUF_SIZE (local_fn), "%s/%s", __local_path, __fn);
 
   /* Open file descriptor */
   istream = fopen (server_fn, "rb");
@@ -365,7 +367,7 @@ unpack_archive (const char *__fn, const char *__tmp_path)
 {
   char full[4096];
 
-  sprintf (full, "%s/%s", __tmp_path, __fn);
+  snprintf (full, BUF_SIZE (full), "%s/%s", __tmp_path, __fn);
   if (unpack_file (full, __tmp_path))
     {
       return FALSE;
@@ -401,7 +403,7 @@ static void
 unlonk_old_checker (const char *__tmp_path)
 {
   char full[4096];
-  sprintf (full, "%s/checker", __tmp_path);
+  snprintf (full, BUF_SIZE (full), "%s/checker", __tmp_path);
   unlink (full);
 }
 
@@ -423,7 +425,8 @@ build_compiler_command (const char *__compiler_id, const char *__source_file,
 
   strcpy (__out, cmd);
 
-  sprintf (flags_path, "Checker/CompilerFlags/%s", __compiler_id);
+  snprintf (flags_path, BUF_SIZE (flags_path),
+            "Checker/CompilerFlags/%s", __compiler_id);
   INF_PCHAR_KEY (flags, flags_path);
 
   strcat (flags, " ");
@@ -515,10 +518,10 @@ compile_checker (const char *__tmp_path, char *__err_desc)
   /* Unlink existing checker */
   unlonk_old_checker (__tmp_path);
 
-  sprintf (checker_fn, "%s/checker", __tmp_path);
+  snprintf (checker_fn, BUF_SIZE (checker_fn), "%s/checker", __tmp_path);
 
   /* Open checker's config file */
-  sprintf (config_fn, "%s/checker.conf", __tmp_path);
+  snprintf (config_fn, BUF_SIZE (config_fn), "%s/checker.conf", __tmp_path);
 
   if (!fexists (config_fn))
     {
@@ -588,7 +591,8 @@ use_checker (const char *__checker, const char *__tmp_path, char *__err_desc)
   unlonk_old_checker (__tmp_path);
 
   full_checkers_dir (checkers_dir);
-  sprintf (full_existing, "%s/%s", checkers_dir, __checker);
+  snprintf (full_existing, BUF_SIZE (full_existing),
+            "%s/%s", checkers_dir, __checker);
 
   if (!fexists (full_existing))
     {
@@ -596,7 +600,7 @@ use_checker (const char *__checker, const char *__tmp_path, char *__err_desc)
       return FALSE;
     }
 
-  sprintf (full_new, "%s/checker", __tmp_path);
+  snprintf (full_new, BUF_SIZE (full_new), "%s/checker", __tmp_path);
 
   symlink (full_existing, full_new);
 
@@ -656,9 +660,9 @@ validate_tests_names (const char *__path)
             INF_DEBUG_LOG ("Renaming test file %s to %s", name, new_name);
 
             snprintf (full_src, BUF_SIZE (full_src),
-                     "%s/%s", __path, name);
+                      "%s/%s", __path, name);
             snprintf (full_dst, BUF_SIZE (full_dst),
-                     "%s/%s", __path, new_name);
+                      "%s/%s", __path, new_name);
 
             rename (full_src, full_dst);
           }
@@ -686,9 +690,11 @@ move_to_dataroot (const char *__id, const char *__tmp_dir, BOOL __rm_all_data)
   /* Some initialization */
   INF_PCHAR_KEY (data_dir, "DataDir");
   INF_PCHAR_KEY (problems_dir, "ProblemsDir");
-  sprintf (full_dst, "%s/%s/%s", data_dir, problems_dir, __id);
+  snprintf (full_dst, BUF_SIZE (full_dst), "%s/%s/%s",
+            data_dir, problems_dir, __id);
 
-  sprintf (full_checker, "%s/%s", full_dst, "checker");
+  snprintf (full_checker, BUF_SIZE (full_checker), "%s/%s",
+            full_dst, "checker");
 
   if (__rm_all_data)
     {
@@ -819,8 +825,8 @@ put_problem (assarr_t *__params, const char *__err, const char *__desc)
 
   urlencode (__desc, desc);
 
-  sprintf (url, "%s&id=%s&lid=0&err=%s&desc=%s", url_prefix,
-           (char*) assarr_get_value (__params, "ID"), __err, desc);
+  snprintf (url, BUF_SIZE (url), "%s&id=%s&lid=0&err=%s&desc=%s", url_prefix,
+            (char*) assarr_get_value (__params, "ID"), __err, desc);
 
   msg = wt_transport_send_message (url);
 

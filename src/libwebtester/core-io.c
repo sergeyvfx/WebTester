@@ -97,7 +97,7 @@ core_print (int __type, char *__text, ...)
         }
 
       char dummy[65536];
-      sprintf (dummy, "[DEBUG] %s", print_buf);
+      snprintf (dummy, BUF_SIZE (dummy), "[DEBUG] %s", print_buf);
 
       if (!silent && !(__type & MSG_LOG))
         {

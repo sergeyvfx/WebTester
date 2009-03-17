@@ -43,7 +43,7 @@ uid_gen (char *__out)
       salt[i] = rand () % 220 + 32;
     }
 
-  sprintf (pass, "%ld-%s", (long) time (0), salt);
+  snprintf (pass, BUF_SIZE (pass), "%ld-%s", (long) time (0), salt);
 
   md5_crypt (pass, salt, dummy);
 

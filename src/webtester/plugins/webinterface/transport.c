@@ -128,8 +128,9 @@ prepare_url (const char *__action, char *__out)
           strcpy (gateway, "/gateway/index.php");
         }
 
-      sprintf (url_prefix, "%s://%s%s?login=%s&pass1=%s&pass2=%s",
-               proto, addr, gateway, login, pass1, pass2);
+      snprintf (url_prefix, BUF_SIZE (url_prefix),
+                "%s://%s%s?login=%s&pass1=%s&pass2=%s",
+                proto, addr, gateway, login, pass1, pass2);
 
       memset (login, 0, sizeof (login));
       memset (pass1, 0, sizeof (pass1));
@@ -239,10 +240,10 @@ send_message (const char *__url)
    *       works only with long-typed numbers
    */
 
-  sprintf (dummy, "%lld", bsend);
+  snprintf (dummy, BUF_SIZE (dummy), "%lld", bsend);
   wt_stat_set_string ("Plugins.WebInterface.BytesSend", dummy);
 
-  sprintf (dummy, "%lld", brecv);
+  snprintf (dummy, BUF_SIZE (dummy), "%lld", brecv);
   wt_stat_set_string ("Plugins.WebInterface.BytesRecv", dummy);
 
   return msg;
@@ -260,7 +261,7 @@ static http_message_t*
 send_task_specified_message (const char *__prefix, long __sid, int __lid)
 {
   char url[MAX_URL_LEN];
-  sprintf (url, "%s&id=%ld&lid=%d", __prefix, __sid, __lid);
+  snprintf (url, BUF_SIZE (url), "%s&id=%ld&lid=%d", __prefix, __sid, __lid);
   return send_message (url);
 }
 

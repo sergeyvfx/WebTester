@@ -70,9 +70,9 @@ socket_login                       (int __sock, char *__login, char *__pass, cha
 {
   char cmd[1024];
   ipc_ans_t ans;
-  
-  sprintf (cmd, "login %s %s", __login, __pass);
-  
+
+  snprintf (cmd, BUF_SIZE (cmd), "login %s %s", __login, __pass);
+
   sock_answer (__sock, "%s\n", cmd);
   memset (cmd, 0, sizeof (cmd));
 
@@ -142,16 +142,17 @@ bind_buttons                       (void)
 
   for (i=0; i<BUTTONS_COUNT; i++)
     {
-      sprintf (path_prefix, "Client/IFACE/Buttons/%d", i);
+      snprintf (path_prefix, BUF_SIZE (path_prefix),
+                "Client/IFACE/Buttons/%d", i);
       if (CONFIG_KEY_EXISTS (path_prefix))
         {
           strcpy (cpt, "");
           strcpy (cmd, "");
 
-          sprintf (path, "%s/Caption", path_prefix);
+          snprintf (path, BUF_SIZE (path), "%s/Caption", path_prefix);
           CONFIG_PCHAR_KEY (cpt, path);
 
-          sprintf (path, "%s/Command", path_prefix);
+          snprintf (path, BUF_SIZE (path), "%s/Command", path_prefix);
           CONFIG_PCHAR_KEY (cmd, path);
 
           bind_button (i, cpt, cmd);
@@ -169,10 +170,11 @@ on_post_config_load                (void)
 
   if (strcmp (host, "") && strcmp (port, ""))
     {
-      sprintf (dummy, "%s:%s", host, port);
-      gtk_entry_set_text ((GtkEntry*)lookup_widget (main_window, "server"), dummy);
+      snprintf (dummy, BUF_SIZE (dummy), "%s:%s", host, port);
+      gtk_entry_set_text ((GtkEntry*)lookup_widget (main_window, "server"),
+                          dummy);
     }
-  
+
   bind_buttons ();
 }
 
@@ -312,7 +314,7 @@ bind_button                        (int __i, char *__cpt, char *__cmd)
   if (__i<0 || __i>=BUTTONS_COUNT)
     return;
 
-  sprintf (tmp, "ctrlButton_%d", __i);
+  snprintf (tmp, BUF_SIZE (tmp), "ctrlButton_%d", __i);
   btn=(GtkButton*)lookup_widget (main_window, tmp);
 
   gtk_button_set_label (btn, __cpt);

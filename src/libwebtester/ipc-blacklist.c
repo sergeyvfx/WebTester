@@ -151,11 +151,11 @@ parse_blacklist_entry (char *__self)
 
       if (!ipv6)
         {
-          sprintf (ip, "%d.%d.%d.%d", a, b, c, d);
+          snprintf (ip, BUF_SIZE (ip), "%d.%d.%d.%d", a, b, c, d);
         }
       else
         {
-          sprintf (ip, "%d.%d.%d.%d.%d.%d", a, b, c, d, e, f);
+          snprintf (ip, BUF_SIZE (ip), "%d.%d.%d.%d.%d.%d", a, b, c, d, e, f);
         }
 
       blacklist_ip (ip, t);

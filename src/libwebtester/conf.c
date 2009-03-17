@@ -115,7 +115,7 @@ config_find_item (char *__name)
 {
   dyna_item_t *item;
   char buf[65536];
-  sprintf (buf, "root/%s", __name);
+  snprintf (buf, BUF_SIZE (buf), "root/%s", __name);
 
   LOCK;
     item = hive_find_item (config, buf);

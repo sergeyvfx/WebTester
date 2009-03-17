@@ -143,7 +143,8 @@ static void
 generate_security_hash (char *__self)
 {
   char ptime[RUN_HASH_LENGTH];
-  sprintf (ptime, "%ld", time (0) + rand () % 8192);
+
+  snprintf (ptime, BUF_SIZE (ptime), "%ld", time (0) + rand () % 8192);
 
   /* Just some random 8 characters */
   md5_crypt (ptime, "wl3mw0sq", __self);
@@ -160,7 +161,8 @@ fill_security_info (run_process_info_t *__self)
   char pchar[RUN_HASH_LENGTH + 64], dummy[128];
   generate_security_hash (__self->security_hash);
 
-  sprintf (pchar, "##%s@%ld##", __self->security_hash, __self->unique);
+  snprintf (pchar, BUF_SIZE (pchar), "##%s@%ld##",
+            __self->security_hash, __self->unique);
   md5_crypt (pchar, SECURITY_MAGICK, dummy);
   strcpy (__self->security_key, dummy + 8);
   memset (pchar, 0, sizeof (pchar));
@@ -695,7 +697,7 @@ unpack_cmd (const char *__cmd, const char *__workdir, char *__out)
       char dummy[RUN_CMD_LEN];
 
       /* Check for executable in working directory */
-      sprintf (dummy, "%s/%s", __workdir, argv[0]);
+      snprintf (dummy, BUF_SIZE (dummy), "%s/%s", __workdir, argv[0]);
       if (!fexists (dummy))
         {
           /* Check for executable in registered paths */
@@ -706,7 +708,7 @@ unpack_cmd (const char *__cmd, const char *__workdir, char *__out)
           else
             {
               dirname (ptr, ptr);
-              sprintf (dummy, "%s/%s", ptr, __cmd);
+              snprintf (dummy, BUF_SIZE (dummy), "%s/%s", ptr, __cmd);
               strcpy (__out, dummy);
               res = TRUE;
             }
@@ -773,13 +775,14 @@ execute_thread (gpointer __data)
       strcat (add, " -chroot");
     }
 
-  sprintf (cmd, "%s -cmd %s -workdir %s -security %s -host %s -port %u "
-                "-unique %ld -sock-read-timeout %lf -sock-read-delay %lf "
-                "-uid %ld -gid %ld %s 2>&1",
-           LRVM_FULL_CMD, cmd_arg, workdir_arg, task->security_hash,
-           run_ipc_client_host (), run_ipc_port (), task->unique,
-           lrvm_sock_read_timeout, lrvm_sock_read_delay,
-           task->uid, task->gid, add);
+  snprintf (cmd, BUF_SIZE (cmd),
+            "%s -cmd %s -workdir %s -security %s -host %s -port %u "
+            "-unique %ld -sock-read-timeout %lf -sock-read-delay %lf "
+            "-uid %ld -gid %ld %s 2>&1",
+            LRVM_FULL_CMD, cmd_arg, workdir_arg, task->security_hash,
+            run_ipc_client_host (), run_ipc_port (), task->unique,
+            lrvm_sock_read_timeout, lrvm_sock_read_delay,
+            task->uid, task->gid, add);
 
   /* Use pipes to read all messages from process */
   DEBUG_LOG ("librun", "Opening pipe to process %ld... (full cmd: %s) \n",
@@ -1143,9 +1146,9 @@ run_finalize_executing (run_process_info_t *__self)
   if (!run_hvpool_stats_by_pid (__self->task_pid, &stats))
     {
       char desc[1024];
-      sprintf (desc, "No accounting info found "
-                     "while finalizing %ld. PID: %u\n",
-               __self->unique, __self->task_pid);
+      snprintf (desc, BUF_SIZE (desc), "No accounting info found "
+                                       "while finalizing %ld. PID: %u\n",
+                __self->unique, __self->task_pid);
       SET_PROCESS_EXECERROR (*__self, desc);
       return -1;
     }

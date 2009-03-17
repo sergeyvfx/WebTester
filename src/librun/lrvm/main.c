@@ -215,7 +215,7 @@ static void
 validate_security (char *__s, long __unique)
 {
   char tmp[128], dummy[128], key[128];
-  sprintf (tmp, "##%s@%ld##", __s, __unique);
+  snprintf (tmp, BUF_SIZE (tmp), "##%s@%ld##", __s, __unique);
   md5_crypt (tmp, SECURITY_MAGICK, dummy);
   strcpy (key, dummy + 8);
   strcpy (__s, key);
@@ -527,7 +527,7 @@ main (int __argc, char **__argv)
    * Send basic info to LibRUN
    */
 
-  sprintf (pchar_pid, "%u", getpid ());
+  snprintf (pchar_pid, BUF_SIZE (pchar_pid), "%u", getpid ());
 
   lrvm_ipc_send_command ("unique", unique);
   lrvm_ipc_send_command ("security", security);
@@ -571,7 +571,7 @@ main (int __argc, char **__argv)
 
       chugid (ruid, rgid, uid, gid);
 
-      sprintf (pchar_pid2, "%u", getpid ());
+      snprintf (pchar_pid2, BUF_SIZE (pchar_pid2), "%u", getpid ());
       lrvm_ipc_send_command ("taskpid", pchar_pid2);
 
       execute (cmd);
@@ -589,7 +589,7 @@ main (int __argc, char **__argv)
         {
           int exit_code = WEXITSTATUS (status);
           char buf[8];
-          sprintf (buf, "%d", exit_code);
+          snprintf (buf, BUF_SIZE (buf), "%d", exit_code);
           lrvm_ipc_send_command ("exit_code", buf);
         }
       else
@@ -597,7 +597,7 @@ main (int __argc, char **__argv)
         {
           int termsig = WTERMSIG (status);
           char buf[8];
-          sprintf (buf, "%d", termsig);
+          snprintf (buf, BUF_SIZE (buf), "%d", termsig);
           lrvm_ipc_send_command ("termsig", buf);
         }
       else
@@ -605,7 +605,7 @@ main (int __argc, char **__argv)
         {
           int stopsig = WSTOPSIG (status);
           char buf[8];
-          sprintf (buf, "%d", stopsig);
+          snprintf (buf, BUF_SIZE (buf), "%d", stopsig);
           lrvm_ipc_send_command ("stopsig", buf);
         }
       else

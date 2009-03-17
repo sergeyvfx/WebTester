@@ -335,7 +335,7 @@ assarr_pack (assarr_t *__self, char **__out)
     key_len = strlen (key);
     val_len = strlen ((char*) value);
 
-    sprintf (buf, "%u", val_len);
+    snprintf (buf, BUF_SIZE (buf), "%u", val_len);
 
     add_len = key_len + strlen (buf) + val_len + 3;
 

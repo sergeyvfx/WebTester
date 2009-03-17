@@ -57,7 +57,7 @@ dump_arr_to_buf (const assarr_t *__self, char *__buf)
     flexval_serialize (val, dumped);
     strcat (__buf, key);
     strcat (__buf, ";");
-    sprintf (dummy, "%ld", (long) strlen (dumped));
+    snprintf (dummy, BUF_SIZE (dummy), "%ld", (long) strlen (dumped));
     strcat (__buf, dummy);
     strcat (__buf, ";");
     strcat (__buf, dumped);
@@ -148,7 +148,7 @@ send_stat_changes (stat_client_t *__self, assarr_t *__vars)
     }
 
   dump_arr_to_buf (__vars, vars);
-  sprintf (stat, "vars;%ld;%s;", (long) strlen (vars), vars);
+  snprintf (stat, BUF_SIZE (stat), "vars;%ld;%s;", (long) strlen (vars), vars);
 
   if (strcmp (vars, ""))
     {

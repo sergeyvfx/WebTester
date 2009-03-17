@@ -282,7 +282,7 @@ sys_launch (const char *__args, ...)
   int ret;
 
   PACK_ARGS (__args, dummy, 65535);
-  sprintf (buf, "%s > /dev/null 2>&1", dummy);
+  snprintf (buf, BUF_SIZE (buf), "%s > /dev/null 2>&1", dummy);
 
   ret = system (buf);
   if (WIFSIGNALED (ret) && (WTERMSIG (ret) == SIGINT ||

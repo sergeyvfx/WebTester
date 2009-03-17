@@ -296,14 +296,14 @@ ipc_login (int __argc, char **__argv)
       return 0;
     }
 
-  sprintf (prefix, "Server/IPC/Users/%s", __argv[1]);
+  snprintf (prefix, BUF_SIZE (prefix), "Server/IPC/Users/%s", __argv[1]);
   CONFIG_OPEN_KEY (node, prefix);
   if (!node)
     {
       goto __fail_;
     }
 
-  sprintf (dummy, "%s/password-hash", prefix);
+  snprintf (dummy, BUF_SIZE (dummy), "%s/password-hash", prefix);
   CONFIG_PCHAR_KEY (pass, dummy);
   md5_crypt (__argv[2], PASSWD_SALT, dummy);
   if (strcmp (pass, dummy + 8))
@@ -311,7 +311,7 @@ ipc_login (int __argc, char **__argv)
       goto __fail_;
     }
 
-  sprintf (dummy, "%s/access", prefix);
+  snprintf (dummy, BUF_SIZE (dummy), "%s/access", prefix);
 
   client->authontificated = 1;
   strcpy (client->login, __argv[1]);

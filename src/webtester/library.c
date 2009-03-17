@@ -122,11 +122,11 @@ static int
 wt_load_single_module (const char *__name, int __id)
 {
   wt_module_t *ptr;
-  char fname[65536], *full = 0;
+  char fname[4096], *full = 0;
   char *error;
 
   /* Attach prefix and suffix to libname */
-  sprintf (fname, "%s%s%s", LIB_PREFIX, __name, LIB_SUFFIX);
+  snprintf (fname, BUF_SIZE (fname), "%s%s%s", LIB_PREFIX, __name, LIB_SUFFIX);
   strlowr (fname, fname);
   full = get_full_path (fname);
 
@@ -182,10 +182,10 @@ __fail_:
 static int
 load_single_plugin (char *__lib)
 {
-  char fname[65536], *full = 0;
+  char fname[4096], *full = 0;
 
   /* Attach prefix and suffix to libname */
-  sprintf (fname, "%s%s%s", LIB_PREFIX, __lib, LIB_SUFFIX);
+  snprintf (fname, BUF_SIZE (fname), "%s%s%s", LIB_PREFIX, __lib, LIB_SUFFIX);
   strlowr (fname, fname);
   full = get_full_path (fname);
 

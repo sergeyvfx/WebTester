@@ -240,8 +240,9 @@ belts_fill (dynastruc_t *__queue)
             }
 
           /* Prepare information string */
-          sprintf (pchar, "Unable to send task %ld@%d for testing: %s",
-                   task->sid, task->lid, error);
+          snprintf (pchar, BUF_SIZE (pchar),
+                    "Unable to send task %ld@%d for testing: %s",
+                    task->sid, task->lid, error);
 
           if (TASK_TEST_FLAG (*task, TF_KEEPINQUEUE))
             {

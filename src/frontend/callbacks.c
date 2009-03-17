@@ -101,7 +101,7 @@ on_ctrlButton_clicked              (GtkButton *__button, gpointer __user_data)
   char name[64];
   for (i=0; i<7; i++)
     {
-      sprintf (name, "ctrlButton_%d", i);
+      snprintf (name, BUF_SIZE (name), "ctrlButton_%d", i);
       if (__button==(GtkButton*)lookup_widget (main_window, name))
         {
           exec_button_command (i);

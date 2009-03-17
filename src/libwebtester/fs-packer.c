@@ -40,7 +40,7 @@ unpack_file_iter (const char *__fn, const char *__dstdir)
   getextension (__fn, ext);
   strlowr (ext, ext);
 
-  sprintf (dummy, "CORE/Unpackers/%s", ext);
+  snprintf (dummy, BUF_SIZE (dummy), "CORE/Unpackers/%s", ext);
   CONFIG_PCHAR_KEY (tpl, dummy);
 
   if (!strcmp (tpl, ""))
@@ -123,7 +123,7 @@ pack_file (const char *__fn, const char *__packer)
   char dummy[4096], tpl[4096] = {0}, packer[1024];
   strlowr (__packer, packer);
 
-  sprintf (dummy, "CORE/Packers/%s", packer);
+  snprintf (dummy, BUF_SIZE (dummy), "CORE/Packers/%s", packer);
   CONFIG_PCHAR_KEY (tpl, dummy);
 
   if (!strcmp (tpl, ""))

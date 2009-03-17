@@ -100,7 +100,7 @@
 #  define REPORT(__params,__text,__args...) \
   { \
     char sbuf[4096], buf[4096]; \
-    sprintf (buf, __text, ##__args); \
+    snprintf (buf, BUF_SIZE (buf), __text, ##__args); \
     strcpy (sbuf, ""); \
     if (assarr_get_value (__params, "REPORT")) \
       { \
@@ -196,10 +196,10 @@ copy_chroot_data (const char *__dst_dir)
 
   INF_DEBUG_LOG ("Copying chroot data to %s\n", __dst_dir);
 
-  sprintf (src_dir, "%s/chroot", data_dir);
+  snprintf (src_dir, BUF_SIZE (src_dir), "%s/chroot", data_dir);
   fcopydir (src_dir, __dst_dir);
 
-  sprintf (src_dir, "%s/chroot", data_dir);
+  snprintf (src_dir, BUF_SIZE (src_dir), "%s/chroot", data_dir);
 
   if (!init)
     {
@@ -234,7 +234,7 @@ remove_chroot_data (const char *__dir)
 
   while (chroot_items[i][0])
     {
-      sprintf (full, "%s/%s", __dir, chroot_items[i]);
+      snprintf (full, BUF_SIZE (full), "%s/%s", __dir, chroot_items[i]);
       unlinkdir (full);
       i++;
     }
@@ -307,8 +307,8 @@ save_solution (wt_task_t *__self, char *__cur_testing_dir)
   char fn[4096];
   char *src = TASK_INPUT_PARAM (*__self, "SOURCE");
 
-  sprintf (fn, "%s/%s%s", __cur_testing_dir,
-           source_file, TASK_SRCEXT (__self));
+  snprintf (fn, BUF_SIZE (fn), "%s/%s%s", __cur_testing_dir,
+            source_file, TASK_SRCEXT (__self));
 
   /* Write data to stream */
   if (fwritebuf (fn, src))
@@ -344,7 +344,8 @@ build_compiler_command (wt_task_t *__self, const char *__cur_testing_dir,
   /* Get command from config file */
   strcpy (__cmd, COMPILER_PCHAR_KEY (TASK_COMPILER_ID (*__self), "Command"));
 
-  sprintf (flags_path, "CompilerFlags/%s", TASK_COMPILER_ID (*__self));
+  snprintf (flags_path, BUF_SIZE (flags_path),
+            "CompilerFlags/%s", TASK_COMPILER_ID (*__self));
   INF_PCHAR_KEY (flags, flags_path);
 
   /* Parse command */
@@ -352,13 +353,13 @@ build_compiler_command (wt_task_t *__self, const char *__cur_testing_dir,
   REPLACE_VAR (__cmd, "flags", flags);
 
   /* Source filename */
-  sprintf (dummy, "%s%s", source_file, TASK_SRCEXT (__self));
+  snprintf (dummy, BUF_SIZE (dummy), "%s%s", source_file, TASK_SRCEXT (__self));
   REPLACE_VAR (__cmd, "source", dummy);
 
   /* Output filename */
-  sprintf (dummy, "%s%s", file_to_exec,
-           COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
-                                    "OutputExtension", INFORMATICS_EXECEXT));
+  snprintf (dummy, BUF_SIZE (dummy), "%s%s", file_to_exec,
+            COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
+                                     "OutputExtension", INFORMATICS_EXECEXT));
   REPLACE_VAR (__cmd, "output", dummy);
 }
 
@@ -456,9 +457,9 @@ post_compiling_check (wt_task_t *__self, const char *__cur_testing_dir,
 
   /* Check for existment of solution executable file */
   /* Get full filename of executable file */
-  sprintf (pchar, "%s/%s%s", __cur_testing_dir, file_to_exec,
-           COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
-                                    "OutputExtension", ""));
+  snprintf (pchar, BUF_SIZE (pchar), "%s/%s%s", __cur_testing_dir, file_to_exec,
+            COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self),
+                                     "OutputExtension", ""));
 
   if (!fexists (pchar))
     {
@@ -534,7 +535,7 @@ copy_test (int __num, int __total, const char *__data_dir,
 
   /* Get full source filename */
   testnum (__num, __total, tst);
-  sprintf (src, "%s/%s%s", __data_dir, tst, tst_ext);
+  snprintf (src, BUF_SIZE (src), "%s/%s%s", __data_dir, tst, tst_ext);
 
   /* Check for existment of test file */
   if (!fexists (src))
@@ -543,7 +544,7 @@ copy_test (int __num, int __total, const char *__data_dir,
     }
 
   /* Get full destination filename */
-  sprintf (dst, "%s/%s", __dst, __name);
+  snprintf (dst, BUF_SIZE (dst), "%s/%s", __dst, __name);
 
   if (copyfile (src, dst))
     {
@@ -730,8 +731,10 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   free_explode_data (tests_pchar_arr);
 
   /* Some more initializations */
-  sprintf (full_input, "%s/%s", __cur_testing_dir, input_file);
-  sprintf (full_output, "%s/%s", __cur_testing_dir, output_file);
+  snprintf (full_input, BUF_SIZE (full_input), "%s/%s",
+            __cur_testing_dir, input_file);
+  snprintf (full_output, BUF_SIZE (full_output), "%s/%s",
+            __cur_testing_dir, output_file);
 
   strcpy (tests_res_pchar, "");
 
@@ -762,12 +765,12 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
     }
 
   /* Get corrections to apply when executing solution */
-  sprintf (dummy, "ResourceCorrections/Compilers/%s/Time",
-           TASK_COMPILER_ID (*__self));
+  snprintf (dummy, BUF_SIZE (dummy), "ResourceCorrections/Compilers/%s/Time",
+            TASK_COMPILER_ID (*__self));
   INF_SAFE_FLOAT_KEY (time_corr, dummy, 0);
 
-  sprintf (dummy, "ResourceCorrections/Compilers/%s/RSS",
-           TASK_COMPILER_ID (*__self));
+  snprintf (dummy, BUF_SIZE (dummy), "ResourceCorrections/Compilers/%s/RSS",
+            TASK_COMPILER_ID (*__self));
   INF_SAFE_FLOAT_KEY (rss_corr, dummy, 0);
 
   /* Apply corrections */
@@ -1206,7 +1209,7 @@ unlink_unwanted_testing_dirs (void)
           }
 
         INF_INFO ("Unlink testing dir %s\n", cur_dir);
-        sprintf (full, "%s/%s", testing_dir, cur_dir);
+        snprintf (full, BUF_SIZE (full), "%s/%s", testing_dir, cur_dir);
         unlinkdir (full);
         to_delete--;
       DYNA_DONE;
@@ -1247,9 +1250,10 @@ testing_thread (gpointer __data, gpointer __user_data)
   all_params = assarr_create ();
 
   /* Calculating current testing and data directories */
-  sprintf (cur_testing_dir, "%s/%ld", testing_dir, task->sid);
-  sprintf (cur_data_dir, "%s/%s/%s", data_dir, problems_dir,
-          (char*) TASK_INPUT_PARAM (*task, "PROBLEMID"));
+  snprintf (cur_testing_dir, BUF_SIZE (cur_testing_dir),
+            "%s/%ld", testing_dir, task->sid);
+  snprintf (cur_data_dir, BUF_SIZE (cur_data_dir), "%s/%s/%s", data_dir,
+            problems_dir, (char*) TASK_INPUT_PARAM (*task, "PROBLEMID"));
 
   /* Delete all unwanted data */
   unlinkdir (cur_testing_dir);
@@ -1345,7 +1349,7 @@ testing_thread (gpointer __data, gpointer __user_data)
 __done_:
 
   /* Updating avaliable parameters */
-  sprintf (pchar, "%d", points);
+  snprintf (pchar, BUF_SIZE (pchar), "%d", points);
   assarr_set_value (all_params, "POINTS", strdup (pchar));
   assarr_set_value (all_params, "ERRORS", strdup (errors));
 
@@ -1357,12 +1361,14 @@ __done_:
 
   if (strcmp (errors, "OK"))
     {
-      sprintf (pchar, "Points: %d. Errors: %s", points, errors);
+      snprintf (pchar, BUF_SIZE (pchar), "Points: %d. Errors: %s",
+                points, errors);
     }
   else
     {
       int bonus = atoi (TASK_INPUT_PARAM (*task, "BONUS"));
-      sprintf (pchar, "Points: %d. Bonus: %d", points - bonus, bonus);
+      snprintf (pchar, BUF_SIZE (pchar), "Points: %d. Bonus: %d",
+                points - bonus, bonus);
     }
   TASK_SET_RESULT_MESSAGE (*task, pchar);
 
@@ -1372,7 +1378,8 @@ __done_:
     }
 
   /* Save log */
-  sprintf (pchar, "%s/%s", cur_testing_dir, SOLUTION_ERRORS_LOG);
+  snprintf (pchar, BUF_SIZE (pchar), "%s/%s",
+            cur_testing_dir, SOLUTION_ERRORS_LOG);
   stream = fopen (pchar, "w");
   if (stream)
     {

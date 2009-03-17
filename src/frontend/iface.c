@@ -65,10 +65,10 @@ iface_set_widgets_connected        (BOOL __connected)
 
   for (i=0; i<BUTTONS_COUNT; i++)
     {
-      sprintf (dummy, "ctrlButton_%d", i);
+      snprintf (dummy, BUF_SIZE (dummy), "ctrlButton_%d", i);
       gtk_widget_set_sensitive (lookup_widget (main_window, dummy), __connected);
     }
-  
+
   if (!__connected)
     iface_pipe_tab_hide ();
 }

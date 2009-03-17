@@ -281,7 +281,7 @@ exec_server (int __argc, char **__argv)
         }
 
       dirname (__argv[0], dummy);
-      sprintf (argv0, "%s/bin/webtester.bin", dummy);
+      snprintf (argv0, sizeof (argv0), "%s/bin/webtester.bin", dummy);
       argv[0] = argv0;
 
       argv[__argc] = 0;
@@ -384,8 +384,9 @@ main (int __argc, char **__argv)
 
                   if (!exec[0])
                     {
-                      sprintf (exec, "sudo %s/sbin/lrvm_killall.sh",
-                               HOME_DIRECTORY);
+                      snprintf (exec, sizeof (exec),
+                                "sudo %s/sbin/lrvm_killall.sh",
+                                HOME_DIRECTORY);
                     }
                   system (exec);
                 }

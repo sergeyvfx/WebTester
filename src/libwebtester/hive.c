@@ -105,7 +105,7 @@ hive_spawn_new_node (hive_item_t *__parent, hive_item_t *__owner,
         {
           char dummy[65536];
           flex_value_t *ptr;
-          sprintf (dummy, "[%s]", __value);
+          snprintf (dummy, BUF_SIZE (dummy), "[%s]", __value);
           ptr = flexval_unserialize (dummy);
           flexval_set_array (&new_ptr->header.value,
                              (flex_value_t**) FLEXVAL_ARRAY_DATA (ptr));
@@ -455,7 +455,7 @@ hive_parse_buf (char *__data, dynastruc_t **__self,
 
               if (token[0] != '/')
                 {
-                  sprintf (fn, "%s/%s", __cur_dir, token);
+                  snprintf (fn, BUF_SIZE (fn), "%s/%s", __cur_dir, token);
                 }
               else
                 {
