@@ -92,6 +92,10 @@ extern "C"
   void
   testlib_silent (int __val);
 
+  /* Set testlib colorized */
+  void
+  testlib_colorized (int __val);
+
   /* Quit from testlib */
   void
   testlib_quit (int __errno, const char *__desc);
@@ -115,14 +119,26 @@ main (int __argc, char **__argv)
     {
       char usage[4096];
       sprintf (usage, "Usage: %s <input file> <output file> "
-                      "<answer file>",
+                      "<answer file> [-s] [-nc]",
                __argv[0]);
       Quit (-1, usage);
     }
 
-  if (__argc > 4 && !strcmp (__argv[4], "-s"))
+  if (__argc > 4)
     {
-      testlib_silent (1);
+      int i;
+
+      for (i = 4; i < __argc; ++i)
+        {
+          if (!strcmp (__argv[i], "-s"))
+            {
+              testlib_silent (1);
+            }
+          else if (!strcmp (__argv[i], "-nc"))
+            {
+              testlib_colorized (0);
+            }
+        }
     }
 
   inf = fopen (__argv[1], "r");

@@ -28,6 +28,7 @@ CTestlibFile::CTestlibFile (void)
 CTestlibFile::CTestlibFile (char *__fn)
 {
   this->stream = 0;
+
   OpenStream (__fn);
 }
 
@@ -211,6 +212,10 @@ CTestlibFile::OpenStream (const char *__fn)
 
   if (!this->stream)
     {
+      char buf[4096];
+      snprintf (buf, sizeof (buf), "Can't open file %s\n", __fn);
+      Quit (_CR, buf);
+
       return 0;
     }
 
@@ -258,13 +263,25 @@ Testlib_Init (int __argc, char **__argv)
     {
       char usage[1024];
       sprintf (usage, "Usage: %s <input file> <output file> "
-                      "<answer file> [-s]", __argv[0]);
+                      "<answer file> [-s] [-nc]", __argv[0]);
       Quit (-1, usage);
     }
 
-  if (__argc > 4 && !strcmp (__argv[4], "-s"))
+  if (__argc > 4)
     {
-      testlib_silent (1);
+      int i;
+
+      for (i = 4; i < __argc; ++i)
+        {
+          if (!strcmp (__argv[i], "-s"))
+            {
+              testlib_silent (1);
+            }
+          else if (!strcmp (__argv[i], "-nc"))
+            {
+              testlib_colorized (0);
+            }
+        }
     }
 
   /* Assign streams */

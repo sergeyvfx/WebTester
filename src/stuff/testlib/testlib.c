@@ -25,6 +25,7 @@
 
 static FILE *out_stream = 0;
 static int silent = 0;
+static int colorized = 1;
 
 /**
  * Go back in strem
@@ -528,7 +529,11 @@ quit_message_prefix (int __errno)
 {
   if (__errno != _OK)
     {
-      PRINT ("\33[31;1m");
+      if (colorized)
+        {
+          PRINT ("\33[31;1m");
+        }
+
       if (__errno == _WA)
         {
           PRINT ("WA");
@@ -541,11 +546,22 @@ quit_message_prefix (int __errno)
         {
           PRINT ("CR");
         }
-      PRINT ("\33[0m");
+
+      if (colorized)
+        {
+          PRINT ("\33[0m");
+        }
     }
   else
     {
-      PRINT ("\33[32;1mOK\33[0m");
+      if (colorized)
+        {
+          PRINT ("\33[32;1mOK\33[0m");
+        }
+      else
+        {
+          PRINT ("OK");
+        }
     }
 }
 
@@ -609,4 +625,15 @@ void
 testlib_silent (int __val)
 {
   silent = __val;
+}
+
+/**
+ * Set testlib colorized
+ *
+ * @param __val - colorized flag
+ */
+void
+testlib_colorized (int __val)
+{
+  colorized = __val;
 }

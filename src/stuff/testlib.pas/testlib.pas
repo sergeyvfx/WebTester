@@ -79,6 +79,8 @@ var
   inf, ouf, ans: TTestlibFile;
   initialized: boolean;
   silent: boolean;
+  colorized: boolean;
+  i: integer;
 
 implementation
 
@@ -282,9 +284,12 @@ begin
 
   { Set text color }
 {$IfDef FPC}
-  if code<>_OK
-    then TextColor (LightRed)
-    else TextColor (LightGreen);
+  if colorized then
+  begin
+    if code<>_OK
+      then TextColor (LightRed)
+      else TextColor (LightGreen);
+  end;
 {$EndIf}
 
   { Write error message }
@@ -296,7 +301,10 @@ begin
   end;
 
 {$IfDef FPC}
-  TextColor (LightGray);
+  if colorized then
+  begin
+    TextColor (LightGray);
+  end;
 {$EndIf}
 
   if desc<>'' then
@@ -320,12 +328,19 @@ end;
 
 begin
 
-  if (ParamCount<3) or (ParamCount>4) then
-    Quit (_CR, 'Usage: checker <input file> <output file> <answer file> [-s]');
+  if (ParamCount<3) or (ParamCount>5) then
+    Quit (_CR, 'Usage: checker <input file> ' +
+               '<output file> <answer file> [-s] [-nc]');
 
-  if (ParamCount=4) then
-    if (ParamStr (4)='-s') then silent:=true else 
-      Quit (_CR, 'Usage: checker <input file> <output file> <answer file> [-s]');
+  colorized:=true;
+
+  for i := 4 to ParamCount do
+  begin
+    if (ParamStr (i)='-s') then silent:=true else
+    if (ParamStr (i)='-nc') then colorized:=false else
+      Quit (_CR, 'Usage: checker <input file> ' +
+                 '<output file> <answer file> [-s] [-nc]');
+  end;
 
   inf.Create (ParamStr (1), TFM_INPUT);
   ouf.Create (ParamStr (2), TFM_OUTPUT);
