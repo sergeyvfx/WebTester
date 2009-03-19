@@ -877,12 +877,34 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
           if (!fexists (full_output))
             {
               /* No output file. Presentation error. */
-              ERR (PE, "PE");
               INF_DEBUG_LOG ("Task %ld. Output file not found after "
                              "running solution.", __self->sid);
+
+              ERR (PE, "PE");
             }
           else
             {
+              /* Need this here because in case of ACM rules */
+              /* macro ERR() may abort testing cycle */
+              if (outputs)
+                {
+                  FILE *stream = fopen (full_output, "r");
+
+                  snprintf (dummy, BUF_SIZE (dummy), "%d", i);
+
+                  if (stream)
+                    {
+                      size_t len = fread (output, 1,
+                                          max_output_store_size, stream);
+                      output[len] = 0;
+
+                      assarr_set_value (outputs, dummy, strdup (output));
+
+                      fclose (stream);
+                    }
+                }
+
+
               /* Exec checker */
               SAFE_FREE_PROC (proc);
               INF_DEBUG_LOG ("Task %ld. Executing checker (cmd: %s)\n",
@@ -1004,23 +1026,6 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
                 }
 
               SAFE_FREE_PROC (proc);
-            }
-        }
-
-      if (outputs)
-        {
-          FILE *stream = fopen (full_output, "r");
-
-          snprintf (dummy, BUF_SIZE (dummy), "%d", i);
-
-          if (stream)
-            {
-              size_t len = fread (output, 1, max_output_store_size, stream);
-              output[len] = 0;
-
-              assarr_set_value (outputs, dummy, strdup (output));
-
-              fclose (stream);
             }
         }
 
