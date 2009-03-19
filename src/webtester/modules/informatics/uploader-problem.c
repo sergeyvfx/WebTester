@@ -191,7 +191,7 @@ local_samba_init (void)
  * @param __full - buffer to store full temporary directory
  */
 static void
-crate_temporary_dir (const char *__id, char *__full)
+create_temporary_dir (const char *__id, char *__full)
 {
   static char CORE_temporary_dir[4096] = {0}, informatics_tmp[4096];
 
@@ -203,6 +203,10 @@ crate_temporary_dir (const char *__id, char *__full)
   snprintf (informatics_tmp, BUF_SIZE (informatics_tmp),
             "%s/Informatics", CORE_temporary_dir);
   sprintf (__full, "%s/uploading", informatics_tmp);
+
+  /* This directory may be not-empty because of */
+  /* incorrect finishing of previous WebTester instance */
+  unlinkdir (__full);
 
   fmkdir (informatics_tmp, 00775);
   fmkdir (__full, 00770);
@@ -739,7 +743,7 @@ upload_task (assarr_t *__params, char *__err, char *__err_desc)
   /* Some initialization */
   strcpy (__err_desc, "");
 
-  crate_temporary_dir (a_id, uploading_tmp_dir);
+  create_temporary_dir (a_id, uploading_tmp_dir);
 
   CHECK_ACTIVE ();
 
@@ -747,9 +751,6 @@ upload_task (assarr_t *__params, char *__err, char *__err_desc)
 
   if (archive_attached)
     {
-      /* This directory may be not-empty because of */
-      /* incorrect finishing of previous WebTester instance */
-      unlinkdir (uploading_tmp_dir);
 
       if (!upload_archive (filename, uploading_tmp_dir))
         {
