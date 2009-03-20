@@ -178,7 +178,7 @@ get_tests_ipc (const char *__problem_id, const char *__range)
 
   if (data)
     {
-      IPC_PROC_ANSWER ("+OK %ld\n%s\n", strlen (data), data);
+      IPC_PROC_ANSWER ("+OK %s\n", data);
 
       free (data);
 
