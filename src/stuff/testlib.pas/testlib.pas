@@ -327,12 +327,11 @@ end;
 
 
 begin
+  colorized:=true;
 
   if (ParamCount<3) or (ParamCount>5) then
     Quit (_CR, 'Usage: checker <input file> ' +
                '<output file> <answer file> [-s] [-nc]');
-
-  colorized:=true;
 
   for i := 4 to ParamCount do
   begin
