@@ -69,7 +69,7 @@ function install_gui()
     $PREFIX/stuff/echo.sh "Create dist directory tree..."
     $PREFIX/stuff/mkdistdir.sh /webtester        webtester webtester 0775
     $PREFIX/stuff/mkdistdir.sh /webtester/bin    webtester webtester 0775
-    $PREFIX/stuff/mkdistdir.sh /webtester/conf   webtester webtester 0770
+    $PREFIX/stuff/mkdistdir.sh /webtester/conf   webtester webtester 0775
 
     $PREFIX/stuff/echo.sh "Installing config files..."
     $PREFIX/stuff/cpfile.sh /etc/gwebtester.conf /conf/gwebtester.conf \
@@ -162,7 +162,7 @@ ${MKDISTDIR} /webtester/lib/plugins          webtester webtester 0775
 ${MKDISTDIR} /webtester/lib/modules          webtester webtester 0775
 ${MKDISTDIR} /webtester/include              webtester webtester 0775
 ${MKDISTDIR} /webtester/include/libwebtester webtester webtester 0775
-${MKDISTDIR} /webtester/conf                 webtester webtester 0770
+${MKDISTDIR} /webtester/conf                 webtester webtester 0775
 ${MKDISTDIR} /webtester/tmp                  webtester webtester 0775
 ${MKDISTDIR} /webtester/var                  webtester webtester 0775
 ${MKDISTDIR} /webtester/var/data             webtester webtester 0770
