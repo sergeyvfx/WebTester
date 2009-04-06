@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #define PRINT(__text,__args...) \
     fprintf (stderr, __text, ##__args)
@@ -595,8 +596,15 @@ quit_message (int __errno, const char *__desc)
  * @param __desc - description of error
  */
 void
-testlib_quit (int __errno, const char *__desc)
+testlib_quit (int __errno, const char *__desc, ...)
 {
+  char desc[65536];
+  va_list ap;
+
+  va_start (ap, __desc);
+  vsnprintf (desc, sizeof (desc), __desc, ap);
+  va_end (ap);
+
   if (__errno == _OK)
     {
       if (!out_stream)
@@ -604,15 +612,18 @@ testlib_quit (int __errno, const char *__desc)
           quit_message (_CR, "Output file not assigned.");
           exit (_CR);
         }
+
       if (testlib_seekeof (out_stream))
         {
-          quit_message (__errno, __desc);
+          quit_message (__errno, desc);
           exit (__errno);
         }
+
       quit_message (_WA, "Extra information in tail of the output file.");
       exit (_WA);
     }
-  quit_message (__errno, __desc);
+
+  quit_message (__errno, desc);
   exit (__errno);
 }
 

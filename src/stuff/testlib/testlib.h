@@ -24,8 +24,8 @@
  * Some useful defenitions
  */
 
-#define Quit(__errno, __text) \
-  testlib_quit (__errno, __text);
+#define Quit(__errno, __text,__args...) \
+  testlib_quit (__errno, __text, ##__args);
 
 #ifdef __cplusplus
 extern "C"
@@ -98,7 +98,7 @@ extern "C"
 
   /* Quit from testlib */
   void
-  testlib_quit (int __errno, const char *__desc);
+  testlib_quit (int __errno, const char *__desc, ...);
 
 #ifdef __cplusplus
 }
