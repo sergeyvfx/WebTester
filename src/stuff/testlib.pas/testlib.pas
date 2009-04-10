@@ -26,7 +26,7 @@ const
   blanks    = [#9, #32, #10, #13];
 
   NumCharsBefore = [#10, #13, ' '];
-  NumCharsAfter = [#10, #13, ' '];
+  NumCharsAfter  = [#10, #13, ' '];
 
   MaxStrLen = 255;
 
@@ -43,33 +43,31 @@ type
     constructor Create  (fn: string; m: TMode);
     destructor  Destroy;
 
-    
     function ReadInteger: integer;    { Read integer value from file }
     function ReadLongint: longint;    { Read longint from file }
     function ReadFloat: real;         { Read double from file }
 
-    
-    function NextChar: char;     { Read char from file and move to next }
-    function CurChar: char;      { Just return current char }
+    function NextChar : char;     { Read char from file and move to next }
+    function CurChar  : char;     { Just return current char }
 
-    function eof: boolean;      { Check for end of file }
-    function eoln: boolean;     { Check for end of line }
-    function seekeof: boolean;  { Seek for end of file }
-    function seekeoln: boolean; { Seek for end on line }
+    function Eof     : boolean; { Check for end of file }
+    function Eoln    : boolean; { Check for end of line }
+    function SeekEof : boolean; { Seek for end of file }
+    function SeekEoln: boolean; { Seek for end on line }
 
-    
-    procedure NextLine;                { Goto next line }
-    procedure skip (charset:TCharset); { Skip characters from set. Do not generate errors }
+    procedure NextLine;                 { Goto next line }
+    procedure Skip (charset: TCharset); { Skip characters from set. }
+                                        { Do not generate errors }
 
     function ReadWord (before, after: TCharset): string;
 
     function ReadString: string;
 
     private
-    ch : char;
-    stream: Text;
-    mode: TMode;
-    
+    ch     : char;
+    stream : File of Char;
+    mode   : TMode;
+
     function ReadNumber: Real;
   end;
 
@@ -77,9 +75,7 @@ type
 
 var
   inf, ouf, ans: TTestlibFile;
-  initialized: boolean;
-  silent: boolean;
-  colorized: boolean;
+  initialized, silent, colorized: boolean;
   i: integer;
 
 implementation
@@ -101,23 +97,21 @@ begin
 
   m:=mode;
 
-  if (ioResult<>0) then
-    if m=TFM_OUTPUT
-      then Quit (_PE, 'File not found: '+fn)
-      else Quit (_CR, 'File not found: '+fn);
+  if (ioResult <> 0) then
+  begin
+    if m = TFM_OUTPUT
+      then Quit (_PE, 'File not found: ' + fn)
+      else Quit (_CR, 'File not found: ' + fn);
+  end;
 
-  if (system.eof (stream))
-    then ch:=EOFChar
+  if (System.Eof (stream))
+    then ch := EOFChar
     else read (stream, ch);
 end;
 
 { Destructor }
 destructor TTestlibFile.Destroy;
 begin
-
-{  if (mode=TFM_OUTPUT) and (not eof) then
-    Quit (_PE, 'Extra information in output file'); }
-
   {$i-}
   close (stream);
   {$i+}
@@ -127,86 +121,126 @@ end;
 function TTestlibFile.ReadInteger: integer;
 var a: longint;
 begin
+  a := trunc (ReadNumber);
 
-  a:=trunc (ReadNumber);
-
-  if (a<-32768) or (a>32767) then
+  if (a < -32768) or (a > 32767) then
+  begin
     Quit (_PE, 'ReadInteger can work ONLY with integer values.');
-  
-  ReadInteger:=a;
-  
+  end;
+
+  ReadInteger := a;
 end;
 
 { Read longint from file }
 function TTestlibFile.ReadLongint: longint;
 begin
-  ReadLongInt:=trunc (ReadNumber);
+  ReadLongInt := trunc (ReadNumber);
 end;
- 
+
  { Read double from file }
 function TTestlibFile.ReadFloat: real;
 begin
-  ReadFloat:=ReadNumber;
+  ReadFloat := ReadNumber;
 end;
 
 { Read char from file and move to next }
 function TTestlibFile.NextChar: char;
 begin
-  NextChar:=CurChar;
+  NextChar := CurChar;
+
+  if System.Eof (stream) then
+  begin
+    ch := EOFChar;
+    exit;
+  end;
 
   {$i-}
   read (stream, ch);
   {$i+}
 
-  if IOResult<>0 then
+  if IOResult <> 0 then
+  begin
     Quit (_CR, 'Disk read error');
+  end;
 end;
 
 { Just return current char }
 function TTestlibFile.CurChar: char;
 begin
-  curchar:=ch;
+  curchar := ch;
 end;
 
 { Check for end of file }
 function TTestlibFile.eof: boolean;
 begin
-  eof:=CurChar=EOFChar;
+  eof := CurChar = EOFChar;
 end;
 
 { Seek for end of file }
-function TTestlibFile.seekeof: boolean;
+function TTestlibFile.SeekEOF: boolean;
+var pos: LongInt;
+    sch: Char;
 begin
-  while ((ord (CurChar)<=32) or (CurChar in blanks)) and (CurChar<>EOFChar) do NextChar;
-  seekeof:=CurChar=EOFChar;
+  pos := FilePos (stream);
+  sch := ch;
+
+  while ((ord (CurChar) <= 32) or (CurChar in blanks)) and
+         (CurChar <> EOFChar) do
+  begin
+    NextChar;
+  end;
+
+  Seek (stream, pos);
+  ch := sch;
+
+  seekeof := CurChar = EOFChar;
 end;
-    
+
 { Check for end of line }
 function TTestlibFile.eoln: boolean;
 begin
-  eoln:=CurChar in EOLNChars;
+  eoln := CurChar in EOLNChars;
 end;
 
 { Seek for end on line }
-function TTestlibFile.seekeoln: boolean;
+function TTestlibFile.SeekEoln: boolean;
+var pos: LongInt;
+    sch: Char;
 begin
-  while (CurChar in blanks) and not (CurChar in EOLNChars) and not eof do NextChar;
-  seekeoln:=CurChar in EOLNChars;
+  pos := FilePos (stream);
+  sch := ch;
+
+  while (CurChar in blanks) and
+        not (CurChar in EOLNChars) and not eof do
+  begin
+    NextChar;
+  end;
+
+  Seek (stream, pos);
+  ch := sch;
+
+  seekeoln := CurChar in EOLNChars;
 end;
 
 { Goto next line }
 procedure TTestlibFile.NextLine;
 begin
-  while not (CurChar in EOLNChars) and not eof do NextChar;
-  if CurChar=#13 then NextChar;
-  if CurChar=#10 then NextChar;
+  while not (CurChar in EOLNChars) and not eof do
+  begin
+    NextChar;
+  end;
+
+  if CurChar = #13 then NextChar;
+  if CurChar = #10 then NextChar;
 end;
 
 { Skip characters from set. Do not generate errors }
-procedure TTestlibFile.skip (charset: TCharset);
+procedure TTestlibFile.Skip (charset: TCharset);
 begin
   while (CurChar in charset) and not eof do
+  begin
     NextChar;
+  end;
 end;
 
 function TTestlibFile.ReadWord (before, after: TCharset): string;
@@ -214,53 +248,64 @@ var
   s: string;
 begin
   skip (before);
-  s:='';
+  s := '';
 
   while not (CurChar in after) and not eof do
   begin
-    if (length (s)>=MaxStrLen-1) then Quit (_PE, 'Word is too long');
-    s:=s+CurChar;
+    if (length (s) >= MaxStrLen - 1) then
+    begin
+      Quit (_PE, 'Word is too long');
+    end;
+
+    s := s + CurChar;
     NextChar;
   end;
 
-  ReadWord:=s;
+  ReadWord := s;
 end;
 
 function TTestlibFile.ReadNumber: Real;
 var
-  s: string;
-  res: real;
+  s:    string;
+  res:  real;
   code: integer;
 
 begin
 
   if seekeof then
+  begin
     Quit (_PE, 'Unexpected end of file');
+  end;
 
-  s:=ReadWord (NumCharsBefore, NumCharsAfter);
-  
+  s := ReadWord (NumCharsBefore, NumCharsAfter);
+
   val (s, res, code);
 
-  if (code<>0) then
+  if (code <> 0) then
   begin
     Quit (_PE, 'Wrong integer format');
   end;
 
-  ReadNumber:=res;
+  ReadNumber := res;
 end;
 
 function TTestlibFile.ReadString: string;
 var s: string;
 begin
-  s:='';
+  s := '';
 
   if CurChar = EOFChar then
+  begin
     Quit (_PE, 'Unexpected end of file');
+  end;
 
   while not (CurChar in EOLNChars) do
   begin
-    if (length (s)>MaxStrLen-1) then
+    if (length (s) > MaxStrLen - 1) then
+    begin
       Quit (_PE, 'String to long');
+    end;
+
     s:=s+CurChar;
     NextChar;
   end;
@@ -274,19 +319,20 @@ end;
 {**** Some internal stuff ****}
 procedure Quit (code: integer; desc: string);
 begin
-
   {** Post-checking of output file **}
-  if (initialized) and (code=_OK) and (not ouf.seekeof) then { CHeck for extra information }
+
+  { Check for extra information }
+  if (initialized) and (code = _OK) and (not ouf.SeekEof) then
   begin
-    code:=_PE;
-    desc:='Extra information in output file';
+    code := _PE;
+    desc := 'Extra information in output file';
   end;
 
   { Set text color }
 {$IfDef FPC}
   if colorized then
   begin
-    if code<>_OK
+    if code <> _OK
       then TextColor (LightRed)
       else TextColor (LightGreen);
   end;
@@ -313,7 +359,7 @@ begin
 
   { For some sound messaging }
 {$IfDef FPC}
-  if (code<>_OK) and (not silent) then
+  if (code <> _OK) and (not silent) then
   begin
     sound (1000);
     delay (200);
@@ -325,26 +371,30 @@ begin
   halt (code);
 end;
 
+procedure Usage;
+begin
+  Quit (_CR, 'Usage: checker <input file> ' +
+        '<output file> <answer file> [-s] [-nc]');
+end;
 
 begin
-  colorized:=true;
+  colorized := true;
 
-  if (ParamCount<3) or (ParamCount>5) then
-    Quit (_CR, 'Usage: checker <input file> ' +
-               '<output file> <answer file> [-s] [-nc]');
+  if (ParamCount < 3) or (ParamCount > 5) then
+  begin
+    Usage;
+  end;
 
   for i := 4 to ParamCount do
   begin
-    if (ParamStr (i)='-s') then silent:=true else
-    if (ParamStr (i)='-nc') then colorized:=false else
-      Quit (_CR, 'Usage: checker <input file> ' +
-                 '<output file> <answer file> [-s] [-nc]');
+    if (ParamStr (i) = '-s')  then silent := true else
+    if (ParamStr (i) = '-nc') then colorized := false else
+      Usage;
   end;
 
   inf.Create (ParamStr (1), TFM_INPUT);
   ouf.Create (ParamStr (2), TFM_OUTPUT);
   ans.Create (ParamStr (3), TFM_ANSWER);
 
-  initialized:=true;
-
+  initialized := true;
 end.

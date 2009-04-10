@@ -258,14 +258,8 @@ testlib_read_string (FILE *__stream, char *__buf, int __maxlen)
 
   if (ch == '\r')
     {
-      if (fgetc (__stream) != '\n')
-        {
-          goback (__stream);
-        }
-    }
-  else
-    {
-      if (ch >= 0)
+      ch = fgetc (__stream);
+      if (ch != '\n')
         {
           goback (__stream);
         }
@@ -360,9 +354,9 @@ testlib_eoln (FILE *__stream)
       Quit (_CR, "Specified file not opened");
     }
 
+  goback (__stream);
   int ch = fgetc (__stream);
   int res = ch == '\n' || ch == '\r' || ch == EOF;
-  goback (__stream);
   return res;
 }
 

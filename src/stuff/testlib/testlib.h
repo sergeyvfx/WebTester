@@ -117,11 +117,8 @@ main (int __argc, char **__argv)
 {
   if (__argc < 4)
     {
-      char usage[4096];
-      sprintf (usage, "Usage: %s <input file> <output file> "
-                      "<answer file> [-s] [-nc]",
-               __argv[0]);
-      Quit (-1, usage);
+      Quit (_CR, "Usage: %s <input file> <output file> "
+                 "<answer file> [-s] [-nc]", __argv[0]);
     }
 
   if (__argc > 4)

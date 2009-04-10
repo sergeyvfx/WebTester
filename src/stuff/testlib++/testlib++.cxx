@@ -261,10 +261,8 @@ Testlib_Init (int __argc, char **__argv)
   /* Check for arguments */
   if (__argc < 4)
     {
-      char usage[1024];
-      sprintf (usage, "Usage: %s <input file> <output file> "
-                      "<answer file> [-s] [-nc]", __argv[0]);
-      Quit (-1, usage);
+      Quit (_CR, "Usage: %s <input file> <output file> "
+                 "<answer file> [-s] [-nc]", __argv[0]);
     }
 
   if (__argc > 4)
