@@ -1,6 +1,363 @@
-2009-01-31  Sergey Sharybin <g.ulairi@gmail.com>
-	Switched to GIT versioning system. Fture changelogs see
-in git commit log.
+2009-04-11  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Implemented recoding of problems' tests files.
+
+	* configure.in.template: Added checking of ENCA presence
+
+	* etc/webtester.conf: Use local folder for archive uploading by default.
+
+	* src/libwebtester/dynastruc.h: Added macro DYNA_CONTINUE.
+
+	* src/libwebtester/fs.c, src/libwebtester/fs.h,
+	  src/libwebtester/log.c: Rename function fsize() stream_size ().
+	  Implemented function fsize() which gets size from file's stat
+	  information.
+
+	* src/libwebtester/recode.c, src/libwebtester/recode.h: Implemented
+	  module for recoding buffers and files.
+	  ENCA character set auto-detection is here.
+
+	* src/webtester/modules/informatics/uploader-problem.c: Implemented
+	  tests files recoding.
+
+2009-04-10  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Bugfixes in testlib's functions SeekEOF(), SeekEOLN(), ReadString().
+
+	* src/stuff/testlib++/testlib++.cxx: Use _CR exit code for
+	  usage message.
+
+	* src/stuff/testlib/testlib.c, src/stuff/testlib/testlib.h: Use _CR
+	  exit code for usage message. Fixed bug in function
+	  testlib_read_string().
+
+	* src/stuff/testlib.pas/testlib.pas: Fixed bug in functions
+	  ReadString(), SeekEOF(), SeekEOLN().
+
+	* src/stuff/testlib.pas/testlib.dcu, src/stuff/testlib.pas/testlib.o.
+	src/stuff/testlib.pas/testlib.ppu: Uploaded new blobs.
+
+2009-04-06  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Added format support for description in the Quit() function
+	from testlib.
+
+	* src/stuff/testlib/testlib.c, src/stuff/testlib/testlib.h: Implemented
+	  support of formatted description in Quit() function.
+	  Minor code formation.
+
+2009-04-06  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* src/stuff/scripts/install/install.sh: Fixed wrong permissions.
+
+2009-03-20  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Minor typo-fixing.
+
+	* src/stuff/testlib.pas/testlib.pas: Fixed variables initialization order
+
+	* src/stuff/testlib.pas/testlib.dcu, src/stuff/testlib.pas/testlib.o,
+	src/stuff/testlib.pas/testlib.ppu: Uploaded new blobs.
+
+	* etc/webtester.conf: Reduced sizes of transfering files.
+
+	* src/webtester/modules/informatics/ipc.c: Do not send data
+	string's length.
+
+2009-03-19  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Fixed bug with temporary uploading path creation.
+	Fixed bug with storing output data and ACM contest rules.
+
+	* src/webtester/modules/informatics/uploader-problem.c: Fixed bug with
+	  temporary directory unlinking after creation.
+	  Fixed function name misspelling.
+
+	* src/webtester/modules/informatics/tester.c: Fixed bug with output
+	  data storing and contests with ACM rules.
+	  Minor typo-fixing with debug logging.
+
+2009-03-18  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Added no-colorize option to testlib.
+
+	* etc/webtester.conf: Added new argument to checker.
+
+	* src/stuff/testlib/testlib.c, src/stuff/testlib/testlib.h,
+	  src/stuff/testlib++/testlib++.cxx,
+	  src/stuff/testlib.pas/testlib.pas: Added implementation of
+	  new argument.
+
+	* src/stuff/testlib.pas/testlib.dcu, src/stuff/testlib.pas/testlib.o,
+	  src/stuff/testlib.pas/testlib.ppu: Added blobs with implementation of
+	  new argument.
+
+2009-03-17  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Use snprintf() instead of sprintf() for more secure.
+
+2009-03-17  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+  Implemented sending of test files and answers through IPC.
+
+	* etc/webtester.conf: Added new key.
+
+	* src/libwebtester/fs.c: Use stat() instead of fopen() in fexists().
+
+	* src/libwebtester/ipc.c: Fixed typo in ipc_done().
+
+	* src/libwebtester/util.c, src/libwebtester/util.h: Implemented
+	  function parse_range() for range parsing.
+
+	* src/webtester/modules/informatics/informatics.c,
+	  src/webtester/modules/informatics/informatics.h: Call IPC
+	  initialization and un-initialization.
+
+	* src/webtester/modules/informatics/ipc.c: Implementation of
+	  Informatics' IPC stuff.
+
+	* src/webtester/modules/informatics/tester.c: Minor code formation.
+
+	* src/libwebtester/cmd.c, src/libwebtester/cmd.h,
+	  src/libwebtester/ipc.c,   src/libwebtester/ipc.h: Implemented stuff
+	  for procedure un-registration.
+
+2009-03-16  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Implemented sending of solutions' output data to Web-interface.
+
+	* etc/webtester.conf: Added new parameters.
+
+	* src/libwebtester/assarr.c: Improvements in assarr_pack() - output
+	  buffer allocates automatically.
+
+	* src/libwebtester/fs.c: Minor code formation.
+
+	* src/webtester/modules/informatics/tester.c: Implemented gathering of
+	  solutions' output files for sending to Web-interface.
+
+2009-03-06  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Bug-fixing and improvements in C/C++ testlib implementation.
+
+	* src/stuff/checkers/c_bystring_cmp, src/stuff/checkers/c_long_cmp,
+	  src/stuff/checkers/c_string_cmp: Removed by unwanted.
+
+	* src/stuff/testlib++/testlib++.cxx: Read strings longer than
+	  buffer size.
+
+	* src/stuff/testlib/testlib.c: Fixed bug in testlib_eoln().
+
+2009-03-03  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Fixed bug with incorrect Kylix's output binary file name specification.
+
+	* etc/webtester.conf: Use command dcc.sh instead of dcc.
+
+	* src/stuff/scripts/dcc.sh: Wrapper around Kylix's dcc to add option
+	  for output binary file name specification.
+
+	* src/stuff/scripts/install/install.sh: Install dcc.sh to
+	  Kylix's directory.
+
+	* src/webtester/modules/informatics/uploader-problem.c: Unlink
+	  temporary uploading directory before uploading.
+
+2009-03-02  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Fixed bug with returning PE instead of RE.
+
+	* src/librun/run.h: Improved macros RUN_PROC_EXITCODE().
+
+	* src/librun/run.c: Minor fixing in style.
+
+	* src/stuff/scripts/install/install.sh: Install testlib source
+	  file for Kylix.
+
+	* src/stuff/testlib.pas/testlib.dcu, src/stuff/testlib.pas/testlib.o,
+	  src/stuff/testlib.pas/testlib.pas,
+	  src/stuff/testlib.pas/testlib.ppu: Fixed bug in ReadWord().
+
+2009-03-01  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* !clean.sh: Some more cleaning.
+
+	* src/webtester/modules/informatics/uploader-problem.c: Fixed typo.
+
+2009-02-27  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* WT-VERSION-GEN: Ignore more files.
+
+	* build-stamp, configure-stamp: Removed by unwanted.
+
+	* debian/rules: Handle building package building without front-end.
+
+	* debian/webtester-core.postinst: Optimize chown-ing and chmod-ing
+	  to work work properly with pre-installed Informatics data.
+
+	* !clean.sh: Clean temporary files.
+
+2009-02-25  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* configure.in.template, src/libwebtester/network-soup.c,
+	  src/libwebtester/network-soup.h: Added support of libsoup-2.4.
+
+	* !clean.sh: Checkout to needed versions of files, needed just for
+	  version generation.
+
+	* src/webtester/modules/informatics/uploader-checker.c,
+	  src/webtester/modules/informatics/uploader-problem.c,
+	  src/webtester/plugins/webinterface/transport.c: Compilation's
+	  warning-fixes.
+
+	* WT-VERSION-GEN: Ignore changes in !config file of installation script.
+
+2009-02-24  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* Makefile.in, config.guess, config.sub,
+	  ltmain.sh: Use generated by new version of autotools.
+
+	* src/stuff/scripts/init.d/webtester: Fixed bug with wrong
+	  compiled librun objectives owner.
+
+	* debian/webtester-core.postinst,
+	  debian/webtester-core.templates: Fixed bug with incorrect Proxy
+	  property name.
+
+	* src/librun/run.c, src/librun/run.h: Use absolute paths to
+	  lrvm and lrvm_kill.
+
+	* src/stuff/scripts/init.d/webtester: Send install directory to make.
+
+	* src/stuff/scripts/install/templates/Makefile.librun: Receive
+	webtester home directory as variable.
+
+2009-02-21  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* src/stuff/Bootstrap/*: Buildstrap for Java solutions execution.
+
+	* src/webtester/modules/informatics/tester.c: Fixed memory corruption.
+
+	* .gitignore: Added new files for ignoring.
+
+	* debian/changelog: Added new changes.
+
+	* debian/webtester-core.postinst: Added missed chown-s and chmod-s.
+
+	* etc/webtester.conf: Enlarged Java VM size. Use Bootstrap for Java
+	  solutions executing.
+
+	* src/librun/lrvm/main.c: Fixed misspelling.
+
+	* src/stuff/scripts/install/*: Improvements and bug-fixing.
+
+	* Added initial support of Java compiler.
+
+	* Split package webtester-core into libwebtester and webtester-core.
+
+	* Removed full chowning of webtester installation directory in
+	  postinst script.
+
+	* Added making symbolic links in system library directory.
+
+	* Initial config file set up to work with web-interface on
+	  local machine.
+
+2009-02-05  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* src/webtester/modules/informatics/uploader-problem.c: Implemented
+	tests files names validator.
+
+	* src/libwebtester/macrodef.h: Added macros BUF_SIZE.
+
+	* configure.in.template: Restored kernel specification and flags stuff.
+
+	* src/stuff/scripts/install/*.sh: Fixed bug with wrong permissions
+	  onto `include` destination directory.
+
+	* src/stuff/scripts/install/templates/Makefile.librun: Use include
+	  directory from current kernel source directory.
+
+2009-02-04  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* Added scripts for building debian package.
+
+	* Some changes in installation scripts to use in debian
+	  package building.
+
+	* Some other small bug-fixes.
+
+2009-02-01  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* WT-VERSION-GEN: Added version generating script.
+
+	* src/libwebtester/version.h: Will be keept with empty version.
+
+	* !clean.sh: Fixed some typo.
+
+	* .gitignore: Add new ignoring files.
+
+	* autogen.sh: Call version generating script at the beginning.
+
+	* configure.in: Removed by unwanted.
+
+	* configure.in.template: Need this for correct version definitions from
+	  automatisation scripts.
+
+	* src/libwebtester/version.h: Will be supported bu WT-VERSION-GEN.
+
+	* src/webtester/modules/informatics/uploader-problem.c: Implemented problems
+	  uploading through local fs file operations without SAMBA stuff.
+
+	* etc/webtester.conf: Added some comments.
+
+2009-01-31  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* src/stuff/scripts/install/install.sh: Stop WebTester server
+	  before installation.
+
+	* src/stuff/scripts/install/uninstall.sh: Remove files from /erc/rc*.
+
+	* etc/.depend, etc/Makefile, src/.depend,
+	  src/stuff/Makefile, src/stuff/checkers/Makefile,
+	  src/webtester/modules/Makefile,
+	  src/webtester/plugins/Makefile: Added missing files.
+
+	* configure.in: Fixed typo.
+
+	* src/stuff/scripts/install/install.sh: Added setting WebTester server
+	  as autostart daemon.
+
+	* src/stuff/scripts/install/install.sh: Added Kylix library directory
+	  creation.
+
+	* src/stuff/scripts/install/install.sh: Some additional loging to
+	  screen. Removed pascal testlib compilation. Added installation of
+	  testlib for Kylix.
+
+	* src/stuff/scripts/install/templates/_webtester.c: Code formation and
+	  commenting.
+
+	* src/stuff/testlib.pas/testlib.dcu,
+	  src/stuff/testlib.pas/testlib.o,
+	  src/stuff/testlib.pas/testlib.pas,
+	  src/stuff/testlib.pas/testlib.ppu: Added t oworking tree to make FPC
+	  and Kylix unneccessary at installation time.
+
+	* NEWS: Added missed file (need for autogen stuff).
+
+	* Removed old unwanted files from po/, intl/ and some other, added to
+	  the working tree by mistake.
+
+	* Removed nbproject by unwanted.
+
+	* Made building of WebTester GUI optional.
+
+2009-01-27  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	* Formation of all source and header files. Removed unwanted modules and
+	some unwanted functions. Added doxygen comments to the most of
+	function. Minor typo-fixes.
 
 2008-05-11  Sergey Sharybin <sharybin@nm.ru>
 
