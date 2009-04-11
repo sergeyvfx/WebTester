@@ -18,6 +18,7 @@
 #include <libwebtester/regexp.h>
 #include <libwebtester/network-smb.h>
 #include <libwebtester/strlib.h>
+#include <libwebtester/recode.h>
 
 #include <libwebtester/mutex.h>
 
@@ -639,42 +640,171 @@ checkerize (const char *__checker, const char *__tmp_path, char *__err_desc)
  */
 
 /**
- * Validate names of files with tests
+ * Validate names of files in archive
  *
- * @param __path - path where tests will be validated
+ * @param __id - problem ID
+ * @param __path - path where files will be validated
  */
 static void
-validate_tests_names (const char *__path)
+validate_file_names (const char *__id, const char *__path)
 {
   dynastruc_t *listing;
   char *name;
   char new_name[1024];
-  char full_src[4096], full_dst[4096];
+  char full_src[4096], full_name[4096];
 
   /* Get listing of directory */
   listing = dir_listing (__path);
 
   DYNA_FOREACH (listing, name);
-    if (preg_match ("/^[0-9]*\\.(tst|ans)$/i", name))
+    if (preg_match ("/^([0-9]*\\.(tst|ans)|(checker.conf)|(tests.conf))$/i",
+                    name))
       {
         strlowr (name, new_name);
 
+        snprintf (full_name, BUF_SIZE (full_name),
+                  "%s/%s", __path, new_name);
+
+        /* Convert test to lowercase */
         if (strcmp (name, new_name))
           {
-            INF_DEBUG_LOG ("Renaming test file %s to %s", name, new_name);
+            INF_LOG ("Renaming file %s to %s in problem %s\n", name,
+                     new_name, __id);
 
-            snprintf (full_src, BUF_SIZE (full_src),
+            snprintf (full_src, BUF_SIZE (full_name),
                       "%s/%s", __path, name);
-            snprintf (full_dst, BUF_SIZE (full_dst),
-                      "%s/%s", __path, new_name);
 
-            rename (full_src, full_dst);
+            rename (full_src, full_name);
           }
       }
   DYNA_DONE;
 
   /* Free used memory */
   dyna_destroy (listing, dyna_deleter_free_ref_data);
+}
+
+/**
+ * Recode tests from one character set to another
+ *
+ * @param __id - problem ID which tests will be recoded
+ * @param __path - path to tests storage
+ * @param __from - current tests character set
+ * @param __to - convert tests to character set
+ */
+static void
+recode_tests (const char *__id, const char *__path,
+              const char *__from, const char *__to)
+{
+  dynastruc_t *listing;
+  char *name;
+  char full_name[4096];
+  const char *from, *to;
+  BOOL guess_cp = FALSE;
+
+#ifdef USE_ENCA
+  const char *fallback;
+#endif
+
+  if (!strcmp (__from, __to) && strcasecmp (__from, "auto"))
+    {
+      /* Recoding is not necessary */
+      return;
+    }
+
+  if (!strcasecmp (__to, "auto"))
+    {
+      to = get_current_charset ();
+    }
+
+  guess_cp = strcasecmp (__to, "auto") == 0;
+
+#ifndef USE_ENCA
+  if (guess_cp)
+    {
+      INF_ERROR ("Trying to recode tests for problem %s from automatic "
+                 "character set without ENCA support", __id);
+      return;
+    }
+#else
+  /*
+   * TODO: May be we should use something different here?
+   */
+  fallback = get_current_charset ();
+#endif
+
+  INF_LOG ("Recoding tests for problem %s from character set %s to %s\n",
+           __id, __from, to);
+
+  /* Get listing of directory */
+  listing = dir_listing (__path);
+
+  from = __from;
+
+  DYNA_FOREACH (listing, name);
+    if (preg_match ("/^[0-9]*\\.(tst|ans)$/i",  name))
+      {
+        snprintf (full_name, BUF_SIZE (full_name),
+                  "%s/%s", __path, name);
+
+#ifdef USE_ENCA
+        if (guess_cp)
+          {
+            from = guess_file_cp (full_name, "ru", fallback);
+
+            INF_LOG ("Recoding test %s of problem %s from character set "
+                     "from %s to %s\n", name, __id, from, to);
+          }
+#endif
+
+        recode_file (full_name, from, to);
+      }
+  DYNA_DONE;
+
+  /* Free used memory */
+  dyna_destroy (listing, dyna_deleter_free_ref_data);
+}
+
+/**
+ * Adopt files in archive for usage
+ *
+ * @param __id - problem ID
+ * @param __path - path where tests will be adopted
+ */
+static void
+adopt_tests (const char *__id, const char *__path)
+{
+  char cfg_file[4096], err[4096];
+  dynastruc_t *cfg = NULL;
+
+  /* Validate names of files came from archive */
+  validate_file_names (__id, __path);
+
+  /* Thin tests configuration */
+  snprintf (cfg_file, BUF_SIZE (cfg_file), "%s/tests.conf", __path);
+  if (fexists (cfg_file))
+    {
+      if (!hive_parse_file (cfg_file, &cfg, err))
+        {
+          flex_value_t *recode_from_flex, *recode_to_flex;
+
+          recode_from_flex = hive_open_key (cfg, "RecodeFrom");
+          recode_to_flex = hive_open_key (cfg, "RecodeTo");
+
+          if (recode_from_flex && recode_to_flex)
+            {
+              char *recode_from, *recode_to;
+
+              recode_from = flexval_get_string (recode_from_flex);
+              recode_to = flexval_get_string (recode_to_flex);
+
+              recode_tests (__id, __path, recode_from, recode_to);
+            }
+        }
+      else
+        {
+          INF_LOG ("Unable to parse tests' config file in problem %s\n", __id);
+        }
+    }
 }
 
 /**
@@ -712,7 +842,7 @@ move_to_dataroot (const char *__id, const char *__tmp_dir, BOOL __rm_all_data)
 
   fcopydir (__tmp_dir, full_dst);
 
-  validate_tests_names (full_dst);
+  adopt_tests (__id, full_dst);
 
   return TRUE;
 }

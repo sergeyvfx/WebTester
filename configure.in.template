@@ -45,6 +45,7 @@ SOUP22_REQ=2.2.3
 SOUP24_REQ=2.4.1
 PCRE_REQ=6.7
 GTK_REQ=2.6.0
+ENCA_REQ=1.9
 
 AC_SUBST(GLIB_REQ)
 
@@ -224,6 +225,28 @@ if pkg-config --exists libpcre ; then
   fi
 else
   AC_MSG_ERROR(no)
+fi
+
+dnl Check for enca
+AC_MSG_CHECKING(if enca >= ${ENCA_REQ} exists)
+if pkg-config --exists enca ; then
+  ENCA_CFLAGS=`pkg-config --cflags enca`
+  ENCA_LIBS=`pkg-config --libs enca`
+  ENCA_PREFIX=`pkg-config --variable=prefix enca`
+  ENCA_VERSION=`pkg-config --modversion enca`
+  AC_SUBST(ENCA_VERSION)
+  AC_SUBST(ENCA_PREFIX)
+  AC_SUBST(ENCA_CFLAGS)
+  AC_SUBST(ENCA_LIBS)
+
+  if pkg-config --exists enca '>=' ${ENCA_REQ} ; then
+    AC_DEFINE_UNQUOTED(USE_ENCA, 1, [Use enca library])
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT("only ${ENCA_VERSION} found")
+  fi
+else
+  AC_MSG_RESULT(no)
 fi
 
 dnl Check for smbclient

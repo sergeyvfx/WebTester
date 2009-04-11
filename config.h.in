@@ -105,5 +105,8 @@
 /* Define for user debugging */
 #undef USER_DEBUG
 
+/* Use enca library */
+#undef USE_ENCA
+
 /* Version number of package */
 #undef VERSION

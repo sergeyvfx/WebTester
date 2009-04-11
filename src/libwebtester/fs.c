@@ -215,13 +215,13 @@ get_full_file (const char *__fn)
 }
 
 /**
- * Get file size
+ * Get stream size
  *
  * @param __stream - stream to measure
- * @return size of file
+ * @return size of stream
  */
 size_t
-fsize (FILE *__stream)
+stream_size (FILE *__stream)
 {
   size_t result, pos;
   pos = ftell (__stream);
@@ -229,6 +229,25 @@ fsize (FILE *__stream)
   result = ftell (__stream);
   fseek (__stream, pos, SEEK_SET);
   return result;
+}
+
+/**
+ * Get file size
+ *
+ * @param __stream - file to measure
+ * @return size of file
+ */
+size_t
+fsize (const char *__fn)
+{
+  struct stat st;
+
+  if (!stat (__fn, &st))
+    {
+      return st.st_size;
+    }
+
+  return 0;
 }
 
 /**
@@ -249,7 +268,7 @@ fload (const char *__fn)
     {
       goto __out;
     }
-  size = fsize (stream);
+  size = stream_size (stream);
   res = malloc (size + 1);
   memset (res, 0, size);
   fread (res, sizeof (char), size, stream);
@@ -403,7 +422,7 @@ copyfile (const char *__src, const char *__dst)
 
   stat (__src, &file_stat);
 
-  size = fsize (istream);
+  size = stream_size (istream);
 
   while (copied < size)
     {

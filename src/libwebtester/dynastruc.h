@@ -32,6 +32,7 @@
         __next_=dyna_next (__cur_);
 
 #define DYNA_BREAK break
+#define DYNA_CONTINUE continue
 
 #define DYNA_DONE \
         __cur_=__next_; \

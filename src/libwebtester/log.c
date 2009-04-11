@@ -125,7 +125,7 @@ logfile_pack (void)
 static void
 check_size (void)
 {
-  if (fsize (stream) > MAX_LOG_SIZE)
+  if (stream_size (stream) > MAX_LOG_SIZE)
     {
       printf ("Packing LOG file...\n");
       logfile_close ();

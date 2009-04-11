@@ -7,8 +7,8 @@ include ../../mk/init.mk
 
 OBJECTIVE_LIBS = libwebtester.so
 
-LIBADD = -ldl  @GLIB_LIBS@ @PCRE_LIBS@ @SOUP_LIBS@ @GTHREAD_LIBS@ @SMBCLIENT_LIBS@  
-CFLAGS +=  @GLIB_CFLAGS@ @PCRE_CFLAGS@ @SOUP_CFLAGS@ @GTHREAD_CFLAGS@ @SMBCLIENT_CFLAGS@ 
+LIBADD = -ldl  @GLIB_LIBS@ @PCRE_LIBS@ @SOUP_LIBS@ @GTHREAD_LIBS@ @SMBCLIENT_LIBS@ @ENCA_LIBS@ 
+CFLAGS +=  @GLIB_CFLAGS@ @PCRE_CFLAGS@ @SOUP_CFLAGS@ @GTHREAD_CFLAGS@ @SMBCLIENT_CFLAGS@ @ENCA_CFLAGS@ 
 
 HEADERS = 
 SOURCES = \
@@ -44,7 +44,8 @@ SOURCES = \
 	scheduler.c \
 	thread.c \
 	network-smb.c \
-	network-soup.c
+	network-soup.c \
+	recode.c
 
 #	libgda.c
 

@@ -33,9 +33,13 @@ get_full_path (const char *__fn);
 char*
 get_full_file (const char *__fn);
 
+/* Get stream size */
+size_t
+stream_size (FILE *__stream);
+
 /* Get file size */
 size_t
-fsize (FILE *__stream);
+fsize (const char *__fn);
 
 /* Load file content */
 char*
