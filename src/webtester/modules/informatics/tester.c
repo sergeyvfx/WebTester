@@ -118,6 +118,17 @@
   COMPILER_SAFE_PCHAR_KEY (TASK_COMPILER_ID (*__self), \
                            "Extension", INFORMATICS_SRCEXT)
 
+#define STORE_OUTPUTS(__outputs, __param)               \
+  if (__outputs != NULL) \
+    { \
+      char *pchar; \
+ \
+      assarr_pack (__outputs, &pchar); \
+      assarr_set_value (__params, __param, pchar); \
+      assarr_destroy (__outputs, assarr_deleter_free_ref_data); \
+    }
+
+
 /****
  *
  */
@@ -589,6 +600,27 @@ build_checker_cmd (wt_task_t *__self, const char *__cur_testing_dir,
  *
  */
 
+static BOOL
+need_store (const char *__param)
+{
+  int i;
+  flex_value_t *retprops = NULL;
+  char *pchar;
+
+  CONFIG_OPEN_KEY (retprops, "Server/Modules/Informatics/RetProps");
+
+  for (i = 0; i < FLEXVAL_ARRAY_LENGTH (retprops); i++)
+    {
+      pchar = flexval_get_array_string (retprops, i);
+      if (!strcmp (pchar, __param))
+        {
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
 /**
  * Check if storing of solution's output is needed
  *
@@ -602,22 +634,27 @@ need_store_output (void)
 
   if (!initialized)
     {
-      int i;
-      flex_value_t *retprops = NULL;
-      char *pchar;
+      result = need_store ("SOLUTION_OUTPUT");
+      initialized = TRUE;
+    }
 
-      CONFIG_OPEN_KEY (retprops, "Server/Modules/Informatics/RetProps");
+  return result;
+}
 
-      for (i = 0; i < FLEXVAL_ARRAY_LENGTH (retprops); i++)
-        {
-          pchar = flexval_get_array_string (retprops, i);
-          if (!strcmp (pchar, "SOLUTION_OUTPUT"))
-            {
-              result = TRUE;
-              break;
-            }
-        }
+/**
+ * Check if storing of checker's output is needed
+ *
+ * @return non-zero if storing is needed, zero otherwise
+ */
+static BOOL
+need_store_checker_output (void)
+{
+  static BOOL initialized = FALSE;
+  static BOOL result = FALSE;
 
+  if (!initialized)
+    {
+      result = need_store ("CHECKER_OUTPUT");
       initialized = TRUE;
     }
 
@@ -719,7 +756,7 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
   /* Per-compiler resource usage correction */
   double time_corr, rss_corr;
 
-  assarr_t *outputs = NULL;
+  assarr_t *outputs = NULL, *checker_outputs = NULL;
   char *output = NULL;
 
   for (i = 0; i < tests_count; i++)
@@ -787,6 +824,11 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
     {
       outputs = assarr_create ();
       output = malloc (max_output_store_size + 1);
+    }
+
+  if (need_store_checker_output ())
+    {
+      checker_outputs = assarr_create ();
     }
 
   /* Cycle by tests */
@@ -904,7 +946,6 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
                     }
                 }
 
-
               /* Exec checker */
               SAFE_FREE_PROC (proc);
               INF_DEBUG_LOG ("Task %ld. Executing checker (cmd: %s)\n",
@@ -995,6 +1036,15 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
                   LOOPCRASH;
                 }
 
+              /* Store checker's output message */
+              if (checker_outputs)
+                {
+                  snprintf (dummy, BUF_SIZE (dummy), "%d", i);
+
+                  assarr_set_value (checker_outputs, dummy,
+                                    strdup (RUN_PROC_PIPEBUF (*proc)));
+                }
+
               /* Overview checker's exit code */
               switch (RUN_PROC_EXITCODE (*proc))
                 {
@@ -1073,15 +1123,8 @@ __done_:
         }
     }
 
-  if (outputs != NULL)
-    {
-      char *pchar;
-
-      assarr_pack (outputs, &pchar);
-      assarr_set_value (__params, "SOLUTION_OUTPUT", pchar);
-
-      assarr_destroy (outputs, assarr_deleter_free_ref_data);
-    }
+  STORE_OUTPUTS (outputs,         "SOLUTION_OUTPUT");
+  STORE_OUTPUTS (checker_outputs, "CHECKER_OUTPUT");
 
   SAFE_FREE (output);
 }

@@ -1,5 +1,14 @@
 2009-04-17  Sergey I. Sharybin <g.ulairi@gmail.com>
 
+	Implementation of checker's message storing.
+
+	* etc/webtester.conf: Added new parameter to RetProps.
+
+	* src/webtester/modules/informatics/tester.c: Implementation of checker's
+	  message storing.
+
+2009-04-17  Sergey I. Sharybin <g.ulairi@gmail.com>
+
 	Set of bug-fixes for testlibs.
 
 	* src/stuff/scripts/check_all/check_all.sh,
