@@ -5,7 +5,7 @@
 #
 # Copyright (C) 2009 Sergey I. Sharybin <g.ulairi@gmail.com>
 #
-# Thids file can be distributed under the terms of the GNU GPL
+# This file can be distributed under the terms of the GNU GPL
 #
 
 #

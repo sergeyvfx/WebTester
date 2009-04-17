@@ -1,3 +1,34 @@
+2009-04-17  Sergey I. Sharybin <g.ulairi@gmail.com>
+
+	Set of bug-fixes for testlibs.
+
+	* src/stuff/scripts/check_all/check_all.sh,
+	  src/stuff/scripts/check_all/check_entry.sh,
+	  src/stuff/scripts/cjar.sh, src/stuff/scripts/dcc.sh,
+	  src/stuff/scripts/init.d/webtester,
+	  src/stuff/scripts/lrvm_killall.sh: Spellchecking.
+
+	* src/stuff/testlib++/testlib++.cxx: Fixes to make compilable
+	  under WIN32.
+
+	* src/stuff/testlib.pas/testlib.pas: Do no restore position in file
+	  when looking up for EOLN and EOF. Return _CR when PE occurred in
+	  input of answer file.
+
+	* src/stuff/testlib.vcproj: Added VS2005 project to make writing
+	  checkers under WIN32 easier.
+
+	* src/stuff/testlib.pas/testlib.dcu,
+	  src/stuff/testlib.pas/testlib.o,
+	  src/stuff/testlib.pas/testlib.ppu: Uploaded new blobs.
+
+	* src/stuff/testlib/testlib.c: Made compilable under WIN32. Return
+	  _CR when PE occurred in input or answer file. Do net restore
+	  position in file when looking up for EOLN and EOF.
+
+	* src/stuff/testlib/testlib.h: Added Quit macro compatible
+	  with VS C compiler.
+
 2009-04-11  Sergey I. Sharybin <g.ulairi@gmail.com>
 
 	Implemented recoding of problems' tests files.

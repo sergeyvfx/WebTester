@@ -12,7 +12,12 @@
 #define TESTLIB_SO
 
 #include "testlib++.h"
+#include <stdio.h>
 #include <stdlib.h>
+
+#ifdef WIN32
+#  define snprintf _snprintf
+#endif
 
 CTestlibFile inf, ouf, ans;
 

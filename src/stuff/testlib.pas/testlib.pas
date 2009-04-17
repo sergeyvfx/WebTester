@@ -69,6 +69,8 @@ type
     mode   : TMode;
 
     function ReadNumber: Real;
+
+    procedure Quit (code: integer; desc: string);
   end;
 
   procedure Quit (code: integer; desc: string);
@@ -178,20 +180,12 @@ end;
 
 { Seek for end of file }
 function TTestlibFile.SeekEOF: boolean;
-var pos: LongInt;
-    sch: Char;
 begin
-  pos := FilePos (stream);
-  sch := ch;
-
   while ((ord (CurChar) <= 32) or (CurChar in blanks)) and
          (CurChar <> EOFChar) do
   begin
     NextChar;
   end;
-
-  Seek (stream, pos);
-  ch := sch;
 
   seekeof := CurChar = EOFChar;
 end;
@@ -204,20 +198,12 @@ end;
 
 { Seek for end on line }
 function TTestlibFile.SeekEoln: boolean;
-var pos: LongInt;
-    sch: Char;
 begin
-  pos := FilePos (stream);
-  sch := ch;
-
   while (CurChar in blanks) and
         not (CurChar in EOLNChars) and not eof do
   begin
     NextChar;
   end;
-
-  Seek (stream, pos);
-  ch := sch;
 
   seekeoln := CurChar in EOLNChars;
 end;
@@ -314,6 +300,24 @@ begin
   if CurChar=#10 then NextChar;
 
   ReadString:=s;
+end;
+
+procedure TTestlibFile.Quit (code: integer; desc: string);
+begin
+  if code = _PE then
+  begin
+    if mode = TFM_INPUT then
+    begin
+      code := _CR;
+      desc := desc + ' in input file';
+    end else if mode = TFM_ANSWER then
+    begin
+      code := _CR;
+      desc := desc + ' in answer file';
+    end;
+  end;
+
+  testlib.Quit (code, desc);
 end;
 
 {**** Some internal stuff ****}

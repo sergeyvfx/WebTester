@@ -8,4 +8,4 @@
 # This file can be distributed under the terms of the GNU GPL
 #
 
-kill -s 9 `pidof lrvm`> /dev/null 2>&1
+rm -f testlib/*.c testlib/*.h testlib++/*.c testlib++/*.h testlib++/*.cxx

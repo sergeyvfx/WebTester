@@ -18,15 +18,62 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+#ifndef WIN32
+#  include <unistd.h>
+#else
+#pragma warning (disable : 4996)
+
+#  include <windows.h>
+#  define usleep(a) Sleep((a) / 1000)
+#endif
+
 #include <stdarg.h>
 
-#define PRINT(__text,__args...) \
-    fprintf (stderr, __text, ##__args)
+#ifndef WIN32
+#  define PRINT(__text,__args...) \
+      fprintf (stderr, __text, ##__args)
+#else
+#  define PRINT(__text,...) \
+  fprintf (stderr, __text, __VA_ARGS__)
+#endif
+
+#undef Quit
+
+#ifndef WIN32
+#  define Quit(__errno, __desc, __args...) \
+  { \
+    if (__stream != out_stream && __errno == _PE) \
+      { \
+        testlib_quit (_CR, __desc " in input/answer file", ##__args); \
+      } \
+    else \
+      { \
+        testlib_quit (__errno, __desc, ##__args); \
+      } \
+  }
+#else
+#  define Quit(__errno, __desc, ...) \
+  { \
+    if (__stream != out_stream && __errno == _PE) \
+      { \
+        testlib_quit (_CR, __desc " in input/answer file", __VA_ARGS__); \
+      } \
+    else \
+      { \
+        testlib_quit (__errno, __desc, __VA_ARGS__); \
+      } \
+  }
+#endif
 
 static FILE *out_stream = 0;
 static int silent = 0;
+
+#ifndef WIN32
 static int colorized = 1;
+#else
+static int colorized = 0;
+#endif
 
 /**
  * Go back in strem
@@ -99,7 +146,7 @@ read_number (FILE *__stream, long long __max)
 #ifdef ENABLE_RANGE_CHECK
       if (sign * val<-__max - 1 || sign * val > __max)
         {
-          Quit (_PE, "Invalid integer value (Range Check error).");
+          Quit (_PE, "Invalid integer value (Range Check error)");
         }
 #endif
       ch = fgetc (__stream);
@@ -107,12 +154,12 @@ read_number (FILE *__stream, long long __max)
 
   if ((!is_space (ch) && ch != EOF) || !readed)
     {
-      Quit (_PE, "Invalid integer value.")
+      Quit (_PE, "Invalid integer value")
     }
 
   goback (__stream);
 
-  return val * sign;
+  return (long)val * sign;
 }
 
 /**
@@ -188,7 +235,7 @@ testlib_read_float (FILE *__stream)
           /* Decimal point is already caught */
           if (decimal > 0)
             {
-              Quit (_PE, "Invalid floating-point value.");
+              Quit (_PE, "Invalid floating-point value");
             }
           decimal = total;
           readed = 0;
@@ -205,7 +252,7 @@ testlib_read_float (FILE *__stream)
 
   if ((!is_space (ch) && ch != EOF) || !readed)
     {
-      Quit (_PE, "Invalid floating-point value.");
+      Quit (_PE, "Invalid floating-point value");
     }
 
   goback (__stream);
@@ -287,7 +334,7 @@ testlib_read_char (FILE *__stream)
   ch = fgetc (__stream);
   if (ch == EOF)
     {
-      Quit (_PE, "No chars to read.");
+      Quit (_PE, "No chars to read");
     }
 
   return ch;
@@ -314,7 +361,7 @@ testlib_cur_char (FILE *__stream)
 
   if (ch == EOF)
     {
-      Quit (_PE, "No chars to read.");
+      Quit (_PE, "No chars to read");
     }
 
   return ch;
@@ -329,14 +376,18 @@ testlib_cur_char (FILE *__stream)
 int
 testlib_eof (FILE *__stream)
 {
+  int ch, res;
+
   if (!__stream)
     {
       Quit (_CR, "Specified file not opened");
     }
 
-  int ch = fgetc (__stream);
-  int res = ch == EOF;
+  ch = fgetc (__stream);
+  res = ch == EOF;
+
   goback (__stream);
+
   return res;
 }
 
@@ -349,14 +400,18 @@ testlib_eof (FILE *__stream)
 int
 testlib_eoln (FILE *__stream)
 {
+  int ch, res;
+
   if (!__stream)
     {
       Quit (_CR, "Specified file not opened");
     }
 
   goback (__stream);
-  int ch = fgetc (__stream);
-  int res = ch == '\n' || ch == '\r' || ch == EOF;
+
+  ch = fgetc (__stream);
+  res = ch == '\n' || ch == '\r' || ch == EOF;
+
   return res;
 }
 
@@ -370,7 +425,6 @@ int
 testlib_seekeof (FILE *__stream)
 {
   int ch, res;
-  size_t pos;
 
   if (!__stream)
     {
@@ -382,8 +436,6 @@ testlib_seekeof (FILE *__stream)
       return 1;
     }
 
-  pos = fposget (__stream);
-
   ch = fgetc (__stream);
   while (is_space (ch) && ch != EOF)
     {
@@ -392,7 +444,10 @@ testlib_seekeof (FILE *__stream)
 
   res = ch == EOF;
 
-  fposset (__stream, pos);
+  if (!res)
+    {
+      goback (__stream);
+    }
 
   return res;
 }
@@ -407,7 +462,6 @@ int
 testlib_seekeoln (FILE *__stream)
 {
   int ch, res;
-  size_t pos;
 
   if (!__stream)
     {
@@ -419,8 +473,6 @@ testlib_seekeoln (FILE *__stream)
       return 1;
     }
 
-  pos = fposget (__stream);
-
   ch = fgetc (__stream);
   while (is_space (ch) && (ch != '\n' && ch != '\r' && ch != EOF))
     {
@@ -429,7 +481,10 @@ testlib_seekeoln (FILE *__stream)
 
   res = ch == EOF || ch == '\r' || ch == '\n';
 
-  fposset (__stream, pos);
+  if (ch != EOF)
+    {
+      goback (__stream);
+    }
 
   return res;
 }
@@ -486,7 +541,7 @@ testlib_skip (FILE *__stream, const char *__charset)
 
   memset (skip_chars, 0, sizeof (skip_chars));
 
-  for (i = 0, n = strlen (__charset); i < n; i++)
+  for (i = 0, n = (int)strlen (__charset); i < n; i++)
     {
       skip_chars[(int) __charset[i]] = 1;
     }
@@ -579,6 +634,7 @@ quit_message (int __errno, const char *__desc)
   if (!silent && __errno != _OK)
     {
       /* PRINT ("\33[10;50;11;1000]\7"); */
+
       usleep (200000);
     }
 }
@@ -603,7 +659,7 @@ testlib_quit (int __errno, const char *__desc, ...)
     {
       if (!out_stream)
         {
-          quit_message (_CR, "Output file not assigned.");
+          quit_message (_CR, "Output file not assigned");
           exit (_CR);
         }
 
@@ -613,8 +669,8 @@ testlib_quit (int __errno, const char *__desc, ...)
           exit (__errno);
         }
 
-      quit_message (_WA, "Extra information in tail of the output file.");
-      exit (_WA);
+      quit_message (_PE, "Extra information in tail of the output file");
+      exit (_PE);
     }
 
   quit_message (__errno, desc);
@@ -640,5 +696,9 @@ testlib_silent (int __val)
 void
 testlib_colorized (int __val)
 {
+#ifndef WIN32
   colorized = __val;
+#else
+  colorized = 0;
+#endif
 }

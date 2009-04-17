@@ -24,8 +24,12 @@
  * Some useful defenitions
  */
 
-#define Quit(__errno, __text,__args...) \
-  testlib_quit (__errno, __text, ##__args);
+#ifndef WIN32
+#  define Quit(__errno, __text,__args...) \
+    testlib_quit (__errno, __text, ##__args);
+#else
+#  define Quit testlib_quit
+#endif
 
 #ifdef __cplusplus
 extern "C"
