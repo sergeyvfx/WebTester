@@ -52,7 +52,7 @@ elif test -d .git -o -f .git &&
     VN="$VN-dirty" ;;
   esac
 then
-  VN=$(echo "$VN" | sed -e 's/-/./g');
+  VN=$(echo "$VN" | sed -e 's/-/./g' | sed -e 's/.\(m[0-9]\)/-\1/');
 else
   VN="$DEF_VER"
 fi
