@@ -60,7 +60,7 @@ load_symbols (void)
   LOADSYM (get_task_list, get_task_list_proc, "webiface_get_task_list");
   LOADSYM (restore_task, restore_task_proc, "webiface_restore_task");
   LOADSYM (get_task, get_task_proc, "webiface_get_task");
-  LOADSYM (put_solution, put_solution_proc, "webiface_put_soution");
+  LOADSYM (put_solution, put_solution_proc, "webiface_put_solution");
   LOADSYM (reset_status, reset_status_proc, "webiface_reset_status");
   return 0;
 }

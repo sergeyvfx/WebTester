@@ -480,7 +480,7 @@ webiface_get_task (wt_task_t *__self)
  * @return sero on success, non-zero otherwise
  */
 int
-webiface_put_soution (wt_task_t *__self)
+webiface_put_solution (wt_task_t *__self)
 {
   char add[MAX_URL_LEN], *key, *value, dummy[MAX_URL_LEN];
   http_message_t *msg;
