@@ -27,6 +27,14 @@
 
 BEGIN_HEADER
 
+/* Attribute for unused parameter to avoid */
+/* compilator's waringns */
+#ifdef HAVE__ATTRIBUTE__
+#  define ATTR_UNUSED __attribute__((unused))
+#else
+#  define ATTR_UNUSED
+#endif
+
 #ifndef NO_CONFIG
 #  include <config.h>
 #endif

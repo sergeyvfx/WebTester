@@ -106,7 +106,7 @@ scheduler_done (void)
  *
  * @param __callback - callback of task
  * @oaram __data - data associated with task
- * @param __interval - intyerval of calling
+ * @param __interval - intterval of calling
  * @return zero on success, non-zero otherwise
  */
 int

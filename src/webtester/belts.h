@@ -25,6 +25,9 @@ BEGIN_HEADER
 
 #define BELTS_AUTOSTART 0
 
+/* Interval of accumulator overview */
+#define ACC_OVERVIEW_INT (4 * USEC_COUNT)
+
 /* Initialize belts' stuff */
 int
 wt_belts_init (void);

@@ -21,6 +21,9 @@
 #include <libwebtester/conf.h>
 #include <libwebtester/log.h>
 #include <libwebtester/ipc.h>
+#include <libwebtester/scheduler.h>
+
+#include <glib.h>
 
 /****
  * Macroses
@@ -29,13 +32,93 @@
 #define StateChanged (stateChanged = TRUE)
 
 static dynastruc_t *belts = NULL;
+static dynastruc_t *accumulator = NULL;
 static long belts_size = BELTS_SIZE;
 static BOOL global_state_changed = FALSE;
 static BOOL active = FALSE;
+static __u64_t acc_overview_int = ACC_OVERVIEW_INT;
+static GMutex *acc_mutex = NULL;
 
 /* Handler for IPC connabd `belts` */
 static int
 ipc_belts (int __argc, char **__argv);
+
+/**
+ * Accumulator overview procidure
+ */
+static int
+accumulator_overview_proc (void *__unused ATTR_UNUSED)
+{
+  dyna_item_t *cur, *dummy;
+  wt_task_t *task;
+
+  g_mutex_lock (acc_mutex);
+
+  if (!accumulator)
+    {
+      g_mutex_unlock (acc_mutex);
+      return 0;
+    }
+
+  core_print (MSG_INFO, "        Try to put solutions from accumulator...\n");
+
+  cur = dyna_head (accumulator);
+  while (cur)
+    {
+      dummy = cur;
+      task = (wt_task_t*)dyna_data (cur);
+      cur = dyna_next  (cur);
+
+      if (!wt_put_solution (task))
+        {
+          core_print (MSG_INFO, "          Solution %ld@%d "
+                                "successfully send.\n",
+                      task->sid, task->lid);
+
+          dyna_delete (accumulator, dummy, wt_task_deleter);
+        }
+      else
+        {
+          core_print (MSG_INFO, "          Solution %ld@%d "
+                                "was unable to send.\n",
+                      task->sid, task->lid);
+        }
+    }
+
+  if (dyna_length (accumulator) == 0)
+    {
+      dyna_destroy (accumulator, NULL);
+      accumulator = NULL;
+    }
+
+  g_mutex_unlock (acc_mutex);
+
+  return 0;
+}
+
+/**
+ * Accumulate task, which was tested,
+ * but which was unable be send to WebIface
+ *
+ * @param __task - task to be accumulated
+ */
+static void
+accumulate_solution (wt_task_t *__task)
+{
+  g_mutex_lock (acc_mutex);
+
+  if (!accumulator)
+    {
+      /* Create deque for accumulator */
+      accumulator = dyna_create ();
+
+      scheduler_add (accumulator_overview_proc, 0, acc_overview_int);
+    }
+
+  dyna_add_to_back (accumulator, (void*)__task, 0);
+
+  g_mutex_unlock (acc_mutex);
+}
 
 /**
  * Read data from config file
@@ -43,7 +126,16 @@ ipc_belts (int __argc, char **__argv);
 static void
 read_config (void)
 {
+  double dummy = 0;
+
   CONFIG_INT_KEY (belts_size, "Server/MainLoop/BeltsSize");
+
+  CONFIG_FLOAT_KEY (dummy, "Server/MainLoop/AccumulatorOverviewInterval");
+
+  if (dummy > 0)
+    {
+      acc_overview_int = dummy * USEC_COUNT;
+    }
 
   /* Some validations */
   RESET_LEZ (belts_size, BELTS_SIZE);
@@ -82,7 +174,7 @@ send_for_testing (wt_task_t *__self, char *__error)
  *
  * @param __self - task to return
  */
-static void
+static int
 return_tested (wt_task_t *__self)
 {
   core_print (MSG_INFO, "        Library %s finished testing task %ld@%d",
@@ -97,7 +189,22 @@ return_tested (wt_task_t *__self)
   core_print (MSG_INFO, "\n");
 
   /* Put tested task to WebInterface */
-  wt_put_solution (__self);
+  if (wt_put_solution (__self))
+    {
+      /* Error sending tested task, so we need accumulate */
+      /* this task in temporary storage to send it later */
+
+      core_print (MSG_WARNING, "        Error in wt_put_solution(). "
+                               "Put task %ld@%d to accumulator to "
+                               "try send it later\n",
+                  __self->sid, __self->lid);
+
+     accumulate_solution (__self);
+
+      return -1;
+    }
+
+  return 0;
 }
 
 /**
@@ -145,10 +252,18 @@ belts_overview_status (void)
       if (TASK_STATUS (*task) == TS_FINISHED)
         {
           /* Return tested task to client iface */
-          return_tested (task);
+          if (!return_tested (task))
+            {
+              /* Free allocated memory for tested task and remove from belts */
+              dyna_delete (belts, dummy, wt_task_deleter);
+            }
+          else
+            {
+              /* Memory used by task will be freed as soon as task will be */
+              /* be send to WebIface from accumulator */
+              dyna_delete (belts, dummy, NULL);
+            }
 
-          /* Free allocated memory for tested task and remove from belts */
-          dyna_delete (belts, dummy, wt_task_deleter);
           StateChanged;
         }
       else
@@ -295,6 +410,8 @@ wt_belts_init (void)
   wt_stat_set_int ("Belts.Size", belts_size);
   wt_stat_set_int ("Belts.Active", FALSE);
 
+  acc_mutex = g_mutex_new ();
+
   return 0;
 }
 
@@ -313,6 +430,16 @@ wt_belts_free (void)
 void
 wt_belts_done (void)
 {
+  scheduler_remove (accumulator_overview_proc);
+
+  g_mutex_lock (acc_mutex);
+  if (accumulator)
+    {
+      dyna_destroy (accumulator, wt_task_deleter);
+    }
+  g_mutex_unlock (acc_mutex);
+  g_mutex_free (acc_mutex);
+
   /*
    * Big troubles if belts is still busy and HTTP stuff
    * has been uninitialized
