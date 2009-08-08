@@ -1,5 +1,6 @@
-AC_INIT(webtester, [@@WT_VERSION@@])
-#AC_CONFIG_SRCDIR(src/libwebtester/includes.h)
+m4_define([VERSION_NUMBER], m4_esyscmd([cat WT-VERSION-FILE | tr \\n "\\0" | sed -r 's/WT_VERSION\=//']))
+
+AC_INIT(webtester, [VERSION_NUMBER])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)

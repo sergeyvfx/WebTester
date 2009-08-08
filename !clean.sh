@@ -10,7 +10,7 @@ which dh_clean > /dev/null && dh_clean
 dirs_to_delete="./debian/webtester autom4te.cache \
   ./debian/webtester-core ./debian/webtester-gui"
 
-files_to_delete="./configure ./configure.in ./acinclude.m4 ./configure \
+files_to_delete="./configure ./acinclude.m4 ./configure \
   ./intltool-extract ./intltool-merge ./intltool-update ./Makefile \
   WT-VERSION-FILE build-stamp configure-stamp"
 
