@@ -52,6 +52,10 @@ extern "C"
   double
   testlib_read_float (FILE *__stream);
 
+  /* Read real value from stream */
+  double
+  testlib_read_real (FILE *__stream);
+
   /* Read char from stream and go to next */
   int
   testlib_read_char (FILE *__stream);

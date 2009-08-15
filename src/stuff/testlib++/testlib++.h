@@ -48,6 +48,7 @@ public:
   int    ReadInteger (void); /* Read integer from file */
   long   ReadLongint (void); /* Read longint from file */
   double ReadFloat (void);   /* Read double from file */
+  double ReadReal (void);    /* Read real from file */
   string ReadString (void);  /* Read string from file */
   int    ReadChar (void);    /* Read char from file and move to next */
   int    CurChar (void);     /* Just return current char */

@@ -272,6 +272,18 @@ testlib_read_float (FILE *__stream)
 }
 
 /**
+ * Read real value from stream
+ *
+ * @param __stream - stream to read from
+ * @return read real value
+ */
+double
+testlib_read_real (FILE *__stream)
+{
+  return testlib_read_float (__stream);
+}
+
+/**
  * Read string from stream
  *
  * @param __stream - stream to read from

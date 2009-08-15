@@ -93,6 +93,17 @@ CTestlibFile::ReadFloat (void)
 }
 
 /**
+ * Read double from file
+ *
+ * @return read real value
+ */
+double
+CTestlibFile::ReadReal (void)
+{
+  return testlib_read_real (this->GetStream ());
+}
+
+/**
  * Read string from file
  *
  * @return read string

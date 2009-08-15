@@ -46,6 +46,7 @@ type
     function ReadInteger: integer;    { Read integer value from file }
     function ReadLongint: longint;    { Read longint from file }
     function ReadFloat: real;         { Read double from file }
+    function ReadReal:  real;         { Read real from file }
 
     function NextChar : char;     { Read char from file and move to next }
     function CurChar  : char;     { Just return current char }
@@ -143,6 +144,12 @@ end;
 function TTestlibFile.ReadFloat: real;
 begin
   ReadFloat := ReadNumber;
+end;
+
+ { Read real from file }
+function TTestlibFile.ReadReal: real;
+begin
+  ReadReal := ReadNumber;
 end;
 
 { Read char from file and move to next }
