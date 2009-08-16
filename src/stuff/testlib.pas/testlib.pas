@@ -28,7 +28,7 @@ const
   NumCharsBefore = [#10, #13, ' '];
   NumCharsAfter  = [#10, #13, ' '];
 
-  MaxStrLen = 255;
+  MaxStrLen = 65535;
 
 type
 
@@ -64,6 +64,8 @@ type
 
     function ReadString: string;
 
+    procedure ReSet;
+
     private
     ch     : char;
     stream : File of Char;
@@ -95,7 +97,7 @@ begin
   assign (stream, fn);
 
   {$i-}
-  reset (stream);
+  System.reset (stream);
   {$i+}
 
   m:=mode;
@@ -118,6 +120,16 @@ begin
   {$i-}
   close (stream);
   {$i+}
+end;
+
+{ Reset fiel position }
+procedure TTestlibFile.ReSet;
+begin
+  System.reset (stream);
+
+  if (System.Eof (stream))
+    then ch := EOFChar
+    else read (stream, ch);
 end;
 
 { Read integer value from file }
