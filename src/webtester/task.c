@@ -206,6 +206,8 @@ wt_spawn_new_task (long __solution_id, int __library_id)
 
   ptr->buffers.lock = mutex_create ();
 
+  ptr->chain_testing.last = 0;
+
   TASK_FREE_BUFFER (*ptr);
   TASK_FREE_RESULT_MESSAGE (*ptr);
   TASK_FREE_LOG (*ptr);
@@ -282,4 +284,47 @@ wt_task_deleter_with_restore (void *__self)
 
   wt_restore_task (__self);
   wt_task_free (__self);
+}
+
+/**
+ * Add library to chain
+ *
+ * @param __self - task for chain testing
+ * @param __lid - ID of library to test task on
+ * @return zero on success, non-zero otherwise
+ */
+int
+wt_task_chaintest (wt_task_t *__self, int __lid)
+{
+  int i;
+  BOOL found = FALSE;
+
+  if (!__self)
+    {
+      return -1;
+    }
+
+  /* Check if task has been already tested on specified library */
+  for (i = 0; i < __self->chain_testing.last; ++i)
+    {
+      if (__self->chain_testing.lid[i] == __lid)
+        {
+          found = TRUE;
+          break;
+        }
+    }
+
+  if (found || __self->lid == __lid)
+    {
+      LOG ("task", "Try to send task %ld for chain testing on module %d, "
+                   "which has been already added to chain.\n",
+           __self->sid, __lid);
+      return -1;
+    }
+
+  __self->chain_testing.lid[__self->chain_testing.last++] = __lid;
+  DEBUG_LOG ("task", "Task %d send to be chain tested on module %d\n",
+             __self->sid, __lid);
+
+  return 0;
 }

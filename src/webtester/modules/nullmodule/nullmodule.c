@@ -49,6 +49,7 @@ BOOL
 StartForTesting (wt_task_t *__task, char *__error)
 {
   TASK_SET_STATUS (*__task, TS_FINISHED);
+
   return TRUE;
 }
 

@@ -25,6 +25,7 @@ BEGIN_HEADER
  */
 
 #define MAXTASKBUF 4096
+#define MAXCHAIN   32
 
 /****
  * Task's ststus
@@ -155,6 +156,25 @@ BEGIN_HEADER
 #define TASK_FREE_FLAG(__self, __flag)   (__self).flags&=~__flag
 
 /****
+ * Chain testing
+ */
+
+#define TASK_CHAINTEST(__self, __name) \
+  wt_task_chaintest (__self, wt_module_id (__name))
+
+#define TASK_CHAINEMPTY(__self) \
+  (__self->chain_testing.cur >= (__self)->chain_testing.last)
+
+#define TASK_CHAINLID(__self) \
+  ((__self)->chain_testing.cur_lid)
+
+#define TASK_CHAINSTARTED(__self) \
+  ((__self)->chain_testing.started)
+
+#define TASK_CURLID(__self) \
+  (TASK_CHAINSTARTED (__self) ? TASK_CHAINLID (__self) : (__self)->lid)
+
+/****
  * Type defenitions
  */
 
@@ -180,6 +200,16 @@ typedef struct
 
   assarr_t *input_params;  /* parameters, received by `get_task` */
   assarr_t *output_params; /* parameters to sent to webiface */
+
+  /* Chain testing */
+  struct
+  {
+    long length; /* Length of testing chain */
+    int lid[MAXCHAIN]; /* Library IDs */
+    int cur, last;     /* Pointer to current element in chain */
+    int cur_lid;
+    BOOL started;      /* Is chain testing started? */
+  } chain_testing;
 } wt_task_t;
 
 /****
@@ -245,6 +275,14 @@ wt_task_deleter (void *__self);
 /* Dyna task deleter with task restoring */
 void
 wt_task_deleter_with_restore (void *__self);
+
+/****
+ * Chain testing stuff
+ */
+
+/* Add library to chain */
+int
+wt_task_chaintest (wt_task_t *__self, int __lid);
 
 END_HEADER
 

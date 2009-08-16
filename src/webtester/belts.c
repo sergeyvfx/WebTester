@@ -151,6 +151,9 @@ read_config (void)
 static int
 send_for_testing (wt_task_t *__self, char *__error)
 {
+  /* Free force keeping in belts flag */
+  TASK_FREE_FLAG (*__self, TF_KEEPINQUEUE);
+
   strcpy (__error, "");
 
   DEBUG_LOG ("belts", "Seding task %ld@%d for testing...\n",
@@ -170,15 +173,36 @@ send_for_testing (wt_task_t *__self, char *__error)
 }
 
 /**
- * Return tested task to WebInterface
+ * Send task to chain module
  *
- * @param __self - task to return
+ * @param __self - task to be send
+ * @param __error - error's description
+ * @return zero on success, non-zero otherwise
  */
 static int
-return_tested (wt_task_t *__self)
+send_to_chain (wt_task_t *__self, char *__error)
+{
+  __self->chain_testing.cur_lid =
+    __self->chain_testing.lid[__self->chain_testing.cur];
+
+  __self->chain_testing.started = TRUE;
+  ++__self->chain_testing.cur;
+
+  TASK_FREE_RESULT_MESSAGE (*__self);
+
+  return wt_module_send_for_testing (__self, __error);
+}
+
+/**
+ * Function to print message about module finished testing task
+ *
+ * @param __self - tested task
+ */
+static void
+module_testing_finished (wt_task_t *__self)
 {
   core_print (MSG_INFO, "        Library %s finished testing task %ld@%d",
-              TASK_LIBNAME (*__self), __self->sid, __self->lid);
+              wt_module_name (TASK_CURLID (__self)), __self->sid, __self->lid);
 
   /* Resultation message from testing library */
   if (strcmp (TASK_RESULT_MESSAGE (*__self), ""))
@@ -187,7 +211,16 @@ return_tested (wt_task_t *__self)
     }
 
   core_print (MSG_INFO, "\n");
+}
 
+/**
+ * Return tested task to WebInterface
+ *
+ * @param __self - task to return
+ */
+static int
+return_tested (wt_task_t *__self)
+{
   /* Put tested task to WebInterface */
   if (wt_put_solution (__self))
     {
@@ -251,17 +284,67 @@ belts_overview_status (void)
       /* Testing of task is finished */
       if (TASK_STATUS (*task) == TS_FINISHED)
         {
-          /* Return tested task to client iface */
-          if (!return_tested (task))
+          BOOL need_return = TRUE, work = TRUE;
+
+          module_testing_finished (task);
+
+          /* Try to send task to modules in chain */
+          while (work && !TASK_CHAINEMPTY (task))
             {
-              /* Free allocated memory for tested task and remove from belts */
-              dyna_delete (belts, dummy, wt_task_deleter);
+              if (!send_to_chain (task, pchar))
+                {
+                  need_return = FALSE;
+                  core_print (MSG_INFO, "        Chain-testing task %ld@%d"
+                                        " on library %s\n",
+                              task->sid, task->lid,
+                              wt_module_name (TASK_CHAINLID (task)));
+                  break;
+                }
+              else
+                {
+                  char msg[4096];
+                  int type = MSG_WARNING;
+
+                  snprintf (msg, BUF_SIZE (msg),
+                            "        "
+                            "Unable to send task %ld@%d for chain testing "
+                            "to module %s: %s",
+                            task->sid, task->lid,
+                            wt_module_name (TASK_CHAINLID (task)), pchar);
+
+                  if (TASK_TEST_FLAG (*task, TF_KEEPINQUEUE))
+                    {
+                      need_return = FALSE;
+                      strcat (msg,
+                              ". Not critical - continue waiting in chain.");
+                      type = MSG_INFO;
+                      --task->chain_testing.cur;
+                      work = FALSE;
+                    }
+                  else
+                    {
+                      strcat (msg, ". Critical - skipping module in chain.");
+                    }
+
+                  core_print (type, "%s\n", msg);
+                }
             }
-          else
+
+          if (need_return)
             {
-              /* Memory used by task will be freed as soon as task will be */
-              /* be send to WebIface from accumulator */
-              dyna_delete (belts, dummy, NULL);
+              /* Return tested task to client iface */
+              if (!return_tested (task))
+                {
+                  /* Free allocated memory for tested task */
+                  /* and remove from belts */
+                  dyna_delete (belts, dummy, wt_task_deleter);
+                }
+              else
+                {
+                  /* Memory used by task will be freed as soon */
+                  /* as task will be be send to WebIface from accumulator */
+                  dyna_delete (belts, dummy, NULL);
+                }
             }
 
           StateChanged;
@@ -298,6 +381,7 @@ belts_fill (dynastruc_t *__queue)
   wt_task_t *task;
   dyna_item_t *cur;
   BOOL stateChanged = FALSE;
+  char pchar[4096];
 
   DEBUG_LOG ("belts", "Filling belts...\n");
 
@@ -334,9 +418,6 @@ belts_fill (dynastruc_t *__queue)
           continue;
         }
 
-      /* Free force keeping in belts flag */
-      TASK_FREE_FLAG (*task, TF_KEEPINQUEUE);
-
       if (!send_for_testing (task, error))
         {
           dyna_append (belts, task, 0);
@@ -346,7 +427,6 @@ belts_fill (dynastruc_t *__queue)
         }
       else
         {
-          char pchar[4096];
           int type = MSG_WARNING;
 
           if (!strcmp (error, ""))

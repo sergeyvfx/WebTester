@@ -74,6 +74,20 @@ module_id_comparator (void *__data, void *__id)
 }
 
 /**
+ * Compare modules by name
+ *
+ * @param __data - library from dyna
+ * @param __name - name of needed library
+ * @return non-zero if library is wanted, zero otherwise
+ */
+static int
+module_name_comparator (void *__data, void *__name)
+{
+  wt_module_t *module = __data;
+  return !strcmp (module->name, (char *)__name);
+}
+
+/**
  * Load all wanted symbols from library
  *
  * @param __data - descriptor of module
@@ -268,7 +282,7 @@ wt_module_send_for_testing (wt_task_t *__self, char *__error)
 
   dyna_search_reset (modules);
 
-  item = dyna_search (modules, (void*) ITOL (__self->lid), 0,
+  item = dyna_search (modules, (void*) ITOL (TASK_CURLID (__self)), 0,
                       module_id_comparator);
 
   if (!item)
@@ -339,4 +353,27 @@ wt_load_plugins (void)
       item = hive_next_sibling (item);
     }
   return 0;
+}
+
+/**
+ * Returns ID of testing module
+ *
+ * @param __name - name of module to get ID of
+ * @return ID of needed module
+ */
+int
+wt_module_id (const char *__name)
+{
+  wt_module_t *lib;
+  dyna_item_t *item;
+  dyna_search_reset (modules);
+  item = dyna_search (modules, (void*) __name, 0, module_name_comparator);
+  lib = dyna_data (item);
+
+  if (!item || !lib || !lib->name)
+    {
+      return -1;
+    }
+
+  return lib->id;
 }

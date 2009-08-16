@@ -70,6 +70,10 @@ wt_module_send_for_testing (wt_task_t *__task, char *__error);
 char*
 wt_module_name (int __lid);
 
+/* Returns ID of testing module */
+int
+wt_module_id (const char *__name);
+
 /****
  * Plugins' library stuff
  */
