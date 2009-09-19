@@ -350,8 +350,6 @@ send_putsolution_message (long __sid, int __lid, char *__add)
   char url[MAX_URL_LEN];
 
   get_putsolution_url (url);
-  strcat (url, "&");
-  strcat (url, __add);
 
   return send_task_specified_message (url, "POST", __add, __sid, __lid);
 }
