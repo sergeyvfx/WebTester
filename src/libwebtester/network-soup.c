@@ -245,39 +245,7 @@ http_message_get_response_length (const http_message_t *__self)
 void
 http_get_error (const http_message_t *__msg, char *__out)
 {
-  switch (__msg->status_code)
-    {
-    case 200: strcpy (__out, "200 OK");
-      break;
-
-    case 300: strcpy (__out, "300 Multiple Choices");
-      break;
-
-    case 301: strcpy (__out, "201 Moved Permanently");
-      break;
-
-    case 302: strcpy (__out, "302 Found");
-      break;
-
-    case 400: strcpy (__out, "400 Bad Request");
-      break;
-
-    case 403: strcpy (__out, "403 Forbidden");
-      break;
-
-    case 404: strcpy (__out, "404 Not Found");
-      break;
-
-    case 500: strcpy (__out, "500 Internal Server Error");
-      break;
-
-    case 501: strcpy (__out, "501 Not Implemented");
-      break;
-
-    default:
-      sprintf (__out, "Sorry, but desription is unguessable "
-                      "(status_code: %d)", __msg->status_code);
-    }
+  sprintf (__out, "%d %s", __msg->status_code, __msg->reason_phrase);
 }
 
 /**

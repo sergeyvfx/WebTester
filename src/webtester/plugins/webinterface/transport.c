@@ -31,7 +31,7 @@
       char buf[1024]; \
       http_get_error (msg, buf); \
       core_print (MSG_ERROR, "    Error sending HTTP request for `%s`: %s\n", \
-                  __proc,buf); \
+                  __proc, buf); \
       http_message_free (msg); \
       return -1; \
     }
@@ -215,18 +215,27 @@ get_resetstatus_url (char *__out)
  * Send simple message with URL
  *
  * @param __url - url to send to
+ * @param __method - method of message sending (GET or POST)
+ * @param __post_body - body to be send as POST content
  * @return sent message
  */
 static http_message_t*
-send_message (const char *__url)
+send_message (const char *__url, const char *__method, const char *__post_body)
 {
   char dummy[1024];
 
-  http_message_t *msg = http_message_prepare ("GET", __url);
+  http_message_t *msg = http_message_prepare (__method, __url);
 
   if (!msg)
     {
       return 0;
+    }
+
+  if (!strcmp (__method, "POST") && __post_body)
+    {
+      soup_message_set_request (msg, "application/x-www-form-urlencoded",
+                                SOUP_MEMORY_COPY,
+                                __post_body, strlen (__post_body));
     }
 
   soup_message_set_flags (msg, SOUP_MESSAGE_NO_REDIRECT);
@@ -253,16 +262,21 @@ send_message (const char *__url)
  * Send message with specified solution and library ID
  *
  * @param __prefix - url prefix
+ * @param __method - method of message sending (GET or POST)
+ * @param __post_body - body to be send as POST content
  * @param __sid - solution ID
  * @param __lid - library ID
  * @return sent message
  */
 static http_message_t*
-send_task_specified_message (const char *__prefix, long __sid, int __lid)
+send_task_specified_message (const char *__prefix, const char *__method,
+                             const char *__post_body, long __sid, int __lid)
 {
   char url[MAX_URL_LEN];
+
   snprintf (url, BUF_SIZE (url), "%s&id=%ld&lid=%d", __prefix, __sid, __lid);
-  return send_message (url);
+
+  return send_message (url, __method, __post_body);
 }
 
 /**
@@ -277,7 +291,7 @@ send_gettasklist_message (void)
 
   /* Get url */
   get_tasklist_url (url);
-  return send_message (url);
+  return send_message (url, "GET", NULL);
 }
 
 /**
@@ -292,7 +306,7 @@ send_deltask_message (long __sid, int __lid)
 {
   char url[MAX_URL_LEN];
   get_deltask_url (url);
-  return send_task_specified_message (url, __sid, __lid);
+  return send_task_specified_message (url, "GET", NULL, __sid, __lid);
 }
 
 /**
@@ -307,7 +321,7 @@ send_restoretask_message (long __sid, int __lid)
 {
   char url[MAX_URL_LEN];
   get_restoretask_url (url);
-  return send_task_specified_message (url, __sid, __lid);
+  return send_task_specified_message (url, "GET", NULL, __sid, __lid);
 }
 
 /**
@@ -322,7 +336,7 @@ send_gettask_message (long __sid, int __lid)
 {
   char url[MAX_URL_LEN];
   get_gettask_url (url);
-  return send_task_specified_message (url, __sid, __lid);
+  return send_task_specified_message (url, "GET", NULL, __sid, __lid);
 }
 
 /**
@@ -336,10 +350,12 @@ static http_message_t*
 send_putsolution_message (long __sid, int __lid, char *__add)
 {
   char url[MAX_URL_LEN];
+
   get_putsolution_url (url);
   strcat (url, "&");
   strcat (url, __add);
-  return send_task_specified_message (url, __sid, __lid);
+
+  return send_task_specified_message (url, "POST", __add, __sid, __lid);
 }
 
 /**
@@ -354,7 +370,7 @@ send_resetstatus_message (void)
 {
   char url[MAX_URL_LEN];
   get_resetstatus_url (url);
-  return send_message (url);
+  return send_message (url, "GET", NULL);
 }
 
 /****
@@ -684,7 +700,7 @@ webiface_prepare_url (const char *__self, char *__out)
 http_message_t*
 webiface_send_message (const char *__url)
 {
-  return send_message (__url);
+  return send_message (__url, "GET", NULL);
 }
 
 /**
