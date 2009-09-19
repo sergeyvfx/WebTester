@@ -233,9 +233,7 @@ send_message (const char *__url, const char *__method, const char *__post_body)
 
   if (!strcmp (__method, "POST") && __post_body)
     {
-      soup_message_set_request (msg, "application/x-www-form-urlencoded",
-                                SOUP_MEMORY_COPY,
-                                __post_body, strlen (__post_body));
+      http_message_set_request (msg, __post_body);
     }
 
   soup_message_set_flags (msg, SOUP_MESSAGE_NO_REDIRECT);

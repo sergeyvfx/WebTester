@@ -1,11 +1,16 @@
-2009-04-17  Sergey I. Sharybin <g.ulairi@gmail.com>
+2009-09-19  Sergey I. Sharybin <g.ulairi@gmail.com>
+	Fixed bug with putting solutions with big OUTPUT_PARAMS array.
 
-	Implementation of checker's message storing.
+	* src/libwebtester/network-soup.c: Refactor of function http_get_error().
 
-	* etc/webtester.conf: Added new parameter to RetProps.
+	* src/webtester/plugins/webinterface/transport.c: Use POST method for
+	  put_solution IPC command.
 
-	* src/webtester/modules/informatics/tester.c: Implementation of checker's
-	  message storing.
+	* .gitignore: Ignore Eclipse project's files.
+
+	* src/libwebtester/network-soup.c,
+	  src/libwebtester/network-soup.h: Added function for setting
+	  message's request.
 
 2009-04-17  Sergey I. Sharybin <g.ulairi@gmail.com>
 

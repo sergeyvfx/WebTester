@@ -197,6 +197,34 @@ http_message_prepare (const char *__method, const char *__url)
 }
 
 /**
+ * Simple function to set message's body request
+ *
+ * @param __self - message to send
+ * @param __body - request's body
+ * @return zero on success, non-zero otherwise
+ */
+int
+http_message_set_request (http_message_t *__self, const char *__body)
+{
+  if (!__self || !__body)
+    {
+      return -1;
+    }
+
+#ifdef LIBSOUP_22
+  soup_message_set_request (__self, "application/x-www-form-urlencoded",
+                            SOUP_BUFFER_USER_OWNED,
+                            __body, strlen (__body));
+#else
+  soup_message_set_request (__self, "application/x-www-form-urlencoded",
+                            SOUP_MEMORY_COPY,
+                            __body, strlen (__body));
+#endif
+
+  return 0;
+}
+
+/**
  * Free HTTP message
  *
  * @param __self - HTTP message to free

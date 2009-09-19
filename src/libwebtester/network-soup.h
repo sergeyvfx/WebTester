@@ -68,6 +68,10 @@ http_session_send_message (http_session_t *__session,
 http_message_t*
 http_message_prepare (const char *__method, const char *__url);
 
+/* Simple function to set message's body request */
+int
+http_message_set_request (http_message_t *__self, const char *__body);
+
 /* Free HTTP message */
 void
 http_message_free (http_message_t *__self);
