@@ -1,4 +1,9 @@
 2009-09-19  Sergey I. Sharybin <g.ulairi@gmail.com>
+	* src/stuff/scripts/install/install.sh,
+	  src/stuff/scripts/install/uninstall.sh: Added /etc/sudoers
+	  file processor.
+
+2009-09-19  Sergey I. Sharybin <g.ulairi@gmail.com>
 	Fixed bug with putting solutions with big OUTPUT_PARAMS array.
 
 	* src/libwebtester/network-soup.c: Refactor of function http_get_error().

@@ -339,6 +339,9 @@ ${CPFILE} /src/librun/*.h /usr/src/librun  webtester webtester 0775
 ${CPFILE} /src/stuff/scripts/install/templates/Makefile.librun \
   /usr/src/librun/Makefile  webtester webtester 0664
 
+${ECHO} "Configuring sudoers file..."
+$PREFIX/stuff/install_sudoers.sh
+
 #
 ${ECHO} "Copying other stuff..."
 ${CPFILE} /AUTHORS    /AUTHORS   webtester webtester 0664

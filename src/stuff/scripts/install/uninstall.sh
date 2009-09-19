@@ -59,5 +59,7 @@ $PREFIX/stuff/delete_user.sh webtester-nobody
 $PREFIX/stuff/delete_group.sh webtester
 $PREFIX/stuff/delete_group.sh webtester-nobody
 
+$PREFIX/stuff/uninstall_sudoers.sh
+
 unlink /etc/init.d/webtester 
 update-rc.d -f webtester remove
