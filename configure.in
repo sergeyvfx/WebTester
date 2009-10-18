@@ -262,8 +262,13 @@ KERNEL_SOURCE="/lib/modules/${KERNEL_RELEASE}/source"
 if [[ -d ${KERNEL_SOURCE} ]]; then
   echo "ok."
 else
-  echo "failed."
-  exit -1;
+  KERNEL_SOURCE="/lib/modules/${KERNEL_RELEASE}/build"
+  if [[ -d ${KERNEL_SOURCE} ]]; then
+    echo "ok."
+  else
+    echo "failed."
+    exit -1;
+  fi
 fi
 
 dnl =============================

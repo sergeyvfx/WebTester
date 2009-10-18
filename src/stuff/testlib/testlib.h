@@ -15,10 +15,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define _OK 0x0000
-#define _WA 0x0001
-#define _PE 0x0002
-#define _CR 0x0004
+#define _OK   0x0000
+#define _WA   0x0001
+#define _PE   0x0002
+#define _CR   0x0004
+#define _FAIL 0x0008
 
 /****
  * Some useful defenitions

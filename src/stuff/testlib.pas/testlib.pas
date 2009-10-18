@@ -14,10 +14,16 @@ unit testlib;
 interface
 
 const
-  _OK = $0000;
-  _WA = $0001;
-  _PE = $0002;
-  _CR = $0004;
+  _OK   = $0000;
+  _WA   = $0001;
+  _PE   = $0002;
+  _CR   = $0004; { System error }
+  _FAIL = $0008; { Test's fail. User's solution is better than judges' }
+
+const
+  READ_ONLY = 0;
+  WRITE_ONLY = 1;
+  READ_WRITE = 2;
 
 const
   EOFChar = #26;
@@ -82,6 +88,7 @@ var
   inf, ouf, ans: TTestlibFile;
   initialized, silent, colorized: boolean;
   i: integer;
+  oldfilemode: byte;
 
 implementation
 
@@ -96,11 +103,15 @@ constructor TTestlibFile.Create (fn: string; m: TMode);
 begin
   assign (stream, fn);
 
+  oldfilemode := filemode;
+  filemode := READ_ONLY;
+
   {$i-}
   System.reset (stream);
   {$i+}
 
-  m:=mode;
+  filemode := oldfilemode;
+  m := mode;
 
   if (ioResult <> 0) then
   begin
