@@ -2,5 +2,5 @@
 
 $PREFIX/stuff/uninstall_sudoers.sh
 
-echo "webtester ALL=NOPASSWD:${PREFIX}/webtester/sbin/lrvm_killall.sh" >> \
+echo "webtester ALL=NOPASSWD:${DIST_DIR}/webtester/sbin/lrvm_killall.sh" >> \
   /etc/sudoers

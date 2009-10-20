@@ -341,7 +341,8 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Package name for gettext]
 # Kernel release
 AC_DEFINE_UNQUOTED(KERNEL_RELEASE, "${KERNEL_RELEASE}", [definition of kernel release])
 AC_DEFINE_UNQUOTED(KERNEL_SOURCE,  "${KERNEL_SOURCE}",  [definition of kernel source dir])
-KERNEL_CFLAGS="-I${KERNEL_SOURCE}/include"
+
+KERNEL_CFLAGS="-I${KERNEL_SOURCE}"
 AC_SUBST(KERNEL_CFLAGS)
 
 PLUGIN_LIBTOOL_FLAGS="-module -avoid-version"
