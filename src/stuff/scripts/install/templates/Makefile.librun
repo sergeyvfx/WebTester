@@ -8,9 +8,6 @@ GLIB_CFLAGS =  `pkg-config --cflags glib-2.0`
 GLIB_LIBS =  `pkg-config --libs glib-2.0`
 LDFLAGS = -Wl,-export-dynamic
 
-KERNEL_VERSION = `uname -r`
-KERNEL_FLAGS = -I/lib/modules/$(KERNEL_VERSION)/source/include
-
 SOURCES = \
 	ipc.c \
 	ipc_builtin.c \
@@ -20,6 +17,14 @@ SOURCES = \
 	unique.c
 
 OBJECTS = ${SOURCES:.c=.o}
+
+all:
+	@ KERNEL_HEADERS="/lib/modules/`uname -r`"; \
+		if test -d $$KERNEL_HEADERS/source; then \
+			$(MAKE) KERNEL_FLAGS="-I$$KERNEL_HEADERS/source" librun.so; \
+		elif test -d $$KERNEL_HEADERS/build; then \
+			$(MAKE) KERNEL_FLAGS="-I$$KERNEL_HEADERS/build" librun.so; \
+		fi
 
 librun.so: $(OBJECTS)
 	echo "$(CC) -shared -o $@ $(OBJECTS) $(LDFLAGS) $(GLIB_LIBS)"
