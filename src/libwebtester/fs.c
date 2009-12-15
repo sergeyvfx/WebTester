@@ -17,6 +17,7 @@
 #include <memory.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define PET_ANY  0x000
 #define PET_FILE 0x001
@@ -562,4 +563,88 @@ fdup (const char *__fn, char *__out, const char *__add_ext, int __count)
     }
 
   return 0;
+}
+
+/**
+ * Set lock to file
+ *
+ * @param __fn - name of file to set lock on
+ * @return zero on success, non-zero otherwise
+ */
+int
+flock_set (const char *__fn)
+{
+  int fd, result;
+  struct flock lock;
+
+  if (!__fn)
+    {
+      return -1;
+    }
+
+  memset (&lock, 0, sizeof (lock));
+  lock.l_type = F_WRLCK;
+
+  fd = open (__fn, O_CREAT | O_WRONLY, S_IWUSR | S_IRUSR);
+  result = fcntl (fd, F_SETLK, &lock);
+  close (fd);
+
+  return result;
+}
+
+/**
+ * Clear lock file
+ *
+ * @param __fn - name of file to clear lock from
+ * @return zero on success, non-zero otherwise
+ */
+int
+flock_clear (const char *__fn)
+{
+  int fd, result;
+  struct flock lock;
+
+  if (!__fn)
+    {
+      return -1;
+    }
+
+  memset (&lock, 0, sizeof (lock));
+  lock.l_type = F_UNLCK;
+
+  fd = open (__fn, O_WRONLY, S_IWUSR | S_IRUSR);
+  result = fcntl (fd, F_SETLK, &lock);
+  close (fd);
+
+  unlink (__fn);
+
+  return result;
+}
+
+/**
+ * Check is file locked
+ *
+ * @param __fn - name of file to test lock from
+ * @return zero if file is unlocked, non-zero otherwise
+ */
+int
+flock_test (const char *__fn)
+{
+  int fd, result;
+  struct flock lock;
+  memset (&lock, 0, sizeof (lock));
+  lock.l_type = F_WRLCK;
+
+  fd = open (__fn, O_RDONLY);
+
+  if (fcntl (fd, F_GETLK, &lock))
+    {
+      return 0;
+    }
+
+  result = (lock.l_type == F_UNLCK);
+
+  close (fd);
+
+  return result;
 }

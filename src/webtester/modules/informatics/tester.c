@@ -175,6 +175,9 @@ static mutex_t suspended = 0;
 
 static DWORD max_output_store_size = 0;
 
+/* Mutex for lock-files operations */
+static GMutex *lck_mutex = NULL;
+
 /* Null-terminated list of required input task's params */
 static char *required_params[] = {"SOURCE",
   "COMPILERID",
@@ -1238,11 +1241,14 @@ unlink_unwanted_testing_dirs (void)
 
   if (CHECK_TIME_DELTA (last_unlink, cur, unlink_interval))
     {
-      char *cur_dir, full[4096];
+      char *cur_dir;
+      char lock_file[4096], full[4096];
       int to_delete = 0;
       dynastruc_t *ls;
 
+      mutex_lock (lck_mutex);
       ls = dir_listing (testing_dir);
+      mutex_unlock (lck_mutex);
 
       to_delete = dyna_length (ls) - keep_alive_testdirs;
       if (to_delete < 0)
@@ -1256,9 +1262,19 @@ unlink_unwanted_testing_dirs (void)
             DYNA_BREAK;
           }
 
-        INF_INFO ("Unlink testing dir %s\n", cur_dir);
         snprintf (full, BUF_SIZE (full), "%s/%s", testing_dir, cur_dir);
-        unlinkdir (full);
+        snprintf (lock_file, BUF_SIZE (lock_file), "%s/lock", full);
+
+        if (!flock_test (lock_file))
+          {
+            INF_INFO ("Unlink testing dir %s\n", cur_dir);
+            unlinkdir (full);
+          }
+        else
+          {
+            INF_DEBUG_LOG ("Skipping unlinking testing dir %s\n", cur_dir);
+          }
+
         to_delete--;
       DYNA_DONE;
 
@@ -1283,6 +1299,7 @@ testing_thread (gpointer __data, gpointer __user_data)
   /* Directories for current testing stuff */
   char cur_testing_dir[4096];
   char cur_data_dir[4096];
+  char lock_file[4096];
 
   int points = 0, rc;
   char errors[MAX_TESTS * (MAX_ERRCODE + 1)];
@@ -1312,7 +1329,10 @@ testing_thread (gpointer __data, gpointer __user_data)
   fmkdir (testing_dir, 00773);
 
   /* Create current testing directory */
+  mutex_lock (lck_mutex);
+  snprintf (lock_file, BUF_SIZE (lock_file), "%s/lock", cur_testing_dir);
   fmkdir (cur_testing_dir, 00777);
+  mutex_unlock (lck_mutex);
 
   /* Some initialization */
   points = 0;
@@ -1449,6 +1469,8 @@ __free_:
   TASK_SET_STATUS (*task, TS_INTERRUPTED);
 
 __all_done_:
+  flock_clear (lock_file);
+
   unlink_unwanted_testing_dirs ();
 
   INF_DEBUG_LOG ("Leave testing thread\n");
@@ -1529,6 +1551,7 @@ Informatics_init_testing (void)
   active = mutex_create ();
   unlink_mutex = mutex_create ();
   suspended = mutex_create ();
+  lck_mutex = mutex_create ();
 
   create_testing_pool ();
 
@@ -1557,6 +1580,11 @@ Informatics_done_testing (void)
   if (suspended)
     {
       mutex_free (suspended);
+    }
+
+  if (lck_mutex)
+    {
+      mutex_free (lck_mutex);
     }
 
   if (pool)

@@ -85,6 +85,18 @@ fcopydir (const char *__src, const char *__dst);
 int
 fdup (const char *__fn, char *__out, const char *__add_ext, int __count);
 
+/* Create lock file */
+int
+flock_set (const char *__fn);
+
+/* Clear lock file */
+int
+flock_clear (const char *__fn);
+
+/* Check is file locked */
+int
+flock_test (const char *__fn);
+
 END_HEADER
 
 #endif
