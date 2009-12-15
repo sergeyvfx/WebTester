@@ -25,8 +25,8 @@
 #define NEXT_ARG       (__argv[++i])
 
 static char usage[] = "Usage: webtester [options]\n"
-        "  -s,  --silent         use specified config file\n"
-        "  -c,  --config-file    Turn to silent mode\n"
+        "  -s,  --silent         Turn to silent mode\n"
+        "  -c,  --config-file    Use specified config file\n"
 #ifdef USER_DEBUG
         "  -d,  --debug          Turn CORE to debug mode\n"
 #endif

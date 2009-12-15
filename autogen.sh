@@ -5,7 +5,7 @@
 
 ./WT-VERSION-GEN
 
-. WT-VERSION-FILE
+. ./WT-VERSION-FILE
 
 # Name of package
 PKG_NAME="webtester-${WT_VERSION}"
