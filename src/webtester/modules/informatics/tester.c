@@ -1332,6 +1332,7 @@ testing_thread (gpointer __data, gpointer __user_data)
   mutex_lock (lck_mutex);
   snprintf (lock_file, BUF_SIZE (lock_file), "%s/lock", cur_testing_dir);
   fmkdir (cur_testing_dir, 00777);
+  flock_set (lock_file);
   mutex_unlock (lck_mutex);
 
   /* Some initialization */
