@@ -48,6 +48,8 @@
   (*__points)=0; \
   strcpy (__errors, "CR"); \
   CR=TRUE; \
+  unlink (full_input); \
+  unlink (full_output); \
   goto __done_;
 
 /* Push error of current test */
@@ -1040,7 +1042,7 @@ testing_main_loop (wt_task_t *__self, const char *__cur_data_dir,
                 }
 
               /* Store checker's output message */
-              if (checker_outputs)
+              if (checker_outputs && RUN_PROC_PIPEBUF (*proc))
                 {
                   snprintf (dummy, BUF_SIZE (dummy), "%d", i);
 

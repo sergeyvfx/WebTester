@@ -1114,7 +1114,7 @@ int
 run_finalize_executing (run_process_info_t *__self)
 {
   struct taskstats stats;
-  int state = 0;
+  int state = RUN_PROC_GETSIGNAL (*__self);
 
   if (RUN_PROC_TEST_FLAG (*__self, PF_KILLING))
     {

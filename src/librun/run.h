@@ -37,6 +37,11 @@ BEGIN_HEADER
 #define RUN_PROC_TERMINATED(__self)   (RUN_PROC_STATE(__self)&PS_TERMINATED)
 #define RUN_PROC_TERMSIG(__self)      ((__self).term_sig)
 
+#define RUN_PROC_GETSIGNAL(__self)    ((RUN_PROC_STATE(__self)&PS_TERMINATED) |\
+                                       (RUN_PROC_STATE(__self)&PS_KILLED) | \
+                                       (RUN_PROC_STATE(__self)&PS_STOPPED) | \
+                                       (RUN_PROC_STATE(__self)&PS_CONTINUED))
+
 /* Process's usage of time. usecs */
 #define RUN_PROC_TIMEUSAGE(__self)    ((__self).r_usage.time)
 
