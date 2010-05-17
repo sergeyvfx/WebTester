@@ -111,7 +111,7 @@ begin
   {$i+}
 
   filemode := oldfilemode;
-  m := mode;
+  mode := m;
 
   if (ioResult <> 0) then
   begin
